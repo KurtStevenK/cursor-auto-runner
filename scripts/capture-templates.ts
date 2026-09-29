@@ -103,7 +103,13 @@ async function main(): Promise<void> {
     });
     const dir = path.join(app.getAppPath(), 'assets', 'templates', theme);
     fs.mkdirSync(dir, { recursive: true });
-    const file = path.join(dir, `${name}.png`);
+    // Add numbered variants (run.png, run-2.png, run-3.png…) instead of
+    // overwriting, so the IDE button and agent-window button styles can
+    // both be captured.
+    let file = path.join(dir, `${name}.png`);
+    for (let i = 2; fs.existsSync(file); i++) {
+      file = path.join(dir, `${name}-${i}.png`);
+    }
     fs.writeFileSync(file, out.toPNG());
     console.log(`template saved: ${file} (${out.getSize().width}x${out.getSize().height})`);
     app.exit(0);

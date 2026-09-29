@@ -13,13 +13,44 @@
   "scripts": {
     "compile": "tsc -p tsconfig.json",
     "start": "npm run compile && electron .",
-    "generate:icons": "electron scripts/generate-icons.js",
-    "capture-templates": "electron dist/scripts/capture-templates.js",
+    "generate:icons": "node scripts/generate-icons.js",
+    "capture-templates": "npm run compile && electron dist/scripts/capture-templates.js",
+    "prepack": "npm run compile",
+    "predist": "npm run compile",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.gf-elektro.cursor-auto-runner",
+    "productName": "Cursor Auto Runner",
+    "directories": { "output": "release" },
+    "files": ["dist/**", "assets/**", "package.json"],
+    "asarUnpack": ["**/node_modules/better-sqlite3/**", "**/node_modules/@nut-tree-fork/**"],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64", "arm64"] }],
+      "icon": "assets/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "icon": "assets/icons/icon.png",
+      "category": "public.app-category.utilities",
+      "extendInfo": {
+        "NSScreenCaptureUsageDescription": "Cursor Auto Runner watches the screen to find the Run button in your Cursor IDE window.",
+        "NSAccessibilityUsageDescription": "Cursor Auto Runner needs accessibility access to click the Run button for you."
+      }
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icons",
+      "category": "Utility"
+    }
   },
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
