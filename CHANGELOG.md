@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.17] - 2026-09-30
+
+### Changed
+- **GitHub Pages landing** ([landing/index.html](landing/index.html)): version badge and direct download links updated to the current release.
+
 ## [1.2.16] - 2026-09-30
 
 ### Added
