@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.6] - 2026-09-29
+
+### Fixed
+- Stats overlay layout: the refresh-interval row could overlap the 7-day chart's date labels (the row wrapped to two lines and the fixed-height card squeezed the content). The chart area now absorbs remaining space while the interval row, status line and buttons are kept at their natural size; the window is slightly wider (400 px) and button labels shorter (`Faster → 700 ms`).
+
 ## [1.2.5] - 2026-09-29
 
 ### Changed

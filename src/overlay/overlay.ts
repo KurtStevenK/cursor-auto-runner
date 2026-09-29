@@ -97,8 +97,8 @@ function renderInterval(ms: number): void {
   const s = $('slowerBtn') as HTMLButtonElement;
   f.disabled = faster === null;
   s.disabled = slower === null;
-  f.textContent = faster !== null ? `Faster (→ ${faster} ms)` : 'Faster';
-  s.textContent = slower !== null ? `Slower (→ ${slower} ms)` : 'Slower';
+  f.textContent = faster !== null ? `Faster → ${faster} ms` : 'Faster';
+  s.textContent = slower !== null ? `Slower → ${slower} ms` : 'Slower';
   f.dataset.ms = faster !== null ? String(faster) : '';
   s.dataset.ms = slower !== null ? String(slower) : '';
 }

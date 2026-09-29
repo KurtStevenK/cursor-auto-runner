@@ -49,7 +49,7 @@ function openOverlay(): void {
     return;
   }
   overlay = new BrowserWindow({
-    width: 380,
+    width: 400,
     height: 560,
     show: false,
     frame: false,
