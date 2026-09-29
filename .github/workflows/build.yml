@@ -8,7 +8,8 @@ name: Build releases
 #  - creates the GitHub Release with changelog-based notes
 #  - publishes the Chocolatey package to community.chocolatey.org (secret: CHOCOLATEY_API_KEY)
 #  - updates the cursor-auto-runner cask in KurtStevenK/homebrew-tap (secret: TAP_TOKEN)
-# Trigger: push a tag like v1.2.10, or run manually from the Actions tab.
+#  - publishes the .deb to KurtStevenK/apt on gh-pages (secrets: TAP_TOKEN, APT_GPG_PRIVATE_KEY)
+# Trigger: push a tag like v1.2.11, or run manually from the Actions tab.
 
 on:
   push:
@@ -126,7 +127,7 @@ jobs:
             echo "|---|---|---|"
             echo "| Windows | \`Cursor.Auto.Runner.Setup.$VERSION.exe\` | Run the installer, or \`choco install cursor-auto-runner\` |"
             echo "| macOS | \`Cursor.Auto.Runner-$VERSION.dmg\` | Open the DMG, or \`brew install --cask KurtStevenK/tap/cursor-auto-runner\` |"
-            echo "| Linux (Debian/Ubuntu) | \`cursor-auto-runner_${VERSION}_amd64.deb\` | \`sudo apt install ./cursor-auto-runner_${VERSION}_amd64.deb\` |"
+            echo "| Linux (Debian/Ubuntu) | \`cursor-auto-runner_${VERSION}_amd64.deb\` | \`apt-get install cursor-auto-runner\` after [adding the APT repo](https://github.com/KurtStevenK/cursor-auto-runner/blob/master/packaging/apt/README.md), or \`sudo apt install ./cursor-auto-runner_${VERSION}_amd64.deb\` |"
             echo "| Linux (any distro) | \`cursor-auto-runner-$VERSION.AppImage\` | \`chmod +x\` and run |"
             echo "| Linux (Arch) | \`cursor-auto-runner-$VERSION.pacman\` | \`sudo pacman -U cursor-auto-runner-$VERSION.pacman\` |"
           } > release-notes.md
@@ -160,6 +161,37 @@ jobs:
           git add Casks/cursor-auto-runner.rb
           git diff --cached --quiet || git commit -m "cursor-auto-runner $VERSION"
           git push
+
+      - name: Update APT repository
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+          APT_GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          DEB="artifacts/linux/cursor-auto-runner_${VERSION}_amd64.deb"
+          if [[ ! -f "$DEB" ]]; then
+            echo "deb artifact not found: $DEB" >&2
+            ls -la artifacts/linux/ || true
+            exit 1
+          fi
+          sudo apt-get update
+          sudo apt-get install -y apt-utils gnupg gzip
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/KurtStevenK/apt.git" apt-repo
+          cd apt-repo
+          if git show-ref --verify --quiet refs/heads/gh-pages; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . 2>/dev/null || true
+          fi
+          bash "$GITHUB_WORKSPACE/packaging/apt/publish.sh" "$(pwd)" "$GITHUB_WORKSPACE/$DEB"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pool dists gpg.key .nojekyll
+          git diff --cached --quiet || git commit -m "cursor-auto-runner $VERSION"
+          git push -u origin gh-pages
 
   chocolatey:
     needs: release

@@ -5,6 +5,22 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.11] - 2026-09-29
+
+### Added
+- **APT repository for Debian/Ubuntu**: tagged releases publish the `.deb` to [`KurtStevenK/apt`](https://github.com/KurtStevenK/apt) on `gh-pages` (GPG-signed) — `sudo apt-get install cursor-auto-runner` after a one-time repo setup ([packaging/apt/README.md](packaging/apt/README.md)).
+
+### Fixed
+- Restored Run and Always Run detection after the 1.2.9 capture cap changed the effective button scale. Template variants now follow each display thumbnail's exact native downscale instead of relying on a sparse fixed list alone.
+- Coarse matching now refines multiple spatially distinct candidates, preventing unrelated Cursor text or icons from hiding a valid high-confidence button match.
+- Bundled templates are guaranteed a bounded fallback slot ahead of local captures, with one complementary current-UI reference for Run and Always Run.
+- Multi-monitor capture keeps each display's native aspect ratio and reports ambiguous source mappings instead of silently returning no crops.
+- The detector diagnostic now receives the real project template root when it runs as Electron's entry point.
+
+### Performance
+- Capture-adjusted template variants are cached in the worker, coarse scanning uses a phase-tolerant stride, and the 0.88 final click threshold remains unchanged.
+- Added real button-pixel regressions at native and capped scales, a coarse-distractor regression, packaged worker checks, and click-coordinate mapping coverage.
+
 ## [1.2.10] - 2026-09-29
 
 ### Added

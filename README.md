@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
   <img src="https://img.shields.io/badge/electron-33-47848f" alt="electron" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
-  <img src="https://img.shields.io/badge/version-1.2.10-22c55e" alt="version" />
+  <img src="https://img.shields.io/badge/version-1.2.11-22c55e" alt="version" />
 </p>
 
 ---
@@ -67,6 +67,7 @@ and shown on the [landing page](https://kurtstevenk.github.io/cursor-auto-runner
 | Windows | Chocolatey | `choco install cursor-auto-runner` |
 | macOS | `Cursor.Auto.Runner-<version>.dmg` | Open the DMG (universal; grant Screen Recording & Accessibility) |
 | macOS | Homebrew | `brew install --cask KurtStevenK/tap/cursor-auto-runner` |
+| Linux (Debian/Ubuntu) | APT ([`KurtStevenK/apt`](https://github.com/KurtStevenK/apt)) | `sudo apt-get install cursor-auto-runner` — [one-time repo setup](packaging/apt/README.md) |
 | Linux (Debian/Ubuntu) | `cursor-auto-runner_<version>_amd64.deb` | `sudo apt install ./cursor-auto-runner_<version>_amd64.deb` |
 | Linux (Arch) | `cursor-auto-runner-<version>.pacman` | `sudo pacman -U cursor-auto-runner-<version>.pacman` |
 | Linux (any distro) | `cursor-auto-runner-<version>.AppImage` | `chmod +x` and run |
@@ -148,9 +149,9 @@ Installers land in `release/`.
 
 Linux packages and the macOS DMG require the matching OS toolchain and are
 built automatically by GitHub Actions on tagged releases (`.github/workflows/build.yml`):
-push a tag like `v1.2.10` and the workflow attaches Setup.exe, .nupkg (Chocolatey),
-AppImage, .deb, .pacman and .dmg to the release, publishes the Chocolatey package
-and updates the Homebrew tap cask. The landing page is served from
+push a tag like `v1.2.11` and the workflow attaches Setup.exe, .nupkg (Chocolatey),
+AppImage, .deb, .pacman and .dmg to the release, publishes the Chocolatey package,
+updates the Homebrew tap cask, and publishes the `.deb` to the [`KurtStevenK/apt`](https://github.com/KurtStevenK/apt) repository for `apt-get install`. The landing page is served from
 `landing/` via GitHub Pages (`.github/workflows/pages.yml`).
 
 ## Platform notes
