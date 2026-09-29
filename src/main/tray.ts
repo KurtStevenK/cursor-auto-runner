@@ -94,8 +94,8 @@ export class TrayUI {
       {
         label: 'Capture templates…',
         submenu: (['run', 'always-run', 'allow'] as const).flatMap((name) => [
-          { label: `${name} (dark)`, click: () => this.cb.capture(name, 'dark') },
-          { label: `${name} (light)`, click: () => this.cb.capture(name, 'light') },
+          { label: `${name === 'allow' ? 'allow / approve' : name} (dark)`, click: () => this.cb.capture(name, 'dark') },
+          { label: `${name === 'allow' ? 'allow / approve' : name} (light)`, click: () => this.cb.capture(name, 'light') },
         ]),
       },
       { type: 'separator' },

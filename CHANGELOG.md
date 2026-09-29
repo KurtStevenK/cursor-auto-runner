@@ -5,6 +5,12 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.5] - 2026-09-29
+
+### Changed
+- Docs and tray labels now mention the **Approve** button: Cursor's approval button has appeared under different labels (*Allow*, *Approve*); the detector matches it via captured image templates either way. The tray's "Capture templates…" submenu shows the entry as "allow / approve".
+- README version badge and description updated accordingly.
+
 ## [1.2.4] - 2026-09-29
 
 ### Added

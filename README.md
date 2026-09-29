@@ -5,15 +5,15 @@
 <h1 align="center">Cursor Auto Runner</h1>
 
 <p align="center">
-  A cross-platform system-tray app that automatically clicks the <b>Run</b> / <b>Always Run</b> button
-  in the Cursor IDE — and keeps track of how often it did.
+  A cross-platform system-tray app that automatically clicks the <b>Run</b>, <b>Always Run</b> and
+  <b>Allow / Approve</b> buttons in the Cursor IDE — and keeps track of how often it did.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
   <img src="https://img.shields.io/badge/electron-33-47848f" alt="electron" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
-  <img src="https://img.shields.io/badge/version-1.2.4-22c55e" alt="version" />
+  <img src="https://img.shields.io/badge/version-1.2.5-22c55e" alt="version" />
 </p>
 
 ---
@@ -21,8 +21,8 @@
 ## Features
 
 - **Auto Run mode** — clicks the *Run* button whenever it appears in a Cursor window.
-- **Auto Always Run mode** — clicks *Always Run* when available, falls back to *Run* and also approves *Allow* prompts so your agent never stalls.
-- **Allow buttons** — permission approvals are clicked too, at any position, in both modes.
+- **Auto Always Run mode** — clicks *Always Run* when available, falls back to *Run* and also approves *Allow* / *Approve* prompts so your agent never stalls.
+- **Allow / Approve buttons** — permission and tool-call approvals are clicked too, at any position, in both modes. Cursor has used different labels for this button over time (*Allow*, *Approve*); matching is image-based, so captured variants cover them.
 - **Repeat clicks** — if a button stays visible after clicking (first click only focused the window, or Cursor asks again), the app clicks it again automatically.
 - **Adjustable refresh interval** — set how often the screen is checked from the tray menu (*Faster* / *Slower*); the current value is shown right in the menu.
 - **System tray** with a state-colored icon: a **left click toggles the stats overlay**, right click opens the menu: *Start Auto Run*, *Start Auto Always Run*, *Stop*, *Capture templates…*, *Open templates folder*, *Stats…*, *Quit*.
@@ -69,7 +69,7 @@ Or from the terminal:
 ```bash
 npm run capture-templates -- run dark          # capture the "Run" button (dark theme)
 npm run capture-templates -- always-run dark   # capture the "Always Run" button (dark theme)
-npm run capture-templates -- allow dark        # capture the "Allow" permission button (dark theme)
+npm run capture-templates -- allow dark        # capture the "Allow" / "Approve" button (dark theme)
 npm run capture-templates -- run light         # light theme variants if you use them
 ```
 
@@ -93,7 +93,7 @@ The app appears in your system tray. Right-click the tray icon:
 | **Stop** | Stops the automation (enabled only while running) |
 | **Refresh interval: 700 ms** | Shows the current check interval (informational) |
 | **Faster / Slower** | Steps the interval up or down (150 ms – 6 s); applied live and persisted |
-| **Capture templates…** | Submenu to capture reference images for *Run*, *Always Run* and *Allow* buttons, each in dark and light theme |
+| **Capture templates…** | Submenu to capture reference images for *Run*, *Always Run* and *Allow*/*Approve* buttons, each in dark and light theme |
 | **Open templates folder** | Opens the folder where captured templates are stored |
 | **Stats…** | Opens the live stats overlay |
 | **Quit** | Exits the app |
