@@ -161,8 +161,8 @@ jobs:
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          DMG_X64="artifacts/macos/Cursor Auto Runner-${VERSION}.dmg"
-          DMG_ARM="artifacts/macos/Cursor Auto Runner-${VERSION}-arm64.dmg"
+          DMG_X64="artifacts/macos/Cursor.Auto.Runner-${VERSION}.dmg"
+          DMG_ARM="artifacts/macos/Cursor.Auto.Runner-${VERSION}-arm64.dmg"
           SHA_X64=$(shasum -a 256 "$DMG_X64" | cut -d' ' -f1)
           SHA_ARM=$(shasum -a 256 "$DMG_ARM" | cut -d' ' -f1)
           mkdir -p Casks

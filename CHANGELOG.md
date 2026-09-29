@@ -5,6 +5,14 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.18] - 2026-09-30
+
+### Added
+- **Homebrew tap** maintainer docs and release smoke test ([packaging/homebrew/README.md](packaging/homebrew/README.md), [packaging/homebrew/smoke-test.sh](packaging/homebrew/smoke-test.sh)).
+
+### Fixed
+- **macOS DMG** `artifactName` aligned with the Homebrew cask and GitHub Release URLs (`Cursor.Auto.Runner-<version>.dmg` / `-arm64.dmg`); CI SHA-256 for the tap uses the same paths.
+
 ## [1.2.17] - 2026-09-30
 
 ### Changed
