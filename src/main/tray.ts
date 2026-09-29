@@ -20,7 +20,7 @@ export class TrayUI {
   private iconPath(state: Mode): string {
     const name =
       state === 'run' ? 'tray-run' : state === 'always-run' ? 'tray-always' : 'tray-idle';
-    const base = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', '..', 'assets', 'icons');
+    const base = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', '..', '..', 'assets', 'icons');
     return path.join(base, 'tray', `${name}.png`);
   }
 

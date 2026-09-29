@@ -2,28 +2,21 @@
  * Detection engine: finds the Cursor IDE window and locates the
  * Run / Always Run button inside it by image matching.
  *
- * Strategy:
- *  1. Look up the Cursor window via the OS window list (works on any
- *     monitor — regions are absolute virtual-desktop coordinates).
- *  2. Restrict the image search to that window's region for speed and
- *     accuracy; fall back to the primary display when no window is found.
- *  3. Template-match against dark/light reference images at multiple
- *     scales (pre-resized with jimp) to absorb per-display DPI scaling.
+ * Multi-monitor strategy:
+ *  1. Enumerate all displays and the Cursor window (absolute
+ *     virtual-desktop coordinates, via the OS window list).
+ *  2. Capture each display with Electron desktopCapturer and search the
+ *     area where the Cursor window intersects that display (or the whole
+ *     display when window lookup fails).
+ *  3. Pure-JS grayscale NCC matching with multi-scale templates absorbs
+ *     per-display DPI scaling differences.
  */
-import { app } from 'electron';
+import { app, desktopCapturer, screen as electronScreen } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as os from 'os';
-import {
-  screen as nutScreen,
-  getWindows,
-  imageResource,
-  Region,
-} from '@nut-tree-fork/nut-js';
-import type { Image } from '@nut-tree-fork/shared';
+import { getWindows } from '@nut-tree-fork/nut-js';
+import { findBestMatch, grayFromBGRA, loadTemplate, resizeGray, GrayImage } from './matcher';
 import type { ClickMode } from '../shared/types';
-
-type Img = Image;
 
 const SCALES = [1.0, 0.8, 1.25, 1.5];
 
@@ -31,8 +24,16 @@ interface TemplateVariant {
   mode: ClickMode;
   theme: 'dark' | 'light';
   scale: number;
-  image: Promise<Img> | null;
+  image: GrayImage | null;
   file: string;
+}
+
+interface WindowInfo {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  focus: () => Promise<boolean>;
 }
 
 export class Detector {
@@ -45,45 +46,30 @@ export class Detector {
     return path.join(base, 'assets', 'templates');
   }
 
-  private scaledFile(source: string, scale: number): string {
-    const dir = path.join(os.tmpdir(), 'cursor-auto-runner-templates');
-    fs.mkdirSync(dir, { recursive: true });
-    const name = `${path.basename(source, '.png')}@${scale}.png`;
-    return path.join(dir, name);
-  }
-
-  /** Lazily build the template variant list (files only; images load on first use). */
+  /** Lazily load all template images (per theme) and pre-scale them. */
   private async prepareVariants(): Promise<TemplateVariant[]> {
     if (this.loadAttempted) return this.variants;
     this.loadAttempted = true;
     const dir = this.templatesDir();
-    const Jimp = (await import('jimp')).default;
 
     for (const theme of ['dark', 'light'] as const) {
       for (const mode of ['always-run', 'run'] as const) {
         const file = path.join(dir, theme, `${mode}.png`);
         if (!fs.existsSync(file)) continue;
+        let base: GrayImage;
+        try {
+          base = await loadTemplate(file);
+        } catch (err) {
+          console.error(`[detector] failed to load template ${file}:`, err);
+          continue;
+        }
         for (const scale of SCALES) {
-          let target = file;
-          if (scale !== 1.0) {
-            target = this.scaledFile(file, scale);
-            if (!fs.existsSync(target)) {
-              try {
-                const img = await Jimp.read(file);
-                img.resize(Math.max(4, Math.round(img.getWidth() * scale)), Jimp.AUTO);
-                await img.writeAsync(target);
-              } catch (err) {
-                console.error(`[detector] failed to scale template ${file}:`, err);
-                continue;
-              }
-            }
-          }
           this.variants.push({
             mode,
             theme,
             scale,
-            file: target,
-            image: null, // loaded lazily
+            file,
+            image: scale === 1.0 ? base : resizeGray(base, scale),
           });
         }
       }
@@ -102,8 +88,8 @@ export class Detector {
     return this.loadAttempted && this.variants.length > 0;
   }
 
-  /** Find the Cursor window region (absolute coordinates, any monitor). */
-  private async findCursorWindow(): Promise<{ region: Region; focus: () => Promise<boolean> } | null> {
+  /** Find the Cursor window in absolute logical (DIP) coordinates. */
+  private async findCursorWindow(): Promise<WindowInfo | null> {
     try {
       const windows = await getWindows();
       for (const win of windows) {
@@ -111,7 +97,13 @@ export class Detector {
         if (title.includes('cursor') && !title.includes('auto runner')) {
           const region = await win.region;
           if (region && region.width > 50 && region.height > 50) {
-            return { region, focus: () => win.focus() };
+            return {
+              left: region.left,
+              top: region.top,
+              width: region.width,
+              height: region.height,
+              focus: () => win.focus(),
+            };
           }
         }
       }
@@ -121,16 +113,36 @@ export class Detector {
     return null;
   }
 
-  private async primaryRegion(): Promise<Region> {
-    const w = await nutScreen.width();
-    const h = await nutScreen.height();
-    return new Region(0, 0, w, h);
+  /** Capture one display at native resolution and return its grayscale image. */
+  private async captureDisplay(display: Electron.Display): Promise<{ gray: GrayImage; originX: number; originY: number } | null> {
+    const scale = display.scaleFactor;
+    try {
+      const sources = await desktopCapturer.getSources({
+        types: ['screen'],
+        thumbnailSize: {
+          width: Math.round(display.size.width * scale),
+          height: Math.round(display.size.height * scale),
+        },
+      });
+      const source = sources.find((s) => s.display_id === String(display.id)) ?? sources[0];
+      if (!source) return null;
+      const thumb = source.thumbnail;
+      const width = thumb.getSize().width;
+      const height = thumb.getSize().height;
+      if (width < 10 || height < 10) return null;
+      const gray = grayFromBGRA(thumb.getBitmap(), width, height);
+      // Physical-pixel origin of this display in the virtual desktop.
+      return { gray, originX: Math.round(display.bounds.x * scale), originY: Math.round(display.bounds.y * scale) };
+    } catch (err) {
+      console.error(`[detector] capture of display ${display.id} failed:`, err);
+      return null;
+    }
   }
 
   /**
    * Search for the button for the requested mode.
    * `always-run` prefers the "Always Run" template and falls back to "Run".
-   * Returns the click point plus a best-effort focus callback for the window.
+   * Returns the absolute physical click point plus a best-effort focus callback.
    */
   async detect(mode: ClickMode): Promise<{ x: number; y: number; mode: ClickMode; focus: () => Promise<boolean> } | null> {
     const variants = await this.prepareVariants();
@@ -138,40 +150,58 @@ export class Detector {
 
     const cursorWindow = await this.findCursorWindow();
     this.windowFound = cursorWindow !== null;
-    const searchRegion = cursorWindow?.region ?? (await this.primaryRegion());
     const focus = cursorWindow?.focus ?? (async () => false);
 
+    const displays = electronScreen.getAllDisplays();
     const preferred: ClickMode[] = mode === 'always-run' ? ['always-run', 'run'] : ['run'];
     const rank = (v: TemplateVariant) => preferred.indexOf(v.mode) * 10 + (v.theme === 'dark' ? 0 : 5) + SCALES.indexOf(v.scale);
     const ordered = variants.slice().sort((a, b) => rank(a) - rank(b));
 
-    for (const variant of ordered) {
-      if (!variant.image) variant.image = imageResource(variant.file);
-      const point = await this.findTemplate(variant.image, searchRegion);
-      if (point) {
-        return { x: point.x, y: point.y, mode: variant.mode, focus };
+    for (const display of displays) {
+      const capture = await this.captureDisplay(display);
+      if (!capture) continue;
+      const { gray, originX, originY } = capture;
+
+      // Crop region: Cursor window intersected with this display (physical px).
+      let cropX = 0, cropY = 0, cropGray = gray;
+      if (cursorWindow) {
+        const wx0 = Math.round(cursorWindow.left * display.scaleFactor);
+        const wy0 = Math.round(cursorWindow.top * display.scaleFactor);
+        const wx1 = Math.round((cursorWindow.left + cursorWindow.width) * display.scaleFactor);
+        const wy1 = Math.round((cursorWindow.top + cursorWindow.height) * display.scaleFactor);
+        const dx0 = Math.max(0, wx0 - originX);
+        const dy0 = Math.max(0, wy0 - originY);
+        const dx1 = Math.min(gray.width, wx1 - originX);
+        const dy1 = Math.min(gray.height, wy1 - originY);
+        if (dx1 - dx0 < 10 || dy1 - dy0 < 10) continue; // window not on this display
+        cropX = dx0;
+        cropY = dy0;
+        cropGray = cropGrayRegion(gray, dx0, dy0, dx1 - dx0, dy1 - dy0);
+      }
+
+      for (const variant of ordered) {
+        if (!variant.image) continue;
+        const match = findBestMatch(cropGray, variant.image, 0.88);
+        if (match) {
+          return {
+            x: originX + cropX + match.x + variant.image.width / 2,
+            y: originY + cropY + match.y + variant.image.height / 2,
+            mode: variant.mode,
+            focus,
+          };
+        }
       }
     }
     return null;
   }
+}
 
-  /** Single template search with a hard timeout so a stuck match can't block the poll loop. */
-  private async findTemplate(image: Promise<Img>, region: Region): Promise<{ x: number; y: number } | null> {
-    try {
-      const find = nutScreen.find(image, {
-        searchRegion: region,
-        confidence: 0.88,
-      });
-      const match = await Promise.race([
-        find,
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-      ]);
-      if (!match) return null;
-      // find() returns the match's top-left region -> aim for its center.
-      return { x: match.left + match.width / 2, y: match.top + match.height / 2 };
-    } catch {
-      // NotFoundException and friends -> not on screen
-      return null;
-    }
+/** Extract a rectangular sub-region of a grayscale image. */
+function cropGrayRegion(src: GrayImage, x: number, y: number, w: number, h: number): GrayImage {
+  const data = new Float32Array(w * h);
+  for (let row = 0; row < h; row++) {
+    const srcOff = (y + row) * src.width + x;
+    data.set(src.data.subarray(srcOff, srcOff + w), row * w);
   }
+  return { width: w, height: h, data };
 }
