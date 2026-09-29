@@ -1,16 +1,17 @@
-# Rendered by CI (release job of .github/workflows/build.yml):
-# __VERSION__ -> release version, __SHA_ARM__ / __SHA_X64__ -> SHA-256 of the arch DMGs.
+# Rendered by CI (release job of .github/workflows/build.yml): the placeholder
+# tokens below are replaced with the release version and the SHA-256 digests
+# of the two arch DMGs.
 cask "cursor-auto-runner" do
   arch arm: "arm64", intel: "x64"
 
-  version "1.2.10"
+  version "__VERSION__"
   sha256 arm: "__SHA_ARM__", intel: "__SHA_X64__"
 
   on_arm do
-    url "https://github.com/KurtStevenK/cursor-auto-runner/releases/download/v#{version}/Cursor%20Auto%20Runner-#{version}-arm64.dmg"
+    url "https://github.com/KurtStevenK/cursor-auto-runner/releases/download/v#{version}/Cursor.Auto.Runner-#{version}-arm64.dmg"
   end
   on_intel do
-    url "https://github.com/KurtStevenK/cursor-auto-runner/releases/download/v#{version}/Cursor%20Auto%20Runner-#{version}.dmg"
+    url "https://github.com/KurtStevenK/cursor-auto-runner/releases/download/v#{version}/Cursor.Auto.Runner-#{version}.dmg"
   end
 
   name "Cursor Auto Runner"

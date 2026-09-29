@@ -124,8 +124,8 @@ jobs:
             echo ""
             echo "| Platform | File | Install |"
             echo "|---|---|---|"
-            echo "| Windows | \`Cursor Auto Runner Setup $VERSION.exe\` | Run the installer, or \`choco install cursor-auto-runner\` |"
-            echo "| macOS | \`Cursor Auto Runner-$VERSION.dmg\` | Open the DMG, or \`brew install --cask KurtStevenK/tap/cursor-auto-runner\` |"
+            echo "| Windows | \`Cursor.Auto.Runner.Setup.$VERSION.exe\` | Run the installer, or \`choco install cursor-auto-runner\` |"
+            echo "| macOS | \`Cursor.Auto.Runner-$VERSION.dmg\` | Open the DMG, or \`brew install --cask KurtStevenK/tap/cursor-auto-runner\` |"
             echo "| Linux (Debian/Ubuntu) | \`cursor-auto-runner_${VERSION}_amd64.deb\` | \`sudo apt install ./cursor-auto-runner_${VERSION}_amd64.deb\` |"
             echo "| Linux (any distro) | \`cursor-auto-runner-$VERSION.AppImage\` | \`chmod +x\` and run |"
             echo "| Linux (Arch) | \`cursor-auto-runner-$VERSION.pacman\` | \`sudo pacman -U cursor-auto-runner-$VERSION.pacman\` |"
@@ -134,9 +134,9 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/windows/*
-            artifacts/linux/*
-            artifacts/macos/*
+            artifacts/windows/**
+            artifacts/linux/**
+            artifacts/macos/**
           body_path: release-notes.md
           generate_release_notes: true
 
