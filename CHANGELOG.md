@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.1.7] - 2026-09-29
+
+### Fixed
+- Overlay's ✕ button (and live stats) did nothing: the sandboxed preload script failed to load because it imported `../shared/types` at runtime, which sandbox restrictions forbid — so `window.autoRunner` never existed. The preload is now self-contained (types via `import type`, IPC channel names as local constants); the bridge is verified loading and the window closes via ✕, ESC and the tray toggle.
+
 ## [1.1.6] - 2026-09-29
 
 ### Fixed

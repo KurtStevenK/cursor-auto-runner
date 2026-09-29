@@ -1,6 +1,20 @@
-/** Preload: exposes a minimal, safe API surface to the overlay window. */
+/**
+ * Preload: exposes a minimal, safe API surface to the overlay window.
+ * IMPORTANT: sandboxed preloads can only require('electron') — no relative
+ * imports at runtime. Types are `import type` (erased), and IPC channel
+ * names are duplicated here as plain constants.
+ */
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC, Mode, StatsSnapshot } from '../shared/types';
+import type { Mode, StatsSnapshot } from '../shared/types';
+
+// Keep in sync with src/shared/types.ts (no runtime import possible).
+const IPC = {
+  SET_MODE: 'set-mode',
+  MODE_CHANGED: 'mode-changed',
+  GET_STATS: 'get-stats',
+  STATS_UPDATED: 'stats-updated',
+  CLOSE_OVERLAY: 'close-overlay',
+} as const;
 
 contextBridge.exposeInMainWorld('autoRunner', {
   getStats: (): Promise<StatsSnapshot> => ipcRenderer.invoke(IPC.GET_STATS),
