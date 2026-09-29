@@ -39,7 +39,7 @@ Or download the DMG from [GitHub Releases](https://github.com/KurtStevenK/cursor
 After a release is published:
 
 ```bash
-VERSION=1.2.18 bash packaging/homebrew/smoke-test.sh
+VERSION=1.2.19 bash packaging/homebrew/smoke-test.sh
 ```
 
 Optional: pass `CASK_URL` to test the live tap file instead of rendering the template locally.

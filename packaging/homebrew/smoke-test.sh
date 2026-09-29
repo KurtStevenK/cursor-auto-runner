@@ -64,8 +64,8 @@ if [[ "$DL_ARM" != "$SHA_ARM_CASK" ]]; then
   exit 1
 fi
 
-if command -v brew >/dev/null 2>&1; then
-  brew style --cask "$CASK_FILE" >/dev/null 2>&1 || brew style --cask "$CASK_FILE"
+if [[ "${BREW_STYLE:-}" == "1" ]] && command -v brew >/dev/null 2>&1; then
+  brew style --cask "$CASK_FILE"
 fi
 
 echo "smoke-test OK (v${VERSION})"
