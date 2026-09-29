@@ -10,6 +10,7 @@ import { StatsStore } from './stats';
 import { SettingsStore } from './settings';
 import { TrayUI } from './tray';
 import { ensureMacPermissions } from './permissions';
+import { startCapture, stopCapture } from './capture';
 import { IPC, Mode, StatsSnapshot } from '../shared/types';
 
 // Ensure a clean tray/app identity on Windows
@@ -102,6 +103,22 @@ app.whenReady().then(() => {
     getMode: () => controller.current,
     setMode: (mode) => applyMode(mode),
     openOverlay,
+    capture: (name, theme) => {
+      // Pause the auto-clicker while the screen is frozen for capture.
+      const prevMode = controller.current;
+      controller.set('idle');
+      tray.rebuild();
+      void startCapture(name, theme, {
+        onSaved: () => detector.resetTemplates(),
+        onDone: () => {
+          // Resume what was running before the capture session.
+          if (prevMode !== 'idle') {
+            controller.set(prevMode);
+            tray.rebuild();
+          }
+        },
+      }).catch((err) => console.error('[capture] failed:', err));
+    },
   });
   tray.show();
 
@@ -124,4 +141,7 @@ app.on('second-instance', openOverlay);
 app.on('window-all-closed', () => {
   // Keep running in the tray.
 });
-app.on('before-quit', () => tray?.destroy());
+app.on('before-quit', () => {
+  stopCapture();
+  tray?.destroy();
+});

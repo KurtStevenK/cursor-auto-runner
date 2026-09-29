@@ -10,6 +10,7 @@ export type TrayCallbacks = {
   getMode: () => Mode;
   setMode: (mode: Mode) => void;
   openOverlay: () => void;
+  capture: (name: 'run' | 'always-run' | 'allow', theme: 'dark' | 'light') => void;
 };
 
 export class TrayUI {
@@ -60,6 +61,14 @@ export class TrayUI {
         checked: mode === 'idle',
         enabled: mode !== 'idle',
         click: () => this.cb.setMode('idle'),
+      },
+      { type: 'separator' },
+      {
+        label: 'Capture templates…',
+        submenu: (['run', 'always-run', 'allow'] as const).flatMap((name) => [
+          { label: `${name} (dark)`, click: () => this.cb.capture(name, 'dark') },
+          { label: `${name} (light)`, click: () => this.cb.capture(name, 'light') },
+        ]),
       },
       { type: 'separator' },
       { label: 'Stats…', click: () => this.cb.openOverlay() },

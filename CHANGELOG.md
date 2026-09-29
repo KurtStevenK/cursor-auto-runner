@@ -5,6 +5,13 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.0] - 2026-09-29
+
+### Added
+- **Capture templates from the tray menu**: new "Capture templates…" submenu with an entry per button (Run / Always Run / Allow) and theme (dark / light). The auto-clicker pauses while the screen is frozen and resumes afterwards; templates are reloaded automatically after each capture.
+- Capture logic moved to `src/main/capture.ts`, shared between the tray menu and the standalone `npm run capture-templates` script (which is now a thin wrapper).
+- When packaged, templates captured via the tray are stored in the user data folder (survive app updates without write access to the install directory); the detector scans both the bundled and the user data template folders.
+
 ## [1.1.8] - 2026-09-29
 
 ### Fixed

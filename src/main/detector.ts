@@ -41,9 +41,17 @@ export class Detector {
   private loadAttempted = false;
   windowFound = false;
 
-  private templatesDir(): string {
-    const base = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..', '..', '..');
-    return path.join(base, 'assets', 'templates');
+  private templatesDirs(): string[] {
+    // In dev: project root. When packaged: bundled resources + userData
+    // (templates captured via the tray menu land in userData so they
+    // survive app updates without write access to the install dir).
+    const dirs: string[] = [];
+    const bundled = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..', '..', '..');
+    dirs.push(path.join(bundled, 'assets', 'templates'));
+    if (app.isPackaged) {
+      dirs.push(path.join(app.getPath('userData'), 'assets', 'templates'));
+    }
+    return dirs;
   }
 
   /** Lazily load all template images (per theme) and pre-scale them.
@@ -51,31 +59,32 @@ export class Detector {
   private async prepareVariants(): Promise<TemplateVariant[]> {
     if (this.loadAttempted) return this.variants;
     this.loadAttempted = true;
-    const dir = this.templatesDir();
 
-    for (const theme of ['dark', 'light'] as const) {
-      const themeDir = path.join(dir, theme);
-      if (!fs.existsSync(themeDir)) continue;
-      const files = fs.readdirSync(themeDir).filter((f) => f.endsWith('.png'));
-      for (const mode of ['always-run', 'run', 'allow'] as const) {
-        const matching = files.filter((f) => f === `${mode}.png` || f.startsWith(`${mode}-`));
-        for (const fileName of matching) {
-          const file = path.join(themeDir, fileName);
-          let base: GrayImage;
-          try {
-            base = await loadTemplate(file);
-          } catch (err) {
-            console.error(`[detector] failed to load template ${file}:`, err);
-            continue;
-          }
-          for (const scale of SCALES) {
-            this.variants.push({
-              mode,
-              theme,
-              scale,
-              file,
-              image: scale === 1.0 ? base : resizeGray(base, scale),
-            });
+    for (const dir of this.templatesDirs()) {
+      for (const theme of ['dark', 'light'] as const) {
+        const themeDir = path.join(dir, theme);
+        if (!fs.existsSync(themeDir)) continue;
+        const files = fs.readdirSync(themeDir).filter((f) => f.endsWith('.png'));
+        for (const mode of ['always-run', 'run', 'allow'] as const) {
+          const matching = files.filter((f) => f === `${mode}.png` || f.startsWith(`${mode}-`));
+          for (const fileName of matching) {
+            const file = path.join(themeDir, fileName);
+            let base: GrayImage;
+            try {
+              base = await loadTemplate(file);
+            } catch (err) {
+              console.error(`[detector] failed to load template ${file}:`, err);
+              continue;
+            }
+            for (const scale of SCALES) {
+              this.variants.push({
+                mode,
+                theme,
+                scale,
+                file,
+                image: scale === 1.0 ? base : resizeGray(base, scale),
+              });
+            }
           }
         }
       }
@@ -92,6 +101,12 @@ export class Detector {
 
   hasTemplates(): boolean {
     return this.loadAttempted && this.variants.length > 0;
+  }
+
+  /** Drop the cached templates so the next detect() re-reads them from disk. */
+  resetTemplates(): void {
+    this.variants = [];
+    this.loadAttempted = false;
   }
 
   /** Find ALL Cursor windows (IDE + agent windows) in absolute logical (DIP) coordinates. */

@@ -60,7 +60,10 @@ npm run compile
 
 ### Capture the button templates (one time, after every Cursor UI update)
 
-The app matches buttons against *your* screenshots, so teach it what your buttons look like:
+The easiest way: right-click the tray icon → **Capture templates…** → pick the button and theme.
+The auto-clicker pauses while capturing and resumes afterwards; new templates are used immediately.
+
+Or from the terminal:
 
 ```bash
 npm run capture-templates -- run dark          # capture the "Run" button (dark theme)
@@ -115,6 +118,7 @@ Installers land in `release/`.
 | Clicks stopped after a Cursor update | Cursor's UI changed — re-capture the templates |
 | "Cursor window not found" in the overlay | The Cursor window is minimized or all its windows are hidden — unminimize it |
 | Wrong clicks on a scaled monitor | Re-capture templates on that display (multi-scale matching covers common cases) |
+| `[stats] better-sqlite3 unavailable` in dev after building an installer | electron-builder rebuilt the native module for another arch. Run `npm run rebuild:dev` (rebuilds for Electron x64) |
 
 ## Development
 
