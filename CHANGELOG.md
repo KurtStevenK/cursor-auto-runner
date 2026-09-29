@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.3] - 2026-09-29
+
+### Added
+- **Left click on the tray icon now toggles the stats overlay** (open/closed). The full menu opens on right click; with `setContextMenu` Windows also opened the menu on left click, which would shadow the toggle.
+
 ## [1.2.2] - 2026-09-29
 
 ### Added

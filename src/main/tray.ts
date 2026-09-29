@@ -29,6 +29,7 @@ function stepPoll(current: number, dir: -1 | 1): number | null {
 
 export class TrayUI {
   private tray: Tray | null = null;
+  private menu: Menu | null = null;
 
   constructor(private cb: TrayCallbacks) {}
 
@@ -43,6 +44,11 @@ export class TrayUI {
     const icon = nativeImage.createFromPath(this.iconPath(this.cb.getMode()));
     this.tray = new Tray(icon);
     this.tray.setToolTip('Cursor Auto Runner — idle');
+    // Left click toggles the stats overlay; right click opens the full menu.
+    this.tray.on('click', () => this.cb.openOverlay());
+    this.tray.on('right-click', () => {
+      if (this.menu) this.tray?.popUpContextMenu(this.menu);
+    });
     this.rebuild();
   }
 
@@ -109,7 +115,10 @@ export class TrayUI {
       { type: 'separator' },
       { label: 'Quit', click: () => app.quit() },
     ];
-    this.tray.setContextMenu(Menu.buildFromTemplate(menu));
+    this.menu = Menu.buildFromTemplate(menu);
+    // Menu is shown on right click via popUpContextMenu; left click toggles
+    // the stats overlay (see show()). setContextMenu would also open the
+    // menu on left click on Windows, shadowing the toggle.
     // Let the overlay react too (best effort).
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send(IPC.MODE_CHANGED, mode);
