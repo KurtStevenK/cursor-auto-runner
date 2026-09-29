@@ -103,11 +103,15 @@ The app appears in your system tray. Right-click the tray icon:
 ```bash
 npm run dist        # builds for the current OS
 npm run dist:win    # NSIS installer (x64 + arm64)
-npm run dist:mac    # DMG (universal)
-npm run dist:linux  # AppImage + deb
+npm run dist:mac    # DMG (universal) — macOS only
+npm run dist:linux  # AppImage + deb — Linux only
 ```
 
 Installers land in `release/`.
+
+Linux packages and the macOS DMG require the matching OS toolchain and are
+built automatically by GitHub Actions on tagged releases (`.github/workflows/build.yml`):
+push a tag like `v1.2.8` and the workflow attaches Setup.exe, AppImage, .deb and .dmg to the release.
 
 ## Platform notes
 

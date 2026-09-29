@@ -9,6 +9,8 @@ and each shipped task gets its own version number.
 
 ### Changed
 - **Default refresh interval is now 4000 ms** (was 700 ms). Existing installations keep their persisted value; the new default applies to fresh setups and to the interval shown before any snapshot arrives.
+- Added a **landing page** (`landing/index.html`) with download buttons for all platforms and a **GitHub Actions workflow** (`.github/workflows/build.yml`) that builds Windows, Linux (AppImage + deb) and macOS (DMG) packages on tagged releases — Linux packages and the DMG cannot be produced on Windows itself.
+- `package.json` metadata completed for Linux packaging (author email as deb maintainer, repository and homepage URLs).
 
 ## [1.2.7] - 2026-09-29
 

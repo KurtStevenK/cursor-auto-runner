@@ -5,11 +5,12 @@
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
-  "author": "Cursor Auto Runner contributors",
+  "author": "KurtStevenK <kurt.steven.kainzmayer@gmail.com>",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/KurtStevenK/cursor-auto-runner.git"
   },
+  "homepage": "https://github.com/KurtStevenK/cursor-auto-runner#readme",
   "scripts": {
     "compile": "tsc -p tsconfig.json && tsc -p tsconfig.overlay.json && node scripts/copy-overlay-assets.js",
     "start": "npm run compile && electron .",

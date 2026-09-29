@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cursor Auto Runner — automatic Run-button clicking for Cursor</title>
+<meta name="description" content="A free, cross-platform system-tray app that automatically clicks the Run / Always Run / Approve buttons in the Cursor IDE and tracks click statistics." />
+<style>
+  :root {
+    --bg: #0b1220;
+    --card: rgba(23, 33, 54, 0.92);
+    --border: rgba(94, 234, 212, 0.14);
+    --text: #e2e8f0;
+    --muted: #7c8ba1;
+    --green: #22c55e;
+    --blue: #3b82f6;
+    --blue-light: #60a5fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1100px 500px at 70% -10%, rgba(59,130,246,0.10), transparent 60%),
+      radial-gradient(900px 480px at 12% 8%, rgba(34,197,94,0.08), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  header img { width: 64px; height: 64px; }
+  h1 { font-size: 34px; letter-spacing: -0.5px; }
+  h1 span { color: var(--green); }
+  .tagline { color: var(--muted); font-size: 17px; max-width: 640px; }
+
+  .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 30px; }
+  .badge {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+    padding: 4px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--muted);
+  }
+  .badge.ok { background: rgba(34,197,94,0.14); border-color: rgba(34,197,94,0.35); color: var(--green); }
+
+  h2 { font-size: 20px; margin: 38px 0 14px; }
+
+  .downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .dl {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .dl h3 { font-size: 16px; display: flex; align-items: center; gap: 10px; }
+  .dl .os-ico { font-size: 22px; }
+  .dl p { color: var(--muted); font-size: 13px; }
+  .dl a.btn {
+    display: block; text-align: center; text-decoration: none; font-weight: 600; font-size: 14px;
+    padding: 10px 14px; border-radius: 10px; margin-top: auto;
+    background: var(--green); color: #052e12;
+    transition: filter .15s ease;
+  }
+  .dl a.btn:hover { filter: brightness(1.12); }
+  .dl a.btn.alt { background: rgba(59,130,246,0.9); color: #fff; }
+  .dl a.btn.ghost { background: rgba(255,255,255,0.07); color: var(--text); border: 1px solid rgba(255,255,255,0.12); }
+  .soon { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .feature { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .feature b { display: block; margin-bottom: 4px; }
+  .feature span { color: var(--muted); font-size: 14px; }
+
+  .how { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
+  .how ol { margin-left: 20px; color: var(--muted); }
+  .how li { margin: 6px 0; }
+  .how code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px; font-size: 13px; color: var(--text); }
+
+  footer { margin-top: 44px; color: var(--muted); font-size: 13px; text-align: center; }
+  footer a { color: var(--blue-light); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="../assets/icons/icon-256.png" alt="Cursor Auto Runner logo" />
+      <h1>Cursor <span>Auto Runner</span></h1>
+    </header>
+    <p class="tagline">
+      A free, cross-platform system-tray app that automatically clicks the <b>Run</b>,
+      <b>Always&nbsp;Run</b> and <b>Allow&nbsp;/&nbsp;Approve</b> buttons in the Cursor IDE —
+      and keeps track of how often it did.
+    </p>
+
+    <div class="badge-row">
+      <span class="badge ok">v1.2.8</span>
+      <span class="badge">Windows · macOS · Linux</span>
+      <span class="badge">MIT License</span>
+      <span class="badge">Electron 33</span>
+    </div>
+
+    <h2>Download</h2>
+    <div class="downloads">
+      <div class="dl">
+        <h3><span class="os-ico">🪟</span> Windows</h3>
+        <p>Installer for x64 and ARM64. Install over an older version — your stats and templates are kept.</p>
+        <a class="btn" href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest/download/Cursor%20Auto%20Runner%20Setup%201.2.8.exe">Download Installer (.exe)</a>
+      </div>
+      <div class="dl">
+        <h3><span class="os-ico">🐧</span> Linux</h3>
+        <p>AppImage (run anywhere, chmod +x) or .deb package for Debian/Ubuntu.</p>
+        <a class="btn alt" href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest/download/cursor-auto-runner-1.2.8.AppImage">Download AppImage</a>
+        <a class="btn ghost" href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest/download/cursor-auto-runner_1.2.8_amd64.deb">Download .deb</a>
+      </div>
+      <div class="dl">
+        <h3><span class="os-ico">🍎</span> macOS</h3>
+        <p>Universal DMG (x64 + ARM64). Grants Screen Recording &amp; Accessibility on first use.</p>
+        <a class="btn alt" href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest/download/Cursor%20Auto%20Runner-1.2.8.dmg">Download DMG</a>
+        <p class="soon">Built via CI on tagged releases — DMGs can only be produced on macOS.</p>
+      </div>
+    </div>
+
+    <h2>Features</h2>
+    <div class="features">
+      <div class="feature"><b>🎯 Auto Run &amp; Auto Always Run</b><span>Clicks Run whenever it appears; Always-Run mode also approves permission prompts so your agent never stalls.</span></div>
+      <div class="feature"><b>🛡️ Approve / Allow buttons</b><span>Tool-call approvals are clicked too — at any position, in both modes.</span></div>
+      <div class="feature"><b>📊 Live statistics</b><span>Session, day, week, month and total clicks plus a 7-day chart in a frameless overlay (SQLite-backed).</span></div>
+      <div class="feature"><b>⚡ Adjustable refresh interval</b><span>Set how often the screen is checked — from the tray menu or the stats window; applied live.</span></div>
+      <div class="feature"><b>🖥️ Multi-monitor &amp; multi-theme</b><span>Finds Cursor windows on any display, dark and light themes, per-display DPI scaling absorbed.</span></div>
+      <div class="feature"><b>🖱️ Cursor-safe clicking</b><span>The mouse pointer is restored after every click; cooldown and match verification prevent double clicks.</span></div>
+    </div>
+
+    <h2>Getting started</h2>
+    <div class="how">
+      <ol>
+        <li>Install and start the app — it lives in your system tray (left click opens the stats).</li>
+        <li>Right-click the tray icon → <b>Capture templates…</b> → pick the button and theme, drag a rectangle around Cursor's Run button.</li>
+        <li>Choose <b>Start Auto Run</b> or <b>Start Auto Always Run</b>. Done.</li>
+      </ol>
+    </div>
+
+    <footer>
+      Cursor Auto Runner is free software under the <a href="https://github.com/KurtStevenK/cursor-auto-runner/blob/main/LICENSE">MIT License</a>.
+      Not affiliated with Cursor (Anysphere Inc.).<br />
+      After every Cursor UI update, re-capture the button templates via the tray menu.
+    </footer>
+  </div>
+</body>
+</html>
