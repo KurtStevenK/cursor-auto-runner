@@ -5,6 +5,16 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.12] - 2026-09-29
+
+### Fixed
+- Restored current Cursor **Run**, **Always Run**, and **Allow** detection with a phase-complete half-resolution search for tiny templates and exact full-resolution verification.
+- Blue Run/Allow controls now provide a bounded action-row anchor. Always Run is accepted only beside a template-verified Run button, preventing identical prose or history text from being clicked.
+
+### Performance
+- Real-color Cursor windows avoid expensive full-window sweeps after bounded button verification; a reproduced no-button pass now spends about 45 ms in the matcher instead of 12 seconds.
+- Added sanitized cluttered-window, odd/even phase, false-positive, no-button budget, packaged-worker, and matcher soak coverage. Packaged builds contain only the five curated button templates.
+
 ## [1.2.11] - 2026-09-29
 
 ### Added

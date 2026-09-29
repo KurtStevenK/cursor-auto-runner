@@ -30,14 +30,49 @@ function request(message, transfer = []) {
   });
 }
 
-function template(mode, seed) {
-  const width = mode === 'always-run' ? 78 : 54;
-  const height = 24;
+function template(mode, seed, dimensions) {
+  const width = dimensions?.width ?? (mode === 'always-run' ? 78 : 54);
+  const height = dimensions?.height ?? 24;
   const data = new Float32Array(width * height);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) data[y * width + x] = (x * 19 + y * 37 + seed) % 255;
   }
   return { file: `${mode}-${seed}.png`, mode, theme: 'dark', width, height, data: data.buffer };
+}
+
+function noButtonCrop(width, height) {
+  const bgra = new Uint8Array(width * height * 4);
+  for (let i = 0; i < width * height; i++) {
+    const value = (i * 13 + Math.floor(i / width) * 17) % 80;
+    const offset = i * 4;
+    bgra[offset] = value;
+    bgra[offset + 1] = value;
+    bgra[offset + 2] = value;
+    bgra[offset + 3] = 255;
+  }
+  return bgra;
+}
+
+async function matchCrop(mode, width, height, bgra) {
+  const startedAt = performance.now();
+  const result = await request(
+    {
+      type: 'match',
+      mode,
+      confidence: 0.88,
+      crops: [{
+        id: 0,
+        width,
+        height,
+        captureToNativeScaleX: 1,
+        captureToNativeScaleY: 1,
+        bgra: bgra.buffer,
+      }],
+      cancelBuffer: new SharedArrayBuffer(4),
+    },
+    [bgra.buffer]
+  );
+  return { result, wallMs: performance.now() - startedAt };
 }
 
 function percentile(values, value) {
@@ -61,16 +96,6 @@ function percentile(values, value) {
 
     const width = 1280;
     const height = 720;
-    const bgra = new Uint8Array(width * height * 4);
-    for (let i = 0; i < width * height; i++) {
-      const value = (i * 13 + Math.floor(i / width) * 17) % 80;
-      const offset = i * 4;
-      bgra[offset] = value;
-      bgra[offset + 1] = value;
-      bgra[offset + 2] = value;
-      bgra[offset + 3] = 255;
-    }
-
     const heartbeat = [];
     let expected = performance.now() + 10;
     const timer = setInterval(() => {
@@ -78,33 +103,77 @@ function percentile(values, value) {
       heartbeat.push(Math.max(0, now - expected));
       expected = now + 10;
     }, 10);
-    const startedAt = performance.now();
-    const result = await request(
-      {
-        type: 'match',
-        mode: 'always-run',
-        confidence: 0.88,
-        crops: [{ id: 0, width, height, bgra: bgra.buffer }],
-        cancelBuffer: new SharedArrayBuffer(4),
-      },
-      [bgra.buffer]
+    const largeNoButton = await matchCrop(
+      'always-run',
+      width,
+      height,
+      noButtonCrop(width, height)
     );
-    const wallMs = performance.now() - startedAt;
+
+    const tinyTemplates = [
+      template('always-run', 11, { width: 52, height: 16 }),
+      template('always-run', 12, { width: 52, height: 16 }),
+      template('run', 13, { width: 40, height: 18 }),
+      template('run', 14, { width: 40, height: 18 }),
+    ];
+    const target = {
+      width: tinyTemplates[2].width,
+      height: tinyTemplates[2].height,
+      data: new Float32Array(tinyTemplates[2].data.slice(0)),
+    };
+    const tinyReady = await request(
+      { type: 'init', templates: tinyTemplates },
+      tinyTemplates.map((item) => item.data)
+    );
+    const tinyNoButton = await matchCrop('always-run', width, height, noButtonCrop(width, height));
+
+    const matchedBgra = noButtonCrop(width, height);
+    const targetPosition = { x: 947, y: 571 };
+    for (let y = 0; y < target.height; y++) {
+      for (let x = 0; x < target.width; x++) {
+        const value = Math.round(target.data[y * target.width + x]);
+        const offset = ((targetPosition.y + y) * width + targetPosition.x + x) * 4;
+        matchedBgra[offset] = value;
+        matchedBgra[offset + 1] = value;
+        matchedBgra[offset + 2] = value;
+      }
+    }
+    const tinyMatch = await matchCrop('run', width, height, matchedBgra);
     clearInterval(timer);
 
     const summary = {
       templateCount: ready.templateCount,
-      variantCount: result.variantCount,
-      wallMs: Number(wallMs.toFixed(1)),
-      workerMatchMs: Number(result.matchMs.toFixed(1)),
+      variantCount: largeNoButton.result.variantCount,
+      largeNoButtonWallMs: Number(largeNoButton.wallMs.toFixed(1)),
+      largeNoButtonMatchMs: Number(largeNoButton.result.matchMs.toFixed(1)),
+      tinyTemplateCount: tinyReady.templateCount,
+      tinyNoButtonWallMs: Number(tinyNoButton.wallMs.toFixed(1)),
+      tinyNoButtonMatchMs: Number(tinyNoButton.result.matchMs.toFixed(1)),
+      tinyMatchWallMs: Number(tinyMatch.wallMs.toFixed(1)),
+      tinyMatchMs: Number(tinyMatch.result.matchMs.toFixed(1)),
+      tinyMatchPath: tinyMatch.result.match?.path ?? null,
+      tinyMatchPyramid: tinyMatch.result.match?.pyramid ?? null,
       heartbeatP50Ms: Number(percentile(heartbeat, 50).toFixed(1)),
       heartbeatP95Ms: Number(percentile(heartbeat, 95).toFixed(1)),
       heartbeatMaxMs: Number(Math.max(0, ...heartbeat).toFixed(1)),
-      workerHeapMiB: Number((result.workerHeapBytes / 1024 / 1024).toFixed(1)),
+      workerHeapMiB: Number((tinyMatch.result.workerHeapBytes / 1024 / 1024).toFixed(1)),
     };
     console.log(JSON.stringify(summary, null, 2));
-    if (summary.workerMatchMs > 2000) {
-      throw new Error(`worker match exceeded 2000 ms CI budget: ${summary.workerMatchMs}`);
+    if (summary.largeNoButtonMatchMs > 2000 || summary.tinyNoButtonMatchMs > 2000) {
+      throw new Error(
+        `no-button match exceeded 2000 ms CI budget: large=${summary.largeNoButtonMatchMs}, tiny=${summary.tinyNoButtonMatchMs}`
+      );
+    }
+    if (
+      !tinyMatch.result.match ||
+      Math.abs(tinyMatch.result.match.x - targetPosition.x) > 1 ||
+      Math.abs(tinyMatch.result.match.y - targetPosition.y) > 1 ||
+      summary.tinyMatchPyramid !== 'half'
+    ) {
+      throw new Error(`tiny-template match failed: ${JSON.stringify(tinyMatch.result.match)}`);
+    }
+    if (summary.tinyMatchMs > 1000) {
+      throw new Error(`tiny-template match exceeded 1000 ms CI budget: ${summary.tinyMatchMs}`);
     }
     if (summary.heartbeatP95Ms > 50 || summary.heartbeatMaxMs > 100) {
       throw new Error(

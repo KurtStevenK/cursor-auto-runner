@@ -20,11 +20,17 @@ export interface PreparedTemplate {
   file: string;
   mode: MatchMode;
   theme: TemplateTheme;
+  /** DPI/UI scale before the detector's capture downscale is applied. */
   scale: number;
+  captureToNativeScaleX: number;
+  captureToNativeScaleY: number;
   image: GrayImage;
+  mid: GrayImage;
   coarse: GrayImage;
   fullSum: number;
   fullSumSq: number;
+  midSum: number;
+  midSumSq: number;
   coarseSum: number;
   coarseSumSq: number;
 }
@@ -35,10 +41,37 @@ export interface MatchCandidate {
   score: number;
 }
 
+export interface MatchBounds {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+export interface ColorComponent {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  pixels: number;
+}
+
+export interface MatchEvaluation {
+  match: MatchCandidate | null;
+  /** Highest exact NCC candidate, including scores below the click threshold. */
+  bestCandidate: MatchCandidate | null;
+  bestCoarseScore: number | null;
+  pyramid: 'full' | 'half' | 'quarter';
+  phaseCount: number;
+  candidateCount: number;
+}
+
 export interface PreparedHaystack {
   image: GrayImage;
+  mid: GrayImage | null;
   coarse: GrayImage;
   coarseFactor: 1 | 4;
+  midIntegral: Integral | null;
   coarseIntegral: Integral;
   fullIntegral: Integral | null;
 }
@@ -55,19 +88,22 @@ export function grayFromBGRA(data: Uint8Array, width: number, height: number): G
   return { width, height, data: gray };
 }
 
-/** Resize a grayscale image by a scale factor using bilinear interpolation. */
-export function resizeGray(src: GrayImage, scale: number): GrayImage {
-  if (scale === 1) return src;
-  const width = Math.max(2, Math.round(src.width * scale));
-  const height = Math.max(2, Math.round(src.height * scale));
+/** Resize a grayscale image using independent, positive scale factors. */
+export function resizeGrayXY(src: GrayImage, scaleX: number, scaleY: number): GrayImage {
+  if (!Number.isFinite(scaleX) || !Number.isFinite(scaleY) || scaleX <= 0 || scaleY <= 0) {
+    throw new Error(`invalid grayscale resize scale ${scaleX}x${scaleY}`);
+  }
+  if (scaleX === 1 && scaleY === 1) return src;
+  const width = Math.max(2, Math.round(src.width * scaleX));
+  const height = Math.max(2, Math.round(src.height * scaleY));
   const data = new Float32Array(width * height);
   for (let y = 0; y < height; y++) {
-    const sourceY = Math.min(src.height - 1, (y + 0.5) / scale - 0.5);
+    const sourceY = Math.min(src.height - 1, (y + 0.5) / scaleY - 0.5);
     const y0 = Math.max(0, Math.floor(sourceY));
     const y1 = Math.min(src.height - 1, y0 + 1);
     const fractionY = sourceY - y0;
     for (let x = 0; x < width; x++) {
-      const sourceX = Math.min(src.width - 1, (x + 0.5) / scale - 0.5);
+      const sourceX = Math.min(src.width - 1, (x + 0.5) / scaleX - 0.5);
       const x0 = Math.max(0, Math.floor(sourceX));
       const x1 = Math.min(src.width - 1, x0 + 1);
       const fractionX = sourceX - x0;
@@ -77,6 +113,11 @@ export function resizeGray(src: GrayImage, scale: number): GrayImage {
     }
   }
   return { width, height, data };
+}
+
+/** Resize a grayscale image uniformly using bilinear interpolation. */
+export function resizeGray(src: GrayImage, scale: number): GrayImage {
+  return resizeGrayXY(src, scale, scale);
 }
 
 function imageStats(image: GrayImage): { sum: number; sumSq: number } {
@@ -90,24 +131,39 @@ function imageStats(image: GrayImage): { sum: number; sumSq: number } {
   return { sum, sumSq };
 }
 
-export function prepareTemplateVariants(inputs: TemplateInput[]): PreparedTemplate[] {
+export function prepareTemplateVariants(
+  inputs: TemplateInput[],
+  captureToNativeScaleX = 1,
+  captureToNativeScaleY = captureToNativeScaleX
+): PreparedTemplate[] {
   const variants: PreparedTemplate[] = [];
   for (const input of inputs) {
     const base: GrayImage = { width: input.width, height: input.height, data: input.data };
     for (const scale of TEMPLATE_SCALES) {
-      const image = resizeGray(base, scale);
+      const image = resizeGrayXY(
+        base,
+        scale * captureToNativeScaleX,
+        scale * captureToNativeScaleY
+      );
+      const mid = resizeGray(image, 0.5);
       const coarse = resizeGray(image, 0.25);
       const fullStats = imageStats(image);
+      const midStats = imageStats(mid);
       const coarseStats = imageStats(coarse);
       variants.push({
         file: input.file,
         mode: input.mode,
         theme: input.theme,
         scale,
+        captureToNativeScaleX,
+        captureToNativeScaleY,
         image,
+        mid,
         coarse,
         fullSum: fullStats.sum,
         fullSumSq: fullStats.sumSq,
+        midSum: midStats.sum,
+        midSumSq: midStats.sumSq,
         coarseSum: coarseStats.sum,
         coarseSumSq: coarseStats.sumSq,
       });
@@ -184,8 +240,10 @@ export function prepareHaystack(image: GrayImage): PreparedHaystack {
   const coarseIntegral = new Integral(coarse);
   return {
     image,
+    mid: null,
     coarse,
     coarseFactor,
+    midIntegral: null,
     coarseIntegral,
     fullIntegral: coarseFactor === 1 ? coarseIntegral : null,
   };
@@ -222,61 +280,131 @@ function nccAt(
   return denominator < 1e-6 ? -1 : covariance / denominator;
 }
 
-/**
- * Match one preprocessed template. The haystack resize and integral images are
- * shared by every template in a crop, avoiding the previous per-variant churn.
- */
-export function findBestPreparedMatch(
-  haystack: PreparedHaystack,
-  template: PreparedTemplate,
-  minConfidence: number,
+/** Find compact saturated-color regions that may be primary action buttons. */
+export function findAccentComponents(
+  bgra: Uint8Array,
+  width: number,
+  height: number,
   cancelled: () => boolean = () => false
-): MatchCandidate | null {
-  const coarseTemplate = haystack.coarseFactor === 4 ? template.coarse : template.image;
-  const coarseTemplateSum = haystack.coarseFactor === 4 ? template.coarseSum : template.fullSum;
-  const coarseTemplateSumSq = haystack.coarseFactor === 4 ? template.coarseSumSq : template.fullSumSq;
-  if (coarseTemplate.width > haystack.coarse.width || coarseTemplate.height > haystack.coarse.height) return null;
+): ColorComponent[] {
+  const pixelCount = width * height;
+  const mask = new Uint8Array(pixelCount);
+  for (let index = 0; index < pixelCount; index++) {
+    if ((index & 0x7fff) === 0 && cancelled()) return [];
+    const offset = index * 4;
+    const blue = bgra[offset];
+    const green = bgra[offset + 1];
+    const red = bgra[offset + 2];
+    const max = Math.max(red, green, blue);
+    const min = Math.min(red, green, blue);
+    if (max >= 80 && max - min >= 35 && (max - min) / max >= 0.25) mask[index] = 1;
+  }
 
-  let best: MatchCandidate | null = null;
-  const maxY = haystack.coarse.height - coarseTemplate.height;
-  const maxX = haystack.coarse.width - coarseTemplate.width;
-  for (let y = 0; y <= maxY; y++) {
-    if ((y & 7) === 0 && cancelled()) return null;
-    for (let x = 0; x <= maxX; x++) {
-      const score = nccAt(
-        haystack.coarse,
-        haystack.coarseIntegral,
-        coarseTemplate,
-        coarseTemplateSum,
-        coarseTemplateSumSq,
-        x,
-        y
-      );
-      if (!best || score > best.score) best = { x, y, score };
+  const seen = new Uint8Array(pixelCount);
+  const queue = new Int32Array(pixelCount);
+  const components: ColorComponent[] = [];
+  for (let start = 0; start < pixelCount; start++) {
+    if (!mask[start] || seen[start]) continue;
+    let queueStart = 0;
+    let queueEnd = 0;
+    queue[queueEnd++] = start;
+    seen[start] = 1;
+    let minX = width;
+    let minY = height;
+    let maxX = 0;
+    let maxY = 0;
+    let pixels = 0;
+
+    while (queueStart < queueEnd) {
+      if ((pixels & 0x1fff) === 0 && cancelled()) return [];
+      const index = queue[queueStart++];
+      const x = index % width;
+      const y = Math.floor(index / width);
+      pixels++;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+
+      if (x > 0) {
+        const next = index - 1;
+        if (mask[next] && !seen[next]) {
+          seen[next] = 1;
+          queue[queueEnd++] = next;
+        }
+      }
+      if (x + 1 < width) {
+        const next = index + 1;
+        if (mask[next] && !seen[next]) {
+          seen[next] = 1;
+          queue[queueEnd++] = next;
+        }
+      }
+      if (y > 0) {
+        const next = index - width;
+        if (mask[next] && !seen[next]) {
+          seen[next] = 1;
+          queue[queueEnd++] = next;
+        }
+      }
+      if (y + 1 < height) {
+        const next = index + width;
+        if (mask[next] && !seen[next]) {
+          seen[next] = 1;
+          queue[queueEnd++] = next;
+        }
+      }
+    }
+
+    const componentWidth = maxX - minX + 1;
+    const componentHeight = maxY - minY + 1;
+    const fill = pixels / (componentWidth * componentHeight);
+    if (
+      componentWidth >= 6 &&
+      componentHeight >= 4 &&
+      componentWidth <= 320 &&
+      componentHeight <= 100 &&
+      pixels >= 24 &&
+      fill >= 0.18
+    ) {
+      components.push({
+        x: minX,
+        y: minY,
+        width: componentWidth,
+        height: componentHeight,
+        pixels,
+      });
     }
   }
-  // Downsampling is phase-sensitive when a small button begins between 4 px
-  // sample boundaries. Keep the coarse gate permissive and let exact NCC make
-  // the final decision in the small refinement area.
-  if (!best || best.score < Math.max(0.2, minConfidence - 0.7) || cancelled()) return null;
+  return components;
+}
 
+/** Exact NCC inside bounded top-left coordinates; used only after a safe seed. */
+export function findBestExactMatchInBounds(
+  haystack: PreparedHaystack,
+  template: PreparedTemplate,
+  bounds: MatchBounds,
+  minConfidence: number,
+  cancelled: () => boolean = () => false,
+  preference: 'score' | 'rightmost' = 'score'
+): MatchCandidate | null {
+  if (template.image.width > haystack.image.width || template.image.height > haystack.image.height) {
+    return null;
+  }
   if (!haystack.fullIntegral) haystack.fullIntegral = new Integral(haystack.image);
-  const coarseScale = 1 / haystack.coarseFactor;
-  const centerX = Math.round((best.x + coarseTemplate.width / 2) / coarseScale);
-  const centerY = Math.round((best.y + coarseTemplate.height / 2) / coarseScale);
-  const radius = Math.round(template.image.width * 0.6);
-  const x0 = Math.max(0, Math.floor(centerX - template.image.width / 2 - radius));
-  const y0 = Math.max(0, Math.floor(centerY - template.image.height / 2 - radius));
+  const x0 = Math.max(0, Math.floor(bounds.x0));
+  const y0 = Math.max(0, Math.floor(bounds.y0));
   const x1 = Math.min(
     haystack.image.width - template.image.width,
-    Math.ceil(centerX - template.image.width / 2 + radius)
+    Math.ceil(bounds.x1)
   );
   const y1 = Math.min(
     haystack.image.height - template.image.height,
-    Math.ceil(centerY - template.image.height / 2 + radius)
+    Math.ceil(bounds.y1)
   );
+  if (x1 < x0 || y1 < y0) return null;
 
-  let refined: MatchCandidate | null = null;
+  let best: MatchCandidate | null = null;
   for (let y = y0; y <= y1; y++) {
     if ((y & 7) === 0 && cancelled()) return null;
     for (let x = x0; x <= x1; x++) {
@@ -289,8 +417,301 @@ export function findBestPreparedMatch(
         x,
         y
       );
-      if (!refined || score > refined.score) refined = { x, y, score };
+      if (
+        preference === 'rightmost'
+          ? score >= minConfidence &&
+            (!best || x > best.x || (x === best.x && score > best.score))
+          : !best || score > best.score
+      ) {
+        best = { x, y, score };
+      }
     }
   }
-  return refined && refined.score >= minConfidence ? refined : null;
+  return best && best.score >= minConfidence ? best : null;
+}
+
+const MAX_COARSE_CANDIDATES = 16;
+const MAX_COMPOSER_CANDIDATES = 8;
+const MIN_QUARTER_COARSE_PIXELS = 72;
+const COMPOSER_BAND_START = 0.55;
+
+function retainDistinctCandidate(
+  candidates: MatchCandidate[],
+  candidate: MatchCandidate,
+  separationX: number,
+  separationY: number,
+  limit = MAX_COARSE_CANDIDATES
+): void {
+  const nearbyIndex = candidates.findIndex(
+    (current) =>
+      Math.abs(current.x - candidate.x) < separationX &&
+      Math.abs(current.y - candidate.y) < separationY
+  );
+  if (nearbyIndex !== -1) {
+    if (candidate.score > candidates[nearbyIndex].score) candidates[nearbyIndex] = candidate;
+    return;
+  }
+  if (candidates.length < limit) {
+    candidates.push(candidate);
+    return;
+  }
+  let weakestIndex = 0;
+  for (let index = 1; index < candidates.length; index++) {
+    if (candidates[index].score < candidates[weakestIndex].score) weakestIndex = index;
+  }
+  if (candidate.score > candidates[weakestIndex].score) candidates[weakestIndex] = candidate;
+}
+
+function ensureMidHaystack(haystack: PreparedHaystack): {
+  image: GrayImage;
+  integral: Integral;
+} {
+  if (!haystack.mid) haystack.mid = resizeGray(haystack.image, 0.5);
+  if (!haystack.midIntegral) haystack.midIntegral = new Integral(haystack.mid);
+  return { image: haystack.mid, integral: haystack.midIntegral };
+}
+
+/**
+ * Evaluate one preprocessed template. Multiple spatially distinct coarse
+ * candidates are refined so a repeated icon or text fragment elsewhere in the
+ * Cursor window cannot hide the real button.
+ */
+export function evaluatePreparedMatch(
+  haystack: PreparedHaystack,
+  template: PreparedTemplate,
+  minConfidence: number,
+  cancelled: () => boolean = () => false
+): MatchEvaluation {
+  let searchImage: GrayImage;
+  let searchIntegral: Integral;
+  let searchTemplate: GrayImage;
+  let searchTemplateSum: number;
+  let searchTemplateSumSq: number;
+  let searchFactor: 1 | 2 | 4;
+  let pyramid: MatchEvaluation['pyramid'];
+  let phases: ReadonlyArray<readonly [number, number]>;
+
+  if (haystack.coarseFactor === 1) {
+    searchImage = haystack.image;
+    searchIntegral = haystack.coarseIntegral;
+    searchTemplate = template.image;
+    searchTemplateSum = template.fullSum;
+    searchTemplateSumSq = template.fullSumSq;
+    searchFactor = 1;
+    pyramid = 'full';
+    phases = [[0, 0]];
+  } else if (template.coarse.width * template.coarse.height < MIN_QUARTER_COARSE_PIXELS) {
+    const midHaystack = ensureMidHaystack(haystack);
+    searchImage = midHaystack.image;
+    searchIntegral = midHaystack.integral;
+    searchTemplate = template.mid;
+    searchTemplateSum = template.midSum;
+    searchTemplateSumSq = template.midSumSq;
+    searchFactor = 2;
+    pyramid = 'half';
+    // Four interleaved stride-two passes cover every half-resolution phase.
+    phases = [[0, 0], [1, 0], [0, 1], [1, 1]];
+  } else {
+    searchImage = haystack.coarse;
+    searchIntegral = haystack.coarseIntegral;
+    searchTemplate = template.coarse;
+    searchTemplateSum = template.coarseSum;
+    searchTemplateSumSq = template.coarseSumSq;
+    searchFactor = 4;
+    pyramid = 'quarter';
+    phases = [[0, 0]];
+  }
+
+  const phaseCount = phases.length;
+  if (searchTemplate.width > searchImage.width || searchTemplate.height > searchImage.height) {
+    return {
+      match: null,
+      bestCandidate: null,
+      bestCoarseScore: null,
+      pyramid,
+      phaseCount,
+      candidateCount: 0,
+    };
+  }
+
+  const candidates: MatchCandidate[] = [];
+  const composerCandidates: MatchCandidate[] = [];
+  const separationX = Math.max(2, Math.floor(searchTemplate.width / 2));
+  const separationY = Math.max(2, Math.floor(searchTemplate.height / 2));
+  const maxY = searchImage.height - searchTemplate.height;
+  const maxX = searchImage.width - searchTemplate.width;
+  const composerStart = Math.floor(searchImage.height * COMPOSER_BAND_START);
+  const searchStep = searchFactor === 1 ? 1 : 2;
+  let scannedRows = 0;
+
+  for (const [phaseX, phaseY] of phases) {
+    for (let y = phaseY; y <= maxY; y += searchStep) {
+      if ((scannedRows++ & 7) === 0 && cancelled()) {
+        return {
+          match: null,
+          bestCandidate: null,
+          bestCoarseScore: null,
+          pyramid,
+          phaseCount,
+          candidateCount: candidates.length,
+        };
+      }
+      for (let x = phaseX; x <= maxX; x += searchStep) {
+        const score = nccAt(
+          searchImage,
+          searchIntegral,
+          searchTemplate,
+          searchTemplateSum,
+          searchTemplateSumSq,
+          x,
+          y
+        );
+        const candidate = { x, y, score };
+        retainDistinctCandidate(candidates, candidate, separationX, separationY);
+        if (pyramid === 'half' && y + searchTemplate.height / 2 >= composerStart) {
+          retainDistinctCandidate(
+            composerCandidates,
+            candidate,
+            separationX,
+            separationY,
+            MAX_COMPOSER_CANDIDATES
+          );
+        }
+      }
+    }
+  }
+  for (const candidate of composerCandidates) {
+    if (!candidates.some((current) => current.x === candidate.x && current.y === candidate.y)) {
+      candidates.push(candidate);
+    }
+  }
+  candidates.sort((left, right) => right.score - left.score);
+  const bestCoarseScore = candidates[0]?.score ?? null;
+  const candidateCount = candidates.length;
+
+  // With no downsampling, the coarse scores are already exact full-resolution
+  // scores and another neighborhood pass would only duplicate work.
+  if (searchFactor === 1) {
+    const bestCandidate = candidates[0] ?? null;
+    return {
+      match: bestCandidate && bestCandidate.score >= minConfidence ? bestCandidate : null,
+      bestCandidate,
+      bestCoarseScore,
+      pyramid,
+      phaseCount,
+      candidateCount,
+    };
+  }
+
+  // Downsampling is phase-sensitive when a small button begins between 4 px
+  // sample boundaries. Keep the gate permissive and let exact NCC decide.
+  const coarseGate = Math.max(0.2, minConfidence - 0.7);
+  const eligible = candidates.filter((candidate) => candidate.score >= coarseGate);
+  if (eligible.length === 0 || cancelled()) {
+    return {
+      match: null,
+      bestCandidate: null,
+      bestCoarseScore,
+      pyramid,
+      phaseCount,
+      candidateCount,
+    };
+  }
+
+  if (!haystack.fullIntegral) haystack.fullIntegral = new Integral(haystack.image);
+  const coarseScale = 1 / searchFactor;
+  const phaseRadius = searchFactor * 3 + 2;
+  const radiusX = Math.max(phaseRadius, Math.ceil(template.image.width * 0.12));
+  const radiusY = Math.max(phaseRadius, Math.ceil(template.image.height * 0.12));
+  let bestCandidate: MatchCandidate | null = null;
+
+  for (const coarseCandidate of eligible) {
+    let localBest: MatchCandidate | null = null;
+    const centerX = Math.round((coarseCandidate.x + searchTemplate.width / 2) / coarseScale);
+    const centerY = Math.round((coarseCandidate.y + searchTemplate.height / 2) / coarseScale);
+    const x0 = Math.max(
+      0,
+      Math.floor(centerX - template.image.width / 2 - radiusX)
+    );
+    const y0 = Math.max(
+      0,
+      Math.floor(centerY - template.image.height / 2 - radiusY)
+    );
+    const x1 = Math.min(
+      haystack.image.width - template.image.width,
+      Math.ceil(centerX - template.image.width / 2 + radiusX)
+    );
+    const y1 = Math.min(
+      haystack.image.height - template.image.height,
+      Math.ceil(centerY - template.image.height / 2 + radiusY)
+    );
+
+    for (let y = y0; y <= y1; y++) {
+      if ((y & 7) === 0 && cancelled()) {
+        return {
+          match: null,
+          bestCandidate: null,
+          bestCoarseScore,
+          pyramid,
+          phaseCount,
+          candidateCount,
+        };
+      }
+      for (let x = x0; x <= x1; x++) {
+        const score = nccAt(
+          haystack.image,
+          haystack.fullIntegral,
+          template.image,
+          template.fullSum,
+          template.fullSumSq,
+          x,
+          y
+        );
+        if (!localBest || score > localBest.score) localBest = { x, y, score };
+      }
+    }
+    if (localBest && (!bestCandidate || localBest.score > bestCandidate.score)) {
+      bestCandidate = localBest;
+    }
+    // A high-confidence exact hit is sufficient; avoid refining the remaining
+    // coarse distractors on the common successful path.
+    if (localBest && localBest.score >= minConfidence) {
+      return {
+        match: localBest,
+        bestCandidate: localBest,
+        bestCoarseScore,
+        pyramid,
+        phaseCount,
+        candidateCount,
+      };
+    }
+  }
+  return {
+    match:
+      bestCandidate && bestCandidate.score >= minConfidence
+        ? bestCandidate
+        : null,
+    bestCandidate,
+    bestCoarseScore,
+    pyramid,
+    phaseCount,
+    candidateCount,
+  };
+}
+
+/**
+ * Compatibility wrapper for callers that only need a thresholded match.
+ */
+export function findBestPreparedMatch(
+  haystack: PreparedHaystack,
+  template: PreparedTemplate,
+  minConfidence: number,
+  cancelled: () => boolean = () => false
+): MatchCandidate | null {
+  return evaluatePreparedMatch(
+    haystack,
+    template,
+    minConfidence,
+    cancelled
+  ).match;
 }

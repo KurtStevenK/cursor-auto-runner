@@ -13,6 +13,9 @@ export interface CropPayload {
   id: number;
   width: number;
   height: number;
+  /** Thumbnail pixels per native display pixel. Templates are captured natively. */
+  captureToNativeScaleX: number;
+  captureToNativeScaleY: number;
   bgra: ArrayBuffer;
 }
 
@@ -36,6 +39,24 @@ export interface WorkerMatch {
   score: number;
   mode: ClickMode;
   file: string;
+  path: 'accent' | 'anchored-row' | 'global';
+  pyramid: 'full' | 'half' | 'quarter';
+}
+
+export interface MatchDebugInfo {
+  cropId: number;
+  file: string;
+  mode: ClickMode;
+  baseScale: number;
+  captureToNativeScaleX: number;
+  captureToNativeScaleY: number;
+  templateWidth: number;
+  templateHeight: number;
+  coarseScore: number | null;
+  refinedScore: number | null;
+  pyramid: 'full' | 'half' | 'quarter';
+  phaseCount: number;
+  candidateCount: number;
 }
 
 export type MatchWorkerResponse =
@@ -44,6 +65,8 @@ export type MatchWorkerResponse =
       type: 'result';
       requestId: number;
       match: WorkerMatch | null;
+      /** Present only when CURSOR_AUTO_RUNNER_DEBUG_MATCH=1 and no match passed. */
+      bestMiss?: MatchDebugInfo;
       variantCount: number;
       matchMs: number;
       workerHeapBytes: number;

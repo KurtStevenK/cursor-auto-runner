@@ -6,7 +6,10 @@ const ROOT = path.join(__dirname, '..');
 const { Detector } = require(path.join(ROOT, 'dist', 'src', 'main', 'detector.js'));
 
 app.whenReady().then(async () => {
-  const detector = new Detector();
+  // This script is Electron's entry point, so app.getAppPath() points near
+  // dist/scripts instead of the project/app root. Pass the template root
+  // explicitly to exercise the same bundled catalog as the real app.
+  const detector = new Detector({ bundledRoot: ROOT });
   console.log('--- running two detection passes (cold + warm, no clicks are performed) ---');
   for (const label of ['cold', 'warm']) {
     const heartbeat = [];
@@ -27,7 +30,17 @@ app.whenReady().then(async () => {
     console.log(`${label} cursor window found:`, detector.windowFound);
     console.log(
       `${label} button detected:`,
-      result ? JSON.stringify({ x: result.x, y: result.y, mode: result.mode }) : 'none on screen right now'
+      result
+        ? JSON.stringify({
+            x: result.x,
+            y: result.y,
+            mode: result.mode,
+            score: Number(result.score.toFixed(4)),
+            path: result.path,
+            pyramid: result.pyramid,
+            template: result.template,
+          })
+        : 'none on screen right now'
     );
     console.log(`${label} elapsed ms:`, elapsedMs.toFixed(1));
     console.log(

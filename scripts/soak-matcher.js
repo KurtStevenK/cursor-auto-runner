@@ -52,7 +52,14 @@ function makeCrop(iteration) {
     bgra[offset + 2] = value;
     bgra[offset + 3] = 255;
   }
-  return { id: 0, width, height, bgra: bgra.buffer };
+  return {
+    id: 0,
+    width,
+    height,
+    captureToNativeScaleX: 1,
+    captureToNativeScaleY: 1,
+    bgra: bgra.buffer,
+  };
 }
 
 function percentile(values, percentileValue) {

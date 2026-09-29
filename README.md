@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
   <img src="https://img.shields.io/badge/electron-33-47848f" alt="electron" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
-  <img src="https://img.shields.io/badge/version-1.2.11-22c55e" alt="version" />
+  <img src="https://img.shields.io/badge/version-1.2.12-22c55e" alt="version" />
 </p>
 
 ---
@@ -149,7 +149,7 @@ Installers land in `release/`.
 
 Linux packages and the macOS DMG require the matching OS toolchain and are
 built automatically by GitHub Actions on tagged releases (`.github/workflows/build.yml`):
-push a tag like `v1.2.11` and the workflow attaches Setup.exe, .nupkg (Chocolatey),
+push a tag like `v1.2.12` and the workflow attaches Setup.exe, .nupkg (Chocolatey),
 AppImage, .deb, .pacman and .dmg to the release, publishes the Chocolatey package,
 updates the Homebrew tap cask, and publishes the `.deb` to the [`KurtStevenK/apt`](https://github.com/KurtStevenK/apt) repository for `apt-get install`. The landing page is served from
 `landing/` via GitHub Pages (`.github/workflows/pages.yml`).

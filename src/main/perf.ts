@@ -10,6 +10,7 @@ export interface DetectionMetrics {
   variantCount: number;
   displayCount: number;
   cropCount: number;
+  sourceMissCount: number;
   workerHeapBytes: number;
   cancelled: boolean;
 }

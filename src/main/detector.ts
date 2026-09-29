@@ -10,6 +10,11 @@ import { getWindows } from '@nut-tree-fork/nut-js';
 import type { ClickMode } from '../shared/types';
 import type { CropPayload, TemplatePayload } from '../shared/match-protocol';
 import {
+  capturePointToPhysical,
+  captureRequestSize,
+  captureToNativeScales,
+} from './capture-geometry';
+import {
   fingerprintDistance,
   loadTemplate,
   templateFingerprint,
@@ -41,10 +46,20 @@ interface CropContext {
   focus: () => Promise<boolean>;
 }
 
+interface CaptureResult {
+  crops: CropContext[];
+  sourceMissCount: number;
+}
+
 interface LoadedFingerprint {
   mode: ClickMode;
   theme: 'dark' | 'light';
   fingerprint: Uint8Array;
+}
+
+export interface DetectorOptions {
+  /** Explicit project/app root for diagnostics whose Electron entry is a script. */
+  bundledRoot?: string;
 }
 
 const EMPTY_METRICS: DetectionMetrics = {
@@ -57,10 +72,13 @@ const EMPTY_METRICS: DetectionMetrics = {
   variantCount: 0,
   displayCount: 0,
   cropCount: 0,
+  sourceMissCount: 0,
   workerHeapBytes: 0,
   cancelled: false,
 };
-const MAX_TEMPLATES_PER_MODE_AND_THEME = 2;
+// Two curated bundled references plus one local capture keep matching bounded
+// while guaranteeing that stale user captures cannot hide all known-good ones.
+const MAX_TEMPLATES_PER_MODE_AND_THEME = 3;
 const MAX_CAPTURE_WIDTH = 1920;
 const MAX_CAPTURE_HEIGHT = 1080;
 
@@ -77,13 +95,16 @@ export class Detector {
   windowFound = false;
   lastMetrics: DetectionMetrics = { ...EMPTY_METRICS };
 
+  constructor(private readonly options: DetectorOptions = {}) {}
+
   private templatesDirs(): string[] {
     // app.getAppPath() is the project root in dev and resources/app.asar when
     // packaged; the asar-patched fs reads bundled templates from either.
-    const bundled = app.getAppPath();
-    // Custom captures take precedence when a perceptual duplicate is present.
+    const bundled = this.options.bundledRoot ?? app.getAppPath();
+    // Keep bundled fallbacks ahead of user captures so a stale local catalog
+    // cannot consume every bounded slot.
     return app.isPackaged
-      ? [path.join(app.getPath('userData'), 'assets', 'templates'), path.join(bundled, 'assets', 'templates')]
+      ? [path.join(bundled, 'assets', 'templates'), path.join(app.getPath('userData'), 'assets', 'templates')]
       : [path.join(bundled, 'assets', 'templates')];
   }
 
@@ -244,6 +265,28 @@ export class Detector {
     );
   }
 
+  private sourceForDisplay(
+    sources: Electron.DesktopCapturerSource[],
+    display: Electron.Display
+  ): Electron.DesktopCapturerSource | undefined {
+    const exact = sources.find((candidate) => candidate.display_id === String(display.id));
+    if (exact) return exact;
+    if (sources.length === 1) return sources[0];
+
+    // Some platforms omit display_id. An aspect-ratio fallback is safe only
+    // when it identifies exactly one source; never guess between equal screens.
+    const targetAspect = display.size.width / display.size.height;
+    const aspectMatches = sources.filter((candidate) => {
+      const size = candidate.thumbnail.getSize();
+      return size.height > 0 && Math.abs(size.width / size.height - targetAspect) < 0.01;
+    });
+    if (aspectMatches.length === 1) {
+      console.warn(`[detector] display ${display.id} matched by unique aspect ratio`);
+      return aspectMatches[0];
+    }
+    return undefined;
+  }
+
   private async bitmapBuffer(image: Electron.NativeImage): Promise<ArrayBuffer> {
     const bitmap = image.getBitmap();
     if (
@@ -268,36 +311,47 @@ export class Detector {
     windows: WindowInfo[],
     displays: Electron.Display[],
     cancelled: () => boolean
-  ): Promise<CropContext[]> {
+  ): Promise<CaptureResult> {
     const relevant = displays
       .map((display) => ({
         display,
         windows: windows.filter((window) => this.intersects(window, display)),
       }))
       .filter((entry) => entry.windows.length > 0);
-    if (relevant.length === 0) return [];
+    if (relevant.length === 0) return { crops: [], sourceMissCount: 0 };
 
-    const thumbnailSize = {
-      width: Math.min(
-        MAX_CAPTURE_WIDTH,
-        Math.max(...relevant.map(({ display }) => Math.round(display.bounds.width * display.scaleFactor)))
-      ),
-      height: Math.min(
-        MAX_CAPTURE_HEIGHT,
-        Math.max(...relevant.map(({ display }) => Math.round(display.bounds.height * display.scaleFactor)))
-      ),
-    };
-    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize });
-    if (cancelled()) return [];
     const crops: CropContext[] = [];
+    const sourcesBySize = new Map<string, Electron.DesktopCapturerSource[]>();
+    let sourceMissCount = 0;
 
     for (const entry of relevant) {
       if (cancelled()) break;
-      const source =
-        sources.find((candidate) => candidate.display_id === String(entry.display.id)) ??
-        (sources.length === 1 ? sources[0] : undefined);
+      const requestSize = captureRequestSize(
+        entry.display,
+        MAX_CAPTURE_WIDTH,
+        MAX_CAPTURE_HEIGHT
+      );
+      const requestKey = `${requestSize.width}x${requestSize.height}`;
+      let sources = sourcesBySize.get(requestKey);
+      if (!sources) {
+        sources = await desktopCapturer.getSources({
+          types: ['screen'],
+          thumbnailSize: {
+            width: requestSize.width,
+            height: requestSize.height,
+          },
+        });
+        sourcesBySize.set(requestKey, sources);
+      }
+      if (cancelled()) break;
+      const source = this.sourceForDisplay(sources, entry.display);
       if (!source) {
-        console.warn(`[detector] no screen source for display ${entry.display.id}`);
+        sourceMissCount++;
+        console.warn(
+          `[detector] no unambiguous screen source for display ${entry.display.id}; available IDs: ${sources
+            .map((candidate) => candidate.display_id || '(empty)')
+            .join(', ')}`
+        );
         continue;
       }
       const thumbnail = source.thumbnail;
@@ -305,6 +359,10 @@ export class Detector {
       if (size.width < 10 || size.height < 10) continue;
       const scaleX = size.width / entry.display.bounds.width;
       const scaleY = size.height / entry.display.bounds.height;
+      const templateScale = captureToNativeScales(size, {
+        width: requestSize.nativeWidth,
+        height: requestSize.nativeHeight,
+      });
 
       for (const window of entry.windows) {
         if (cancelled()) break;
@@ -329,6 +387,8 @@ export class Detector {
             id,
             width: croppedSize.width,
             height: croppedSize.height,
+            captureToNativeScaleX: templateScale.x,
+            captureToNativeScaleY: templateScale.y,
             bgra: await this.bitmapBuffer(cropped),
           },
           display: entry.display,
@@ -340,7 +400,7 @@ export class Detector {
         });
       }
     }
-    return crops;
+    return { crops, sourceMissCount };
   }
 
   /**
@@ -350,7 +410,16 @@ export class Detector {
   async detect(
     mode: ClickMode,
     confidence = 0.88
-  ): Promise<{ x: number; y: number; mode: ClickMode; focus: () => Promise<boolean> } | null> {
+  ): Promise<{
+    x: number;
+    y: number;
+    mode: ClickMode;
+    score: number;
+    path: 'accent' | 'anchored-row' | 'global';
+    pyramid: 'full' | 'half' | 'quarter';
+    template: string;
+    focus: () => Promise<boolean>;
+  } | null> {
     const startedAt = perfNow();
     const generation = this.cancelGeneration;
     const cancelled = (): boolean => generation !== this.cancelGeneration;
@@ -380,9 +449,11 @@ export class Detector {
       const displays = electronScreen.getAllDisplays();
       metrics.displayCount = displays.length;
       const captureStartedAt = perfNow();
-      const crops = await this.captureCrops(cursorWindows, displays, cancelled);
+      const capture = await this.captureCrops(cursorWindows, displays, cancelled);
       metrics.captureMs = perfNow() - captureStartedAt;
+      const { crops } = capture;
       metrics.cropCount = crops.length;
+      metrics.sourceMissCount = capture.sourceMissCount;
       if (cancelled()) {
         metrics.cancelled = true;
         return null;
@@ -398,6 +469,12 @@ export class Detector {
       metrics.variantCount = response.variantCount;
       metrics.workerHeapBytes = response.workerHeapBytes;
       metrics.cancelled = response.cancelled;
+      if (!response.match && response.bestMiss) {
+        console.debug(
+          '[detector] best match below threshold',
+          JSON.stringify({ threshold: confidence, ...response.bestMiss })
+        );
+      }
       if (!response.match || response.cancelled || cancelled()) {
         metrics.cancelled = response.cancelled || cancelled();
         return null;
@@ -407,12 +484,19 @@ export class Detector {
       if (!crop) return null;
       const captureX = crop.cropX + response.match.x + response.match.templateWidth / 2;
       const captureY = crop.cropY + response.match.y + response.match.templateHeight / 2;
-      const logicalX = crop.display.bounds.x + captureX / crop.captureScaleX;
-      const logicalY = crop.display.bounds.y + captureY / crop.captureScaleY;
+      const physical = capturePointToPhysical(
+        crop.display,
+        { x: crop.captureScaleX, y: crop.captureScaleY },
+        { x: captureX, y: captureY }
+      );
       return {
-        x: Math.round(logicalX * crop.display.scaleFactor),
-        y: Math.round(logicalY * crop.display.scaleFactor),
+        x: physical.x,
+        y: physical.y,
         mode: response.match.mode,
+        score: response.match.score,
+        path: response.match.path,
+        pyramid: response.match.pyramid,
+        template: path.basename(response.match.file),
         focus: crop.focus,
       };
     } catch (error) {
