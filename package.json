@@ -55,6 +55,12 @@
             "x64",
             "arm64"
           ]
+        },
+        {
+          "target": "chocolatey",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icons/icon-256.png"
@@ -83,7 +89,8 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb"
+        "deb",
+        "pacman"
       ],
       "icon": "assets/icons",
       "category": "Utility"

@@ -1,10 +1,14 @@
 name: Build releases
 
 # Builds all platform packages on the OSes that support them:
-#  - Windows installer (NSIS, x64 + arm64)
-#  - Linux AppImage + deb (requires a real Linux toolchain — not possible on Windows)
+#  - Windows installer (NSIS, x64 + arm64) + Chocolatey package
+#  - Linux AppImage + deb + pacman (requires a real Linux toolchain — not possible on Windows)
 #  - macOS DMG universal (requires macOS — hdiutil)
-# Trigger: push a tag like v1.2.9, or run manually from the Actions tab.
+# On tagged releases it also:
+#  - creates the GitHub Release with changelog-based notes
+#  - publishes the Chocolatey package to community.chocolatey.org (secret: CHOCOLATEY_API_KEY)
+#  - updates the cursor-auto-runner cask in KurtStevenK/homebrew-tap (secret: TAP_TOKEN)
+# Trigger: push a tag like v1.2.10, or run manually from the Actions tab.
 
 on:
   push:
@@ -43,6 +47,7 @@ jobs:
           path: |
             release/*.exe
             release/*.blockmap
+            release/*.nupkg
 
   linux:
     needs: quality
@@ -60,6 +65,7 @@ jobs:
           path: |
             release/*.AppImage
             release/*.deb
+            release/*.pacman
 
   macos:
     needs: quality
@@ -85,13 +91,76 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Build release notes
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          SECTION=$(awk -v ver="$VERSION" 'BEGIN{insec=0} /^## \[/{ if (insec) exit; if (index($0, "## [" ver) == 1) insec=1; next } insec{print}' CHANGELOG.md)
+          {
+            if [ -n "$SECTION" ]; then
+              echo "$SECTION"
+            else
+              echo "See [CHANGELOG.md](https://github.com/KurtStevenK/cursor-auto-runner/blob/master/CHANGELOG.md) for details."
+            fi
+            echo ""
+            echo "## Downloads & install"
+            echo ""
+            echo "| Platform | File | Install |"
+            echo "|---|---|---|"
+            echo "| Windows | \`Cursor Auto Runner Setup $VERSION.exe\` | Run the installer, or \`choco install cursor-auto-runner\` |"
+            echo "| macOS | \`Cursor Auto Runner-$VERSION.dmg\` | Open the DMG, or \`brew install --cask KurtStevenK/tap/cursor-auto-runner\` |"
+            echo "| Linux (Debian/Ubuntu) | \`cursor-auto-runner_${VERSION}_amd64.deb\` | \`sudo apt install ./cursor-auto-runner_${VERSION}_amd64.deb\` |"
+            echo "| Linux (any distro) | \`cursor-auto-runner-$VERSION.AppImage\` | \`chmod +x\` and run |"
+            echo "| Linux (Arch) | \`cursor-auto-runner-$VERSION-x86_64.pacman\` | \`sudo pacman -U cursor-auto-runner-$VERSION-x86_64.pacman\` |"
+          } > release-notes.md
+
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             artifacts/windows/*
             artifacts/linux/*
             artifacts/macos/*
+          body_path: release-notes.md
           generate_release_notes: true
+
+      - name: Update Homebrew tap
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          DMG="artifacts/macos/Cursor Auto Runner-${VERSION}.dmg"
+          SHA=$(shasum -a 256 "$DMG" | cut -d' ' -f1)
+          mkdir -p Casks
+          sed -e "s/PLACEHOLDER/$SHA/" -e "s/\"1.2.10\"/\"$VERSION\"/" packaging/homebrew/cursor-auto-runner.rb > Casks/cursor-auto-runner.rb
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/KurtStevenK/homebrew-tap.git" tap
+          mkdir -p tap/Casks
+          cp Casks/cursor-auto-runner.rb tap/Casks/cursor-auto-runner.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/cursor-auto-runner.rb
+          git diff --cached --quiet || git commit -m "cursor-auto-runner $VERSION"
+          git push
+
+  chocolatey:
+    needs: release
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: artifacts
+      - name: Push to Chocolatey
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        shell: bash
+        run: |
+          choco apikey add --key "$CHOCOLATEY_API_KEY" --source https://push.chocolatey.org/
+          for f in artifacts/*.nupkg; do
+            choco push "$f" --source https://push.chocolatey.org/
+          done
