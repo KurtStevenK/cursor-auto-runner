@@ -5,6 +5,15 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.14] - 2026-09-30
+
+### Fixed
+- **Build releases**: Chocolatey push is skipped (workflow stays green) while the community package has no approved version yet, avoiding HTTP 403 during first-package moderation.
+- **APT publish**: CI now checks out the existing `gh-pages` branch on `KurtStevenK/apt` instead of recreating an orphan branch on every release.
+
+### Added
+- `packaging/chocolatey/should-push.sh` — queries the community package page before `choco push`.
+
 ## [1.2.13] - 2026-09-30
 
 ### Fixed
