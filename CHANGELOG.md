@@ -5,6 +5,12 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.16] - 2026-09-30
+
+### Added
+- Maintainer docs for **Chocolatey moderation** and manual push ([packaging/chocolatey/README.md](packaging/chocolatey/README.md)).
+- **APT Pages verification** steps in [packaging/apt/README.md](packaging/apt/README.md) (`curl` check for `gpg.key`).
+
 ## [1.2.15] - 2026-09-30
 
 ### Added

@@ -6,6 +6,14 @@ Debian and Ubuntu users install with `apt-get install cursor-auto-runner` after 
 
 1. Public repository **`KurtStevenK/apt`** (created on GitHub).
 2. After the first tagged release publishes `gh-pages`, enable **Settings → Pages** → **Deploy from a branch** → **`gh-pages`** → `/` (root). CI adds `.nojekyll` so `dists/` is served correctly.
+   - **Verify** (after Pages deploy finishes, often 1–2 minutes):
+
+     ```bash
+     curl -fsSL https://kurtstevenk.github.io/apt/gpg.key | head -n 1
+     # expected: -----BEGIN PGP PUBLIC KEY BLOCK-----
+     ```
+
+   - If the URL returns 404/500, Pages is not enabled on `gh-pages` or the first publish has not run yet.
 3. Generate a dedicated GPG key for APT signing (no passphrase is easiest for CI):
 
    ```bash
@@ -20,7 +28,7 @@ Debian and Ubuntu users install with `apt-get install cursor-auto-runner` after 
    - **`APT_GPG_PASSPHRASE`**: only if the key has a passphrase
    - **`TAP_TOKEN`**: existing PAT with `repo` scope (push access to `KurtStevenK/apt`)
 
-5. Push a tagged release (`v*`). The `release` job in `.github/workflows/build.yml` clones `KurtStevenK/apt`, runs `publish.sh`, and pushes `gh-pages`.
+5. Push a tagged release (`v*`). The `release` job in `.github/workflows/build.yml` clones `KurtStevenK/apt`, checks out the existing **`gh-pages`** branch when present, runs `publish.sh`, and pushes updates.
 
 ## User install (Debian / Ubuntu, amd64)
 
