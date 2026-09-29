@@ -31,7 +31,7 @@
     "asarUnpack": ["**/node_modules/better-sqlite3/**", "**/node_modules/@nut-tree-fork/**"],
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64", "arm64"] }],
-      "icon": "assets/icons/icon.ico"
+      "icon": "assets/icons/icon-256.png"
     },
     "nsis": {
       "oneClick": false,

@@ -89,7 +89,7 @@ function encodePng(width, height, rgba) {
   return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 
-function rasterize(size, opts) {
+function rasterizeRaw(size, opts) {
   const buf = Buffer.alloc(size * size * 4);
   const SS = 4; // supersampling
   const scale = 256 / size;
@@ -101,7 +101,6 @@ function rasterize(size, opts) {
           const px = (x + (sx + 0.5) / SS) * scale;
           const py = (y + (sy + 0.5) / SS) * scale;
           const [pr, pg, pb, pa] = sampleLogo(px, py, opts);
-          // "over" composite for the subsample
           r += pr * pa; g += pg * pa; b += pb * pa; a += pa;
         }
       }
@@ -115,15 +114,49 @@ function rasterize(size, opts) {
       buf[o + 3] = Math.round(a / n);
     }
   }
-  return encodePng(size, size, buf);
+  return { width: size, height: size, rgba: buf };
 }
 
-// ---------- ICO packing (PNG-compressed) ----------
+function rasterize(size, opts) {
+  const { rgba } = rasterizeRaw(size, opts);
+  return encodePng(size, size, rgba);
+}
+
+// ---------- ICO packing ----------
+/** Encode a raw RGBA buffer as a BMP-format ICO entry (uncompressed). */
+function bmpEntry(size, rgba) {
+  const headerSize = 40;
+  const pixelBytes = size * size * 4;
+  const maskRow = Math.ceil(size / 32) * 4; // 1bpp AND mask, 32-bit aligned rows
+  const maskBytes = maskRow * size;
+  const buf = Buffer.alloc(headerSize + pixelBytes + maskBytes);
+  // BITMAPINFOHEADER, biHeight = 2*h (XOR + AND masks)
+  buf.writeUInt32LE(headerSize, 0);
+  buf.writeInt32LE(size, 4);
+  buf.writeInt32LE(size * 2, 8);
+  buf.writeUInt16LE(1, 12);
+  buf.writeUInt16LE(32, 14);
+  buf.writeUInt32LE(0, 16);
+  buf.writeUInt32LE(pixelBytes + maskBytes, 20);
+  // Pixel data bottom-up BGRA
+  let o = headerSize;
+  for (let y = size - 1; y >= 0; y--) {
+    for (let x = 0; x < size; x++) {
+      const s = (y * size + x) * 4;
+      buf[o++] = rgba[s + 2];
+      buf[o++] = rgba[s + 1];
+      buf[o++] = rgba[s];
+      buf[o++] = rgba[s + 3];
+    }
+  }
+  // AND mask left at 0 (alpha channel is authoritative)
+  return buf;
+}
+
 function packIco(entries) {
   const count = entries.length;
-  const headerSize = 6 + 16 * count;
-  let offset = headerSize;
-  const chunks = [];
+  let offset = 6 + 16 * count; // directory table comes first, contiguous
+  const heads = [], datas = [];
   for (const { size, data } of entries) {
     const head = Buffer.alloc(16);
     head.writeUInt8(size >= 256 ? 0 : size, 0);
@@ -133,11 +166,12 @@ function packIco(entries) {
     head.writeUInt32LE(data.length, 8);
     head.writeUInt32LE(offset, 12);
     offset += data.length;
-    chunks.push(head, data);
+    heads.push(head);
+    datas.push(data);
   }
   const header = Buffer.alloc(6);
   header.writeUInt16LE(count, 2);
-  return Buffer.concat([header, ...chunks]);
+  return Buffer.concat([header, ...heads, ...datas]);
 }
 
 // ---------- main ----------
@@ -149,7 +183,8 @@ function main() {
   const appOpts = { accent: hex('#22c55e'), bg: hex('#0f172a'), fg: hex('#f8fafc') };
 
   // App icon set
-  const png256 = rasterize(256, appOpts);
+  const raw256 = rasterizeRaw(256, appOpts);
+  const png256 = encodePng(256, 256, raw256.rgba);
   for (const size of [16, 24, 32, 48, 64, 128, 256]) {
     fs.writeFileSync(path.join(OUT, `icon-${size}.png`), size === 256 ? png256 : rasterize(size, appOpts));
     console.log(`icon-${size}.png written`);
@@ -158,7 +193,7 @@ function main() {
     path.join(OUT, 'icon.ico'),
     packIco([16, 32, 48, 64, 256].map((size) => ({
       size,
-      data: size === 256 ? png256 : fs.readFileSync(path.join(OUT, `icon-${size}.png`)),
+      data: size === 256 ? bmpEntry(256, raw256.rgba) : fs.readFileSync(path.join(OUT, `icon-${size}.png`)),
     })))
   );
   fs.writeFileSync(path.join(OUT, 'icon.png'), png256);
