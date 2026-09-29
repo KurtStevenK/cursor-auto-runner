@@ -9,6 +9,7 @@ import { ModeController } from './controller';
 import { StatsStore } from './stats';
 import { SettingsStore } from './settings';
 import { TrayUI } from './tray';
+import { ensureMacPermissions } from './permissions';
 import { IPC, Mode, StatsSnapshot } from '../shared/types';
 
 // Ensure a clean tray/app identity on Windows
@@ -67,6 +68,15 @@ function openOverlay(): void {
 }
 
 function applyMode(mode: Mode): void {
+  if (mode !== 'idle') {
+    // macOS: verify permissions before starting the automation.
+    void ensureMacPermissions().then((ok) => {
+      if (!ok) {
+        controller.set('idle');
+        tray.rebuild();
+      }
+    });
+  }
   controller.set(mode);
   settings.set({ lastMode: mode });
   tray.rebuild();
