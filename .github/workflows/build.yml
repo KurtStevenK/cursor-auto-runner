@@ -4,7 +4,7 @@ name: Build releases
 #  - Windows installer (NSIS, x64 + arm64)
 #  - Linux AppImage + deb (requires a real Linux toolchain — not possible on Windows)
 #  - macOS DMG universal (requires macOS — hdiutil)
-# Trigger: push a tag like v1.2.8, or run manually from the Actions tab.
+# Trigger: push a tag like v1.2.9, or run manually from the Actions tab.
 
 on:
   push:
@@ -12,15 +12,31 @@ on:
   workflow_dispatch:
 
 jobs:
-  windows:
+  quality:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npx electron-builder install-app-deps
+      - run: npm run test:stats
+      - run: npm run bench:matcher
+
+  windows:
+    needs: quality
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
       - run: npm run dist:win
+      - run: npm run test:packaged-worker
       - uses: actions/upload-artifact@v4
         with:
           name: windows
@@ -29,13 +45,14 @@ jobs:
             release/*.blockmap
 
   linux:
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+      - run: npm ci
       - run: npm run dist:linux
       - uses: actions/upload-artifact@v4
         with:
@@ -45,13 +62,14 @@ jobs:
             release/*.deb
 
   macos:
+    needs: quality
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+      - run: npm ci
       - run: npm run dist:mac
       - uses: actions/upload-artifact@v4
         with:

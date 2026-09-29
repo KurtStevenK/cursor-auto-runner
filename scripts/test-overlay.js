@@ -13,7 +13,7 @@ app.whenReady().then(() => {
   ipcMain.handle('get-stats', () => ({
     session: 1, day: 2, week: 3, month: 4, total: 5,
     byDay: [{ date: '2026-09-29', count: 2 }], mode: 'always-run',
-    since: new Date().toISOString(), windowFound: true,
+    since: new Date().toISOString(), windowFound: true, pollIntervalMs: 4000,
   }));
   ipcMain.on('set-mode', () => {});
   ipcMain.on('close-overlay', () => {

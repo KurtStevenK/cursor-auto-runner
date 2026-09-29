@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -20,19 +20,43 @@
     "predist": "npm run compile",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "dist:win": "electron-builder --win",
-    "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux",
-    "rebuild:dev": "electron-rebuild -f -w better-sqlite3 -a x64"
+    "dist:win": "npm run compile && electron-builder --win",
+    "dist:mac": "npm run compile && electron-builder --mac",
+    "dist:linux": "npm run compile && electron-builder --linux",
+    "rebuild:dev": "electron-rebuild -f -w better-sqlite3 -a x64",
+    "test": "npm run compile && node --test dist/tests/*.test.js",
+    "test:stats": "npm run compile && electron scripts/test-stats.js",
+    "test:overlay": "npm run compile && electron scripts/test-overlay.js",
+    "test:packaged-worker": "node scripts/check-packaged-worker.js",
+    "bench:matcher": "npm run compile && node scripts/bench-matcher.js",
+    "soak:matcher": "npm run compile && node scripts/soak-matcher.js"
   },
   "build": {
     "appId": "com.gf-elektro.cursor-auto-runner",
     "productName": "Cursor Auto Runner",
-    "directories": { "output": "release" },
-    "files": ["dist/**", "assets/**", "package.json"],
-    "asarUnpack": ["**/node_modules/better-sqlite3/**", "**/node_modules/@nut-tree-fork/**"],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "assets/**",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**",
+      "**/node_modules/@nut-tree-fork/**",
+      "dist/src/worker/**"
+    ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64", "arm64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "icon": "assets/icons/icon-256.png"
     },
     "nsis": {
@@ -40,7 +64,15 @@
       "allowToChangeInstallationDirectory": true
     },
     "mac": {
-      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "icon": "assets/icons/icon.png",
       "category": "public.app-category.utilities",
       "extendInfo": {
@@ -49,14 +81,18 @@
       }
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "assets/icons",
       "category": "Utility"
     }
   },
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
-    "better-sqlite3": "^12.4.1"
+    "better-sqlite3": "^12.4.1",
+    "jimp": "^0.22.12"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

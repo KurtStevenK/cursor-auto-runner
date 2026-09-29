@@ -5,6 +5,21 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.9] - 2026-09-29
+
+### Fixed
+- **Tray and stats clicks no longer wait for screen matching.** Grayscale conversion and NCC now run in a warm, cancellable worker thread; Electron's main event loop remains available for tray events.
+- Auto Run no longer searches `always-run` templates first. Ineligible modes are filtered instead of receiving a negative sort rank.
+- Stopping or changing mode cancels in-flight matching, and worker failures restart with backoff instead of falling back to blocking main-thread work.
+
+### Changed
+- Detection captures screen sources once, crops only displays containing visible Cursor windows, and skips full-screen matching when no Cursor window is known.
+- Template preprocessing and haystack integral images are reused. Bundled template noise was reduced; duplicate, oversized, overly wide and excess captures are ignored.
+- The bundled starter set contains one tight dark Run, Always Run and Allow / Approve reference; light-theme or changed controls require a local capture.
+- The capture overlay now asks for invariant button labels, rejects duplicate/dynamic captures, and announces validation feedback.
+- Overlay detection status uses lightweight IPC. Full stats are sent on meaningful changes or at most once per second, and SQLite snapshots use two prepared aggregate queries instead of twelve synchronous counts.
+- Added opt-in event-loop/phase timings, a repeatable worker benchmark, matcher/cancellation regressions, an SQLite integration test, packaged-worker checks, and CI quality gates. See `PERFORMANCE.md`.
+
 ## [1.2.8] - 2026-09-29
 
 ### Changed

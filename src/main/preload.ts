@@ -5,7 +5,7 @@
  * names are duplicated here as plain constants.
  */
 import { contextBridge, ipcRenderer } from 'electron';
-import type { Mode, StatsSnapshot } from '../shared/types';
+import type { DetectionState, Mode, StatsSnapshot } from '../shared/types';
 
 // Keep in sync with src/shared/types.ts (no runtime import possible).
 const IPC = {
@@ -13,6 +13,7 @@ const IPC = {
   MODE_CHANGED: 'mode-changed',
   GET_STATS: 'get-stats',
   STATS_UPDATED: 'stats-updated',
+  DETECTION_STATE: 'detection-state',
   CLOSE_OVERLAY: 'close-overlay',
   SET_POLL_INTERVAL: 'set-poll-interval',
 } as const;
@@ -27,5 +28,8 @@ contextBridge.exposeInMainWorld('autoRunner', {
   },
   onModeChanged: (cb: (mode: Mode) => void): void => {
     ipcRenderer.on(IPC.MODE_CHANGED, (_e, mode: Mode) => cb(mode));
+  },
+  onDetectionState: (cb: (state: DetectionState) => void): void => {
+    ipcRenderer.on(IPC.DETECTION_STATE, (_e, state: DetectionState) => cb(state));
   },
 });

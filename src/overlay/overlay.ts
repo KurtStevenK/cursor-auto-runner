@@ -37,6 +37,7 @@ declare global {
       setPollInterval: (ms: number) => void;
       onStats: (cb: (snap: StatsSnapshot) => void) => void;
       onModeChanged: (cb: (mode: Mode) => void) => void;
+      onDetectionState: (cb: (state: { windowFound: boolean }) => void) => void;
     };
   }
 }
@@ -103,15 +104,7 @@ function renderInterval(ms: number): void {
   s.dataset.ms = slower !== null ? String(slower) : '';
 }
 
-function render(snap: StatsSnapshot): void {
-  setText('session', snap.session);
-  setText('day', snap.day);
-  setText('week', snap.week);
-  setText('month', snap.month);
-  setText('total', snap.total);
-  renderBadge(snap.mode);
-  renderSpark(snap.byDay);
-  renderInterval(snap.pollIntervalMs);
+function renderStatus(snap: StatsSnapshot): void {
   const status = $('status');
   if (!snap.windowFound && snap.mode !== 'idle') {
     status.textContent = 'Cursor window not found — make sure Cursor is visible on screen (not minimized).';
@@ -123,6 +116,21 @@ function render(snap: StatsSnapshot): void {
     status.textContent = 'Start Auto Run from the tray menu to begin.';
     status.className = 'status';
   }
+}
+
+let latestSnapshot: StatsSnapshot | null = null;
+
+function render(snap: StatsSnapshot): void {
+  latestSnapshot = snap;
+  setText('session', snap.session);
+  setText('day', snap.day);
+  setText('week', snap.week);
+  setText('month', snap.month);
+  setText('total', snap.total);
+  renderBadge(snap.mode);
+  renderSpark(snap.byDay);
+  renderInterval(snap.pollIntervalMs);
+  renderStatus(snap);
 }
 
 $('close').addEventListener('click', () => window.autoRunner.close());
@@ -138,5 +146,16 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') window.autoRunner.close();
 });
 window.autoRunner.onStats(render);
-window.autoRunner.onModeChanged((mode) => renderBadge(mode));
+window.autoRunner.onModeChanged((mode) => {
+  renderBadge(mode);
+  if (latestSnapshot) {
+    latestSnapshot.mode = mode;
+    renderStatus(latestSnapshot);
+  }
+});
+window.autoRunner.onDetectionState((state) => {
+  if (!latestSnapshot || latestSnapshot.windowFound === state.windowFound) return;
+  latestSnapshot.windowFound = state.windowFound;
+  renderStatus(latestSnapshot);
+});
 window.autoRunner.getStats().then(render).catch(() => {});

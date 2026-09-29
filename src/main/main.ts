@@ -13,6 +13,7 @@ import { ensureMacPermissions } from './permissions';
 import { startCapture, stopCapture, templatesBaseDir } from './capture';
 import * as fs from 'fs';
 import { IPC, Mode, StatsSnapshot, DEFAULT_SETTINGS } from '../shared/types';
+import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
 
 // Ensure a clean tray/app identity on Windows
 app.setAppUserModelId('com.gf-elektro.cursor-auto-runner');
@@ -28,6 +29,10 @@ let settings: SettingsStore;
 let controller: ModeController;
 let tray: TrayUI;
 let overlay: BrowserWindow | null = null;
+let statsTimer: NodeJS.Timeout | null = null;
+let lastStatsSentAt = 0;
+let lastWindowFound: boolean | null = null;
+let quitCleanupStarted = false;
 
 function currentSnapshot(): StatsSnapshot {
   const snap = stats.snapshot(controller.current);
@@ -36,9 +41,32 @@ function currentSnapshot(): StatsSnapshot {
   return snap;
 }
 
-function sendStats(): void {
-  if (!overlay) return;
+function flushStats(): void {
+  if (!overlay || overlay.isDestroyed()) return;
+  lastStatsSentAt = Date.now();
   overlay.webContents.send(IPC.STATS_UPDATED, currentSnapshot());
+}
+
+function sendStats(immediate = false): void {
+  if (!overlay || overlay.isDestroyed()) return;
+  if (immediate || Date.now() - lastStatsSentAt >= 1000) {
+    if (statsTimer) clearTimeout(statsTimer);
+    statsTimer = null;
+    flushStats();
+    return;
+  }
+  if (statsTimer) return;
+  statsTimer = setTimeout(() => {
+    statsTimer = null;
+    flushStats();
+  }, Math.max(0, 1000 - (Date.now() - lastStatsSentAt)));
+}
+
+function sendDetectionState(windowFound: boolean): void {
+  if (windowFound === lastWindowFound) return;
+  lastWindowFound = windowFound;
+  if (!overlay || overlay.isDestroyed()) return;
+  overlay.webContents.send(IPC.DETECTION_STATE, { windowFound });
 }
 
 function openOverlay(): void {
@@ -73,9 +101,14 @@ function openOverlay(): void {
   });
   overlay.once('ready-to-show', () => {
     overlay?.show();
-    sendStats();
+    sendStats(true);
   });
-  overlay.on('closed', () => (overlay = null));
+  overlay.on('closed', () => {
+    overlay = null;
+    lastWindowFound = null;
+    if (statsTimer) clearTimeout(statsTimer);
+    statsTimer = null;
+  });
 }
 
 function applyMode(mode: Mode): void {
@@ -84,17 +117,14 @@ function applyMode(mode: Mode): void {
     void ensureMacPermissions().then((ok) => {
       if (!ok) {
         controller.set('idle');
-        tray.rebuild();
       }
     });
   }
   controller.set(mode);
-  settings.set({ lastMode: mode });
-  tray.rebuild();
-  sendStats();
 }
 
 app.whenReady().then(() => {
+  startPerformanceMonitor();
   settings = new SettingsStore();
   stats = new StatsStore();
   detector = new Detector();
@@ -106,7 +136,12 @@ app.whenReady().then(() => {
       confidence: settings.get().confidence,
       cooldownMs: settings.get().cooldownMs,
     },
-    (mode) => tray?.rebuild(),
+    (mode) => {
+      settings.set({ lastMode: mode });
+      tray?.rebuild();
+      sendStats(true);
+    },
+    (windowFound) => sendDetectionState(windowFound),
     () => sendStats()
   );
   tray = new TrayUI({
@@ -119,19 +154,18 @@ app.whenReady().then(() => {
       settings.set({ pollIntervalMs: ms });
       controller.setPollInterval(ms);
       tray.rebuild();
+      sendStats(true);
     },
     capture: (name, theme) => {
       // Pause the auto-clicker while the screen is frozen for capture.
       const prevMode = controller.current;
       controller.set('idle');
-      tray.rebuild();
       void startCapture(name, theme, {
         onSaved: () => detector.resetTemplates(),
         onDone: () => {
           // Resume what was running before the capture session.
           if (prevMode !== 'idle') {
             controller.set(prevMode);
-            tray.rebuild();
           }
         },
       }).catch((err) => console.error('[capture] failed:', err));
@@ -153,7 +187,7 @@ app.whenReady().then(() => {
     settings.set({ pollIntervalMs: clamped });
     controller.setPollInterval(clamped);
     tray.rebuild();
-    sendStats(); // echo the new value back to the overlay (and tray)
+    sendStats(true); // echo the new value back to the overlay (and tray)
   });
 
   // Optionally restore the last used mode on launch.
@@ -167,7 +201,15 @@ app.on('second-instance', openOverlay);
 app.on('window-all-closed', () => {
   // Keep running in the tray.
 });
-app.on('before-quit', () => {
+app.on('before-quit', (event) => {
+  if (quitCleanupStarted) return;
+  quitCleanupStarted = true;
+  event.preventDefault();
+  if (statsTimer) clearTimeout(statsTimer);
+  statsTimer = null;
+  stopPerformanceMonitor();
   stopCapture();
+  stats?.dispose();
   tray?.destroy();
+  void Promise.resolve(detector?.dispose()).finally(() => app.quit());
 });

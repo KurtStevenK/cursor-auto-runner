@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
   <img src="https://img.shields.io/badge/electron-33-47848f" alt="electron" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
-  <img src="https://img.shields.io/badge/version-1.2.8-22c55e" alt="version" />
+  <img src="https://img.shields.io/badge/version-1.2.9-22c55e" alt="version" />
 </p>
 
 ---
@@ -29,20 +29,24 @@
 - **Stats overlay** — a live, frameless mini-window showing clicks for the **session**, **day**, **week**, **month** and **total**, plus a 7-day bar chart. Also shows the current **refresh interval** with *Faster* / *Slower* buttons to change it right there.
 - **Multi-monitor** — the Cursor window is located on whatever display it is on; coordinates are resolved across the whole virtual desktop.
 - **IDE + Agent windows** — all Cursor windows are searched (the main IDE and the agent/chat window place their buttons differently — both are handled).
-- **Multi-theme, multi-scale** — dark/light button reference images, several scale variants to absorb per-display DPI scaling.
+- **Multi-theme, multi-scale** — dark/light button reference images, several scale variants to absorb per-display DPI scaling. Duplicate, oversized and excess captures are ignored so matching stays bounded.
 - **Cursor-safe clicking** — the mouse pointer is restored immediately after each click; a 2 s cooldown and match verification prevent double clicks.
+- **Responsive by design** — screen matching runs in a cancellable worker thread, leaving Electron's tray and stats UI responsive during every scan.
 
 ## How it works
 
-The app looks up every window titled "Cursor" via the OS window list, captures the displays where those windows are, and runs a grayscale normalized-cross-correlation (NCC) template match against your captured button reference images. On a match it moves the mouse, clicks, restores the pointer, and records the click in a SQLite database (with an automatic JSON fallback).
+The app looks up every window titled "Cursor" via the OS window list and captures only the display regions containing those windows. A worker thread runs grayscale normalized-cross-correlation (NCC) against a small, deduplicated template set, so CPU matching cannot block tray clicks. On a match the main process moves the mouse, clicks, restores the pointer, and records the click in SQLite (with an automatic JSON fallback).
 
 ```
-Tray menu ──► Mode controller ──► Detector (per-display capture + NCC)
+Tray menu ──► Mode controller ──► Detector (window crops)
+                   │                     │ transferable bitmap
+                   │                     ▼
+                   │                Matcher worker (NCC)
                    │                     │ button found
                    ▼                     ▼
               Stats store ◄──────────── Clicker (move → click → restore)
                    │
-              Stats overlay (IPC live updates)
+              Stats overlay (throttled IPC)
 ```
 
 ## Getting started
@@ -61,6 +65,10 @@ npm run compile
 
 ### Capture the button templates (one time, after every Cursor UI update)
 
+The release includes minimal dark-theme Run, Always Run and Allow / Approve
+references. Capture any light-theme or changed controls you use; Cursor changes
+these buttons frequently, so local captures are intentionally preferred.
+
 The easiest way: right-click the tray icon → **Capture templates…** → pick the button and theme.
 The auto-clicker pauses while capturing and resumes afterwards; new templates are used immediately.
 
@@ -73,10 +81,10 @@ npm run capture-templates -- allow dark        # capture the "Allow" / "Approve"
 npm run capture-templates -- run light         # light theme variants if you use them
 ```
 
-A fullscreen overlay freezes your screen — drag a rectangle tightly around the button, release, done.
+A fullscreen overlay freezes your screen — drag a rectangle tightly around only the stable button label, release, done. Do not include changing command names, counters or surrounding panel content; overly wide and duplicate captures are rejected.
 The tool stays open: capture further variants (e.g. the same button in the agent window) and press
-ESC when finished. Captures are saved as `run.png`, `run-2.png`, `run-3.png`, … and all variants
-are matched.
+ESC when finished. Captures are saved as `run.png`, `run-2.png`, `run-3.png`, …; at most two
+unique templates per button/theme are activated.
 
 ### Run
 
@@ -111,7 +119,7 @@ Installers land in `release/`.
 
 Linux packages and the macOS DMG require the matching OS toolchain and are
 built automatically by GitHub Actions on tagged releases (`.github/workflows/build.yml`):
-push a tag like `v1.2.8` and the workflow attaches Setup.exe, AppImage, .deb and .dmg to the release.
+push a tag like `v1.2.9` and the workflow attaches Setup.exe, AppImage, .deb and .dmg to the release.
 
 ## Platform notes
 
@@ -127,6 +135,7 @@ push a tag like `v1.2.8` and the workflow attaches Setup.exe, AppImage, .deb and
 | Clicks stopped after a Cursor update | Cursor's UI changed — re-capture the templates |
 | "Cursor window not found" in the overlay | The Cursor window is minimized or all its windows are hidden — unminimize it |
 | Wrong clicks on a scaled monitor | Re-capture templates on that display (multi-scale matching covers common cases) |
+| Tray or stats feels slow | Update to the worker-based build, remove captures containing command text, and run `npm run bench:matcher` |
 | `[stats] better-sqlite3 unavailable` in dev after building an installer | electron-builder rebuilt the native module for another arch. Run `npm run rebuild:dev` (rebuilds for Electron x64) |
 
 ## Development
@@ -134,11 +143,17 @@ push a tag like `v1.2.8` and the workflow attaches Setup.exe, AppImage, .deb and
 ```bash
 npm run compile          # type-check + build to dist/
 npm start                # launch the app in dev mode
+npm test                 # matcher, filtering, cancellation and worker regressions
+npm run test:stats       # aggregated SQLite snapshot integration test
+npm run bench:matcher    # worker latency + main-thread heartbeat benchmark
+npm run soak:matcher     # 30-minute worker memory/responsiveness soak
 npm run generate:icons   # regenerate all icons from the built-in logo renderer
 ```
 
-Stats are stored in `%APPDATA%/cursor-auto-runner/stats.db` (SQLite) or
+Stats are stored in `%APPDATA%/Cursor Auto Runner/stats.db` (SQLite) or
 `clicks-fallback.json` when the native SQLite module is unavailable.
+See [PERFORMANCE.md](PERFORMANCE.md) for the recorded baseline, acceptance
+measurements and opt-in live diagnostics.
 
 ## Versioning
 

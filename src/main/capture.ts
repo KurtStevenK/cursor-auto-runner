@@ -9,12 +9,14 @@
 import { app, BrowserWindow, desktopCapturer, ipcMain, screen } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import { validateTemplateDimensions } from './matcher';
 
 export type CaptureName = 'run' | 'always-run' | 'allow';
 export type CaptureTheme = 'dark' | 'light';
 
 export interface CaptureCallbacks {
   onSaved?: (file: string) => void;
+  onRejected?: (reason: string) => void;
   onDone?: () => void;
 }
 
@@ -51,7 +53,7 @@ const html = (buttonName: string) => `<!DOCTYPE html>
 <body>
   <img id="shot" draggable="false" />
   <div id="rect"></div>
-  <div id="hint">Drag a rectangle around the "${buttonName}" button, then release. ESC = finish.</div>
+  <div id="hint" role="status" aria-live="polite">Select only the stable "${buttonName}" label; exclude changing command text. ESC = finish.</div>
   <script>
     const { ipcRenderer } = require('electron');
     let sx=0, sy=0, dragging=false, saved=0;
@@ -79,6 +81,10 @@ const html = (buttonName: string) => `<!DOCTYPE html>
       rect.style.display='none';
       hint.textContent = 'Saved #' + saved + ': ' + file + ' — drag the next one, or press ESC to finish.';
     });
+    ipcRenderer.on('capture-rejected', (_e, reason) => {
+      rect.style.display='none';
+      hint.textContent = 'Not saved: ' + reason + '. Select only the stable button label and try again.';
+    });
     document.addEventListener('keydown', e => { if (e.key==='Escape') ipcRenderer.send('capture-cancel'); });
   </script>
 </body></html>`;
@@ -95,15 +101,37 @@ function registerHandlers(): void {
       width: Math.round(r.w * scale),
       height: Math.round(r.h * scale),
     });
+    const size = out.getSize();
+    const validation = validateTemplateDimensions(size.width, size.height);
+    if (!validation.valid) {
+      const reason = validation.reason ?? 'invalid selection';
+      callbacks.onRejected?.(reason);
+      activeWin?.webContents.send('capture-rejected', reason);
+      return;
+    }
     const dir = path.join(templatesBaseDir(), 'assets', 'templates', target.theme);
     fs.mkdirSync(dir, { recursive: true });
+    const png = out.toPNG();
+    const existing = fs
+      .readdirSync(dir)
+      .filter(
+        (name) =>
+          name.toLowerCase().endsWith('.png') &&
+          (name === `${target!.name}.png` || name.startsWith(`${target!.name}-`))
+      );
+    if (existing.some((name) => fs.readFileSync(path.join(dir, name)).equals(png))) {
+      const reason = 'an identical template already exists';
+      callbacks.onRejected?.(reason);
+      activeWin?.webContents.send('capture-rejected', reason);
+      return;
+    }
     // Numbered variants instead of overwriting: run.png, run-2.png, …
     let file = path.join(dir, `${target.name}.png`);
     for (let i = 2; fs.existsSync(file); i++) {
       file = path.join(dir, `${target.name}-${i}.png`);
     }
-    fs.writeFileSync(file, out.toPNG());
-    console.log(`template saved: ${file} (${out.getSize().width}x${out.getSize().height})`);
+    fs.writeFileSync(file, png);
+    console.log(`template saved: ${file} (${size.width}x${size.height})`);
     callbacks.onSaved?.(file);
     activeWin?.webContents.send('capture-saved', path.basename(file));
   });

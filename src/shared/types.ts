@@ -21,6 +21,10 @@ export interface StatsSnapshot {
   pollIntervalMs: number; // current detection refresh interval
 }
 
+export interface DetectionState {
+  windowFound: boolean;
+}
+
 export interface Settings {
   pollIntervalMs: number;
   confidence: number;
