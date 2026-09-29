@@ -78,7 +78,9 @@ export class Detector {
   lastMetrics: DetectionMetrics = { ...EMPTY_METRICS };
 
   private templatesDirs(): string[] {
-    const bundled = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..', '..', '..');
+    // app.getAppPath() is the project root in dev and resources/app.asar when
+    // packaged; the asar-patched fs reads bundled templates from either.
+    const bundled = app.getAppPath();
     // Custom captures take precedence when a perceptual duplicate is present.
     return app.isPackaged
       ? [path.join(app.getPath('userData'), 'assets', 'templates'), path.join(bundled, 'assets', 'templates')]

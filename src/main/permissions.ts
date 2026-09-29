@@ -36,5 +36,6 @@ export async function ensureMacPermissions(): Promise<boolean> {
 function appIconDir(): string {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const electron = require('electron');
-  return electron.app.isPackaged ? electron.process.resourcesPath : path.join(electron.app.getAppPath(), 'assets', 'icons');
+  // app.getAppPath() is the project root in dev and resources/app.asar when packaged.
+  return path.join(electron.app.getAppPath(), 'assets', 'icons');
 }

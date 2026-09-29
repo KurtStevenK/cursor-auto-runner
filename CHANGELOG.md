@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.10] - 2026-09-29
+
+### Fixed
+- **No tray icon in packaged (installer) builds.** Tray icons, bundled button templates and the macOS permission-dialog icon were resolved against `process.resourcesPath`, but electron-builder packs `assets/` inside `app.asar` — so the icon file was not found and the tray showed a blank slot (tooltip still worked). All asset paths now resolve via `app.getAppPath()`, which points into the asar when packaged and to the project root in dev. Packaged builds also regain the bundled Run / Always Run / Allow starter templates.
+
 ## [1.2.9] - 2026-09-29
 
 ### Fixed

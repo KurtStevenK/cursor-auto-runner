@@ -25,8 +25,9 @@ export class TrayUI {
   private iconPath(state: Mode): string {
     const name =
       state === 'run' ? 'tray-run' : state === 'always-run' ? 'tray-always' : 'tray-idle';
-    const base = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', '..', '..', 'assets', 'icons');
-    return path.join(base, 'tray', `${name}.png`);
+    // app.getAppPath() is the project root in dev and resources/app.asar when
+    // packaged — assets/icons/tray lives in both, so one path works everywhere.
+    return path.join(app.getAppPath(), 'assets', 'icons', 'tray', `${name}.png`);
   }
 
   show(): void {
