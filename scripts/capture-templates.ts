@@ -87,7 +87,10 @@ async function main(): Promise<void> {
     width: display.size.width,
     height: display.size.height,
     frame: false,
-    fullscreen: false,
+    // True fullscreen: a normal window would be clipped to the work area
+    // (above the taskbar), which misaligns the frozen screenshot and
+    // shows the taskbar twice.
+    fullscreen: true,
     alwaysOnTop: true,
     enableLargerThanScreen: true,
     webPreferences: { nodeIntegration: true, contextIsolation: false },

@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.1.3] - 2026-09-29
+
+### Fixed
+- Capture tool showed the taskbar twice: the selection window was clipped to the Windows work area (above the taskbar), so the frozen screenshot — which includes the taskbar — appeared above the real one. The window is now true fullscreen, aligning the frozen image 1:1 with the actual screen.
+
 ## [1.1.2] - 2026-09-29
 
 ### Fixed
