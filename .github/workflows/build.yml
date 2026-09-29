@@ -141,6 +141,21 @@ jobs:
           body_path: release-notes.md
           generate_release_notes: true
 
+      - name: Verify publish secrets
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${TAP_TOKEN:-}" ]]; then
+            echo "TAP_TOKEN is required (Homebrew tap and APT repo push). Add it under Settings → Secrets → Actions." >&2
+            exit 1
+          fi
+          if [[ -z "${APT_GPG_PRIVATE_KEY:-}" ]]; then
+            echo "APT_GPG_PRIVATE_KEY is required" >&2
+            exit 1
+          fi
+
       - name: Update Homebrew tap
         env:
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}

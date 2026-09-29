@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.13] - 2026-09-30
+
+### Fixed
+- **Build releases**: the `release` job now fails fast with a clear message when `TAP_TOKEN` or `APT_GPG_PRIVATE_KEY` is missing, instead of failing mid APT publish.
+
 ## [1.2.12] - 2026-09-29
 
 ### Fixed
