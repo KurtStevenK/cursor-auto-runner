@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
   <img src="https://img.shields.io/badge/electron-33-47848f" alt="electron" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
-  <img src="https://img.shields.io/badge/version-1.2.7-22c55e" alt="version" />
+  <img src="https://img.shields.io/badge/version-1.2.8-22c55e" alt="version" />
 </p>
 
 ---
@@ -91,7 +91,7 @@ The app appears in your system tray. Right-click the tray icon:
 | **Start Auto Run** | Clicks every *Run* button that appears in a Cursor window |
 | **Start Auto Always Run** | Prefers *Always Run*, falls back to *Run* |
 | **Stop** | Stops the automation (enabled only while running) |
-| **Refresh interval: 700 ms** | Shows the current check interval (informational) |
+| **Refresh interval: 4000 ms** | Shows the current check interval (informational; default is 4000 ms) |
 | **Faster / Slower** | Steps the interval up or down (150 ms – 6 s); applied live and persisted |
 | **Capture templates…** | Submenu to capture reference images for *Run*, *Always Run* and *Allow*/*Approve* buttons, each in dark and light theme |
 | **Open templates folder** | Opens the folder where captured templates are stored |

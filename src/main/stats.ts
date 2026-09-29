@@ -135,7 +135,7 @@ export class StatsStore {
       mode,
       since: new Date(this.sessionStart).toISOString(),
       windowFound: false, // filled in by main from detector state
-      pollIntervalMs: 700, // filled in by main from the controller
+      pollIntervalMs: 4000, // filled in by main from the controller
     };
   }
 }

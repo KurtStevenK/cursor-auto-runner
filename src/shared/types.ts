@@ -30,7 +30,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  pollIntervalMs: 700,
+  pollIntervalMs: 4000,
   confidence: 0.88,
   cooldownMs: 2000,
   restoreLastMode: false,

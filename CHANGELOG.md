@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.8] - 2026-09-29
+
+### Changed
+- **Default refresh interval is now 4000 ms** (was 700 ms). Existing installations keep their persisted value; the new default applies to fresh setups and to the interval shown before any snapshot arrives.
+
 ## [1.2.7] - 2026-09-29
 
 ### Fixed
