@@ -119,7 +119,11 @@ async function main(): Promise<void> {
       width: Math.round(r.w * scale),
       height: Math.round(r.h * scale),
     });
-    const dir = path.join(app.getAppPath(), 'assets', 'templates', theme);
+    // Project root from the compiled script location (dist/scripts) —
+    // NOT app.getAppPath(), which points to dist/scripts when electron
+    // runs this script directly.
+    const root = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..', '..');
+    const dir = path.join(root, 'assets', 'templates', theme);
     fs.mkdirSync(dir, { recursive: true });
     // Add numbered variants (run.png, run-2.png, run-3.png…) instead of
     // overwriting, so the IDE button and agent-window button styles can

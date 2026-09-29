@@ -42,7 +42,7 @@ export class Detector {
   windowFound = false;
 
   private templatesDir(): string {
-    const base = app.isPackaged ? process.resourcesPath : app.getAppPath();
+    const base = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..', '..', '..');
     return path.join(base, 'assets', 'templates');
   }
 

@@ -5,6 +5,12 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.1.8] - 2026-09-29
+
+### Fixed
+- Templates captured by the capture tool were saved to the wrong folder (`dist/scripts/assets/templates`) and the app reported "no templates found": `app.getAppPath()` points to `dist/scripts` when Electron runs the capture script directly, but to the project root for the main app. Both the capture tool and the detector now derive the project root from the compiled script location (`__dirname`), so both always agree.
+- Added `scripts/test-detector.js` diagnostic: one detection pass that logs template loading, Cursor window discovery and any on-screen button (no clicks performed).
+
 ## [1.1.7] - 2026-09-29
 
 ### Fixed
