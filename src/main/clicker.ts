@@ -7,7 +7,6 @@ import { mouse, Button, Point } from '@nut-tree-fork/nut-js';
 
 mouse.config.autoDelayMs = 0;
 mouse.config.mouseSpeed = 3000; // near-instant move
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function clickAt(x: number, y: number): Promise<void> {

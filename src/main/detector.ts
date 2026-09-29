@@ -7,87 +7,112 @@
  *     monitor — regions are absolute virtual-desktop coordinates).
  *  2. Restrict the image search to that window's region for speed and
  *     accuracy; fall back to the primary display when no window is found.
- *  3. Template-match against dark/light reference images with
- *     multi-scale search to absorb per-display DPI scaling.
+ *  3. Template-match against dark/light reference images at multiple
+ *     scales (pre-resized with jimp) to absorb per-display DPI scaling.
  */
 import { app } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import {
   screen as nutScreen,
-  Region,
+  getWindows,
   imageResource,
-  ImageResource,
+  Region,
 } from '@nut-tree-fork/nut-js';
+import type { Image } from '@nut-tree-fork/shared';
 import type { ClickMode } from '../shared/types';
 
-nutScreen.config.autoDelayMs = 0;
-nutScreen.config.mouseSpeed = 3000;
+type Img = Image;
 
-export interface DetectionResult {
-  x: number;
-  y: number;
+const SCALES = [1.0, 0.8, 1.25, 1.5];
+
+interface TemplateVariant {
   mode: ClickMode;
-  windowFound: boolean;
-}
-
-interface Template {
-  name: ClickMode;
   theme: 'dark' | 'light';
-  res: ImageResource;
+  scale: number;
+  image: Promise<Img> | null;
+  file: string;
 }
 
 export class Detector {
-  private templates: Template[] = [];
+  private variants: TemplateVariant[] = [];
   private loadAttempted = false;
-  private lastWindowRegion: Region | null = null;
   windowFound = false;
 
   private templatesDir(): string {
-    // In dev: project root. When packaged: process.resourcesPath.
-    const packaged = app.isPackaged ? process.resourcesPath : app.getAppPath();
-    return path.join(packaged, 'assets', 'templates');
+    const base = app.isPackaged ? process.resourcesPath : app.getAppPath();
+    return path.join(base, 'assets', 'templates');
   }
 
-  /** Lazily load all template images that exist on disk. */
-  private async loadTemplates(): Promise<Template[]> {
-    if (this.loadAttempted) return this.templates;
+  private scaledFile(source: string, scale: number): string {
+    const dir = path.join(os.tmpdir(), 'cursor-auto-runner-templates');
+    fs.mkdirSync(dir, { recursive: true });
+    const name = `${path.basename(source, '.png')}@${scale}.png`;
+    return path.join(dir, name);
+  }
+
+  /** Lazily build the template variant list (files only; images load on first use). */
+  private async prepareVariants(): Promise<TemplateVariant[]> {
+    if (this.loadAttempted) return this.variants;
     this.loadAttempted = true;
     const dir = this.templatesDir();
+    const Jimp = (await import('jimp')).default;
+
     for (const theme of ['dark', 'light'] as const) {
-      for (const name of ['always-run', 'run'] as const) {
-        const file = path.join(dir, theme, `${name}.png`);
+      for (const mode of ['always-run', 'run'] as const) {
+        const file = path.join(dir, theme, `${mode}.png`);
         if (!fs.existsSync(file)) continue;
-        try {
-          this.templates.push({ name, theme, res: await imageResource(file) });
-        } catch (err) {
-          console.error(`[detector] failed to load template ${file}:`, err);
+        for (const scale of SCALES) {
+          let target = file;
+          if (scale !== 1.0) {
+            target = this.scaledFile(file, scale);
+            if (!fs.existsSync(target)) {
+              try {
+                const img = await Jimp.read(file);
+                img.resize(Math.max(4, Math.round(img.getWidth() * scale)), Jimp.AUTO);
+                await img.writeAsync(target);
+              } catch (err) {
+                console.error(`[detector] failed to scale template ${file}:`, err);
+                continue;
+              }
+            }
+          }
+          this.variants.push({
+            mode,
+            theme,
+            scale,
+            file: target,
+            image: null, // loaded lazily
+          });
         }
       }
     }
-    if (this.templates.length === 0) {
+    if (this.variants.length === 0) {
       console.warn(
         '[detector] no templates found. Run `npm run capture-templates` once to capture the Run / Always Run buttons from your own setup.'
       );
+    } else {
+      console.log(`[detector] ${this.variants.length} template variants ready`);
     }
-    return this.templates;
+    return this.variants;
   }
 
   hasTemplates(): boolean {
-    return this.templates.length > 0;
+    return this.loadAttempted && this.variants.length > 0;
   }
 
   /** Find the Cursor window region (absolute coordinates, any monitor). */
-  private async findCursorWindow(): Promise<Region | null> {
+  private async findCursorWindow(): Promise<{ region: Region; focus: () => Promise<boolean> } | null> {
     try {
-      const getWindows = (nutScreen as unknown as { getWindows?: () => Promise<Array<{ title: string; region: Region }>> }).getWindows;
-      if (typeof getWindows !== 'function') return null;
-      const windows = await getWindows.call(nutScreen);
+      const windows = await getWindows();
       for (const win of windows) {
-        const title = (win.title || '').toLowerCase();
+        const title = ((await win.title) || '').toLowerCase();
         if (title.includes('cursor') && !title.includes('auto runner')) {
-          const r = win.region;
-          if (r && r.width > 50 && r.height > 50) return r;
+          const region = await win.region;
+          if (region && region.width > 50 && region.height > 50) {
+            return { region, focus: () => win.focus() };
+          }
         }
       }
     } catch (err) {
@@ -105,49 +130,45 @@ export class Detector {
   /**
    * Search for the button for the requested mode.
    * `always-run` prefers the "Always Run" template and falls back to "Run".
+   * Returns the click point plus a best-effort focus callback for the window.
    */
-  async detect(mode: ClickMode): Promise<DetectionResult | null> {
-    const templates = await this.loadTemplates();
-    if (templates.length === 0) return null;
+  async detect(mode: ClickMode): Promise<{ x: number; y: number; mode: ClickMode; focus: () => Promise<boolean> } | null> {
+    const variants = await this.prepareVariants();
+    if (variants.length === 0) return null;
 
-    const windowRegion = await this.findCursorWindow();
-    this.windowFound = windowRegion !== null;
-    this.lastWindowRegion = windowRegion;
-    const searchRegion = windowRegion ?? (await this.primaryRegion());
+    const cursorWindow = await this.findCursorWindow();
+    this.windowFound = cursorWindow !== null;
+    const searchRegion = cursorWindow?.region ?? (await this.primaryRegion());
+    const focus = cursorWindow?.focus ?? (async () => false);
 
     const preferred: ClickMode[] = mode === 'always-run' ? ['always-run', 'run'] : ['run'];
-    // Dark theme first (Cursor default), light as fallback.
-    const ordered = templates
-      .slice()
-      .sort((a, b) => {
-        const t = (tpl: Template) => preferred.indexOf(tpl.name) * 2 + (tpl.theme === 'dark' ? 0 : 1);
-        return t(a) - t(b);
-      });
+    const rank = (v: TemplateVariant) => preferred.indexOf(v.mode) * 10 + (v.theme === 'dark' ? 0 : 5) + SCALES.indexOf(v.scale);
+    const ordered = variants.slice().sort((a, b) => rank(a) - rank(b));
 
-    for (const tpl of ordered) {
-      const point = await this.findTemplate(tpl.res, searchRegion);
+    for (const variant of ordered) {
+      if (!variant.image) variant.image = imageResource(variant.file);
+      const point = await this.findTemplate(variant.image, searchRegion);
       if (point) {
-        return { x: point.x, y: point.y, mode: tpl.name, windowFound: this.windowFound };
+        return { x: point.x, y: point.y, mode: variant.mode, focus };
       }
     }
     return null;
   }
 
   /** Single template search with a hard timeout so a stuck match can't block the poll loop. */
-  private async findTemplate(res: ImageResource, region: Region): Promise<{ x: number; y: number } | null> {
-    const timeout = <T>(p: Promise<T>, ms: number): Promise<T | null> =>
-      Promise.race([
-        p,
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
-      ]);
+  private async findTemplate(image: Promise<Img>, region: Region): Promise<{ x: number; y: number } | null> {
     try {
-      const find = nutScreen.find(res, {
-        confidence: 0.88,
-        searchMultipleScales: true,
+      const find = nutScreen.find(image, {
         searchRegion: region,
+        confidence: 0.88,
       });
-      const point = await timeout(find, 4000);
-      return point ? { x: point.x, y: point.y } : null;
+      const match = await Promise.race([
+        find,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      ]);
+      if (!match) return null;
+      // find() returns the match's top-left region -> aim for its center.
+      return { x: match.left + match.width / 2, y: match.top + match.height / 2 };
     } catch {
       // NotFoundException and friends -> not on screen
       return null;

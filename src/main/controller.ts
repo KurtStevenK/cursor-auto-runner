@@ -3,7 +3,7 @@
  * Modes: idle | run (clicks Run buttons) | always-run (prefers Always Run).
  * Exactly one poll loop runs at a time; the loop stops cleanly on Stop.
  */
-import { Detector, DetectionResult } from './detector';
+import { Detector } from './detector';
 import { clickAt } from './clicker';
 import { StatsStore } from './stats';
 import { Mode, ClickMode, IPC } from '../shared/types';
@@ -58,12 +58,17 @@ export class ModeController {
     while (this.running && token === this.loopToken) {
       try {
         const clickMode: ClickMode = this.mode === 'always-run' ? 'always-run' : 'run';
-        const result: DetectionResult | null = await this.detector.detect(clickMode);
+        const result = await this.detector.detect(clickMode);
         this.onDetectionState?.(this.detector.windowFound);
 
         if (result) {
           const sinceClick = Date.now() - this.lastClickAt;
           if (sinceClick >= this.opts.cooldownMs) {
+            try {
+              await result.focus(); // best-effort: bring Cursor to foreground
+            } catch {
+              /* focus is optional */
+            }
             await clickAt(result.x, result.y);
             this.lastClickAt = Date.now();
             this.stats.record(result.mode);
