@@ -12,7 +12,7 @@ import { TrayUI } from './tray';
 import { ensureMacPermissions } from './permissions';
 import { startCapture, stopCapture, templatesBaseDir } from './capture';
 import * as fs from 'fs';
-import { IPC, Mode, StatsSnapshot } from '../shared/types';
+import { IPC, Mode, StatsSnapshot, DEFAULT_SETTINGS } from '../shared/types';
 
 // Ensure a clean tray/app identity on Windows
 app.setAppUserModelId('com.gf-elektro.cursor-auto-runner');
@@ -29,11 +29,16 @@ let controller: ModeController;
 let tray: TrayUI;
 let overlay: BrowserWindow | null = null;
 
+function currentSnapshot(): StatsSnapshot {
+  const snap = stats.snapshot(controller.current);
+  snap.windowFound = detector.windowFound;
+  snap.pollIntervalMs = controller.pollIntervalMs;
+  return snap;
+}
+
 function sendStats(): void {
   if (!overlay) return;
-  const snap: StatsSnapshot = stats.snapshot(controller.current);
-  snap.windowFound = detector.windowFound;
-  overlay.webContents.send(IPC.STATS_UPDATED, snap);
+  overlay.webContents.send(IPC.STATS_UPDATED, currentSnapshot());
 }
 
 function openOverlay(): void {
@@ -140,13 +145,16 @@ app.whenReady().then(() => {
   });
   tray.show();
 
-  ipcMain.handle(IPC.GET_STATS, () => {
-    const snap = stats.snapshot(controller.current);
-    snap.windowFound = detector.windowFound;
-    return snap;
-  });
+  ipcMain.handle(IPC.GET_STATS, () => currentSnapshot());
   ipcMain.on(IPC.SET_MODE, (_e, mode: Mode) => applyMode(mode));
   ipcMain.on(IPC.CLOSE_OVERLAY, () => overlay?.close());
+  ipcMain.on(IPC.SET_POLL_INTERVAL, (_e, ms: number) => {
+    const clamped = Math.max(150, Math.min(60000, Number(ms) || DEFAULT_SETTINGS.pollIntervalMs));
+    settings.set({ pollIntervalMs: clamped });
+    controller.setPollInterval(clamped);
+    tray.rebuild();
+    sendStats(); // echo the new value back to the overlay (and tray)
+  });
 
   // Optionally restore the last used mode on launch.
   const s = settings.get();

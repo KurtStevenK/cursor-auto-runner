@@ -4,7 +4,7 @@
  */
 import { app, BrowserWindow, Menu, nativeImage, Tray, MenuItemConstructorOptions } from 'electron';
 import * as path from 'path';
-import { Mode, IPC } from '../shared/types';
+import { Mode, IPC, stepPoll } from '../shared/types';
 
 export type TrayCallbacks = {
   getMode: () => Mode;
@@ -15,17 +15,6 @@ export type TrayCallbacks = {
   getPollInterval: () => number;
   setPollInterval: (ms: number) => void;
 };
-
-/** Adjustable detection refresh interval, ms. Faster = checks more often. */
-const POLL_LADDER_MS = [150, 300, 500, 700, 1000, 1500, 2500, 4000, 6000];
-
-/** Next ladder value in the given direction, or null at the ends. */
-function stepPoll(current: number, dir: -1 | 1): number | null {
-  const idx = POLL_LADDER_MS.indexOf(current);
-  if (idx !== -1) return POLL_LADDER_MS[idx + dir] ?? null;
-  const candidates = POLL_LADDER_MS.filter((v) => (dir === -1 ? v < current : v > current));
-  return candidates.length ? (dir === -1 ? candidates[candidates.length - 1] : candidates[0]) : null;
-}
 
 export class TrayUI {
   private tray: Tray | null = null;

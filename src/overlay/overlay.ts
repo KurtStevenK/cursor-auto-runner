@@ -15,6 +15,17 @@ export interface StatsSnapshot {
   mode: Mode;
   since: string;
   windowFound: boolean;
+  pollIntervalMs: number;
+}
+
+// Duplicated from shared/types.ts (page must stay self-contained).
+const POLL_LADDER_MS = [150, 300, 500, 700, 1000, 1500, 2500, 4000, 6000];
+
+function stepPoll(current: number, dir: -1 | 1): number | null {
+  const idx = POLL_LADDER_MS.indexOf(current);
+  if (idx !== -1) return POLL_LADDER_MS[idx + dir] ?? null;
+  const candidates = POLL_LADDER_MS.filter((v) => (dir === -1 ? v < current : v > current));
+  return candidates.length ? (dir === -1 ? candidates[candidates.length - 1] : candidates[0]) : null;
 }
 
 declare global {
@@ -23,6 +34,7 @@ declare global {
       getStats: () => Promise<StatsSnapshot>;
       setMode: (mode: Mode) => void;
       close: () => void;
+      setPollInterval: (ms: number) => void;
       onStats: (cb: (snap: StatsSnapshot) => void) => void;
       onModeChanged: (cb: (mode: Mode) => void) => void;
     };
@@ -77,6 +89,20 @@ function renderSpark(byDay: { date: string; count: number }[]): void {
     .join('');
 }
 
+function renderInterval(ms: number): void {
+  const faster = stepPoll(ms, -1);
+  const slower = stepPoll(ms, +1);
+  $('intervalValue').textContent = `${ms} ms`;
+  const f = $('fasterBtn') as HTMLButtonElement;
+  const s = $('slowerBtn') as HTMLButtonElement;
+  f.disabled = faster === null;
+  s.disabled = slower === null;
+  f.textContent = faster !== null ? `Faster (→ ${faster} ms)` : 'Faster';
+  s.textContent = slower !== null ? `Slower (→ ${slower} ms)` : 'Slower';
+  f.dataset.ms = faster !== null ? String(faster) : '';
+  s.dataset.ms = slower !== null ? String(slower) : '';
+}
+
 function render(snap: StatsSnapshot): void {
   setText('session', snap.session);
   setText('day', snap.day);
@@ -85,6 +111,7 @@ function render(snap: StatsSnapshot): void {
   setText('total', snap.total);
   renderBadge(snap.mode);
   renderSpark(snap.byDay);
+  renderInterval(snap.pollIntervalMs);
   const status = $('status');
   if (!snap.windowFound && snap.mode !== 'idle') {
     status.textContent = 'Cursor window not found — make sure Cursor is visible on screen (not minimized).';
@@ -99,6 +126,14 @@ function render(snap: StatsSnapshot): void {
 }
 
 $('close').addEventListener('click', () => window.autoRunner.close());
+$('fasterBtn').addEventListener('click', () => {
+  const ms = Number(($('fasterBtn') as HTMLButtonElement).dataset.ms);
+  if (ms) window.autoRunner.setPollInterval(ms);
+});
+$('slowerBtn').addEventListener('click', () => {
+  const ms = Number(($('slowerBtn') as HTMLButtonElement).dataset.ms);
+  if (ms) window.autoRunner.setPollInterval(ms);
+});
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') window.autoRunner.close();
 });

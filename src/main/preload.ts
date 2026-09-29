@@ -14,12 +14,14 @@ const IPC = {
   GET_STATS: 'get-stats',
   STATS_UPDATED: 'stats-updated',
   CLOSE_OVERLAY: 'close-overlay',
+  SET_POLL_INTERVAL: 'set-poll-interval',
 } as const;
 
 contextBridge.exposeInMainWorld('autoRunner', {
   getStats: (): Promise<StatsSnapshot> => ipcRenderer.invoke(IPC.GET_STATS),
   setMode: (mode: Mode): void => ipcRenderer.send(IPC.SET_MODE, mode),
   close: (): void => ipcRenderer.send(IPC.CLOSE_OVERLAY),
+  setPollInterval: (ms: number): void => ipcRenderer.send(IPC.SET_POLL_INTERVAL, ms),
   onStats: (cb: (snap: StatsSnapshot) => void): void => {
     ipcRenderer.on(IPC.STATS_UPDATED, (_e, snap: StatsSnapshot) => cb(snap));
   },

@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.4] - 2026-09-29
+
+### Added
+- **Refresh interval visible and adjustable in the stats overlay**: the window now shows the current value (`Refresh interval: 700 ms`) next to *Faster* / *Slower* buttons — same ladder as the tray menu, applied live and persisted. The interval travels with the stats snapshot (`pollIntervalMs`), so both displays always agree.
+
 ## [1.2.3] - 2026-09-29
 
 ### Added

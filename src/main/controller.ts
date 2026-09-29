@@ -36,6 +36,11 @@ export class ModeController {
     this.opts.pollIntervalMs = Math.max(150, Math.min(60000, ms));
   }
 
+  /** Current poll interval (for display in the overlay). */
+  get pollIntervalMs(): number {
+    return this.opts.pollIntervalMs;
+  }
+
   set(mode: Mode): void {
     if (mode === this.mode) return;
     this.mode = mode;

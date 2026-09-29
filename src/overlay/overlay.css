@@ -87,5 +87,21 @@ header {
 #sparkSvg { width: 100%; flex: 1; min-height: 60px; }
 .spark-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); }
 
+.interval-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.interval-label { font-size: 12px; color: var(--muted); }
+.interval-label b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.interval-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.interval-btn:hover:not(:disabled) { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.4); }
+.interval-btn:disabled { opacity: 0.35; cursor: default; }
+
 .status { font-size: 12px; color: var(--muted); }
 .status.warn { color: #fbbf24; }

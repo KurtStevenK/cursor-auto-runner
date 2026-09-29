@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
   <img src="https://img.shields.io/badge/electron-33-47848f" alt="electron" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
-  <img src="https://img.shields.io/badge/version-1.2.3-22c55e" alt="version" />
+  <img src="https://img.shields.io/badge/version-1.2.4-22c55e" alt="version" />
 </p>
 
 ---
@@ -26,7 +26,7 @@
 - **Repeat clicks** — if a button stays visible after clicking (first click only focused the window, or Cursor asks again), the app clicks it again automatically.
 - **Adjustable refresh interval** — set how often the screen is checked from the tray menu (*Faster* / *Slower*); the current value is shown right in the menu.
 - **System tray** with a state-colored icon: a **left click toggles the stats overlay**, right click opens the menu: *Start Auto Run*, *Start Auto Always Run*, *Stop*, *Capture templates…*, *Open templates folder*, *Stats…*, *Quit*.
-- **Stats overlay** — a live, frameless mini-window showing clicks for the **session**, **day**, **week**, **month** and **total**, plus a 7-day bar chart.
+- **Stats overlay** — a live, frameless mini-window showing clicks for the **session**, **day**, **week**, **month** and **total**, plus a 7-day bar chart. Also shows the current **refresh interval** with *Faster* / *Slower* buttons to change it right there.
 - **Multi-monitor** — the Cursor window is located on whatever display it is on; coordinates are resolved across the whole virtual desktop.
 - **IDE + Agent windows** — all Cursor windows are searched (the main IDE and the agent/chat window place their buttons differently — both are handled).
 - **Multi-theme, multi-scale** — dark/light button reference images, several scale variants to absorb per-display DPI scaling.
