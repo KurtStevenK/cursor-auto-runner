@@ -11,7 +11,7 @@ export async function ensureMacPermissions(): Promise<boolean> {
   if (process.platform !== 'darwin') return true;
 
   const screenOk = systemPreferences.getMediaAccessStatus('screen') === 'granted';
-  const accessOk = systemPreferences.isAccessibilityTrusted();
+  const accessOk = systemPreferences.isTrustedAccessibilityClient(false);
   if (screenOk && accessOk) return true;
 
   const { response } = await dialog.showMessageBox({
