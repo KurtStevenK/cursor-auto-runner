@@ -1,5 +1,21 @@
-/** Overlay renderer: live stats display. */
-import type { StatsSnapshot, Mode } from '../shared/types';
+/** Overlay renderer: live stats display.
+ *  Compiled by tsconfig.overlay.json as a standalone ES module and loaded by
+ *  index.html via <script type="module"> — it must NOT import runtime modules.
+ *  The shared types are therefore duplicated here (keep in sync with
+ *  src/shared/types.ts), mirroring the preload's self-contained IPC constants. */
+export type Mode = 'idle' | 'run' | 'always-run';
+
+export interface StatsSnapshot {
+  session: number;
+  day: number;
+  week: number;
+  month: number;
+  total: number;
+  byDay: { date: string; count: number }[];
+  mode: Mode;
+  since: string;
+  windowFound: boolean;
+}
 
 declare global {
   interface Window {

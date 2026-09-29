@@ -62,6 +62,10 @@ function openOverlay(): void {
   });
   overlay.setAlwaysOnTop(true, 'screen-saver');
   overlay.loadFile(path.join(__dirname, '..', 'overlay', 'index.html'));
+  // Surface renderer errors in the main log — overlay bugs used to be silent.
+  overlay.webContents.on('console-message', (_e, level, message, line, sourceId) => {
+    if (level >= 3) console.error(`[overlay-renderer] ${sourceId}:${line} ${message}`);
+  });
   overlay.once('ready-to-show', () => {
     overlay?.show();
     sendStats();
@@ -104,6 +108,13 @@ app.whenReady().then(() => {
     getMode: () => controller.current,
     setMode: (mode) => applyMode(mode),
     openOverlay,
+    getPollInterval: () => settings.get().pollIntervalMs,
+    setPollInterval: (ms) => {
+      // Persist and apply live; the loop picks it up on its next cycle.
+      settings.set({ pollIntervalMs: ms });
+      controller.setPollInterval(ms);
+      tray.rebuild();
+    },
     capture: (name, theme) => {
       // Pause the auto-clicker while the screen is frozen for capture.
       const prevMode = controller.current;

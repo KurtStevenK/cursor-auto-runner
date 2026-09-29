@@ -12,7 +12,20 @@ export type TrayCallbacks = {
   openOverlay: () => void;
   capture: (name: 'run' | 'always-run' | 'allow', theme: 'dark' | 'light') => void;
   openTemplatesFolder: () => void;
+  getPollInterval: () => number;
+  setPollInterval: (ms: number) => void;
 };
+
+/** Adjustable detection refresh interval, ms. Faster = checks more often. */
+const POLL_LADDER_MS = [150, 300, 500, 700, 1000, 1500, 2500, 4000, 6000];
+
+/** Next ladder value in the given direction, or null at the ends. */
+function stepPoll(current: number, dir: -1 | 1): number | null {
+  const idx = POLL_LADDER_MS.indexOf(current);
+  if (idx !== -1) return POLL_LADDER_MS[idx + dir] ?? null;
+  const candidates = POLL_LADDER_MS.filter((v) => (dir === -1 ? v < current : v > current));
+  return candidates.length ? (dir === -1 ? candidates[candidates.length - 1] : candidates[0]) : null;
+}
 
 export class TrayUI {
   private tray: Tray | null = null;
@@ -43,6 +56,10 @@ export class TrayUI {
         : `Cursor Auto Runner — auto ${mode === 'run' ? 'Run' : 'Always Run'} active`
     );
 
+    const interval = this.cb.getPollInterval();
+    const faster = stepPoll(interval, -1);
+    const slower = stepPoll(interval, +1);
+
     const menu: MenuItemConstructorOptions[] = [
       {
         label: 'Start Auto Run',
@@ -62,6 +79,21 @@ export class TrayUI {
         checked: mode === 'idle',
         enabled: mode !== 'idle',
         click: () => this.cb.setMode('idle'),
+      },
+      { type: 'separator' },
+      {
+        label: `Refresh interval: ${this.cb.getPollInterval()} ms`,
+        enabled: false,
+      },
+      {
+        label: faster !== null ? `Faster (→ ${faster} ms)` : 'Faster',
+        enabled: faster !== null,
+        click: () => this.cb.setPollInterval(faster!),
+      },
+      {
+        label: slower !== null ? `Slower (→ ${slower} ms)` : 'Slower',
+        enabled: slower !== null,
+        click: () => this.cb.setPollInterval(slower!),
       },
       { type: 'separator' },
       {

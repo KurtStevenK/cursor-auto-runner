@@ -31,6 +31,11 @@ export class ModeController {
     return this.mode;
   }
 
+  /** Apply a new poll interval live (takes effect on the next loop cycle). */
+  setPollInterval(ms: number): void {
+    this.opts.pollIntervalMs = Math.max(150, Math.min(60000, ms));
+  }
+
   set(mode: Mode): void {
     if (mode === this.mode) return;
     this.mode = mode;

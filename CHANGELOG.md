@@ -5,6 +5,16 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.2] - 2026-09-29
+
+### Added
+- **Refresh interval control in the tray menu**: shows the current value (`Refresh interval: 700 ms`) and offers *Faster* / *Slower* steps (150 ms – 6 s ladder). Persisted in `settings.json`, applied live — no restart needed.
+- `scripts/test-overlay.js` diagnostic: loads the overlay in a test window, verifies the preload bridge and that the ✕ button reaches the main process.
+
+### Fixed
+- **Stats overlay was completely dead** (all zeros, status stuck at "Watching for the Cursor window…", ✕ and ESC did nothing): the renderer script was compiled to CommonJS but loaded by the page as a plain `<script>`, so it crashed immediately with `ReferenceError: exports is not defined` — before attaching any listeners or rendering any values. It is now compiled as a standalone ES module (`tsconfig.overlay.json`) and loaded with `<script type="module">`; the renderer is self-contained (no imports). Click stats, live updates, ✕ and ESC all work again.
+- Renderer console errors are now logged in the main process output (`[overlay-renderer]`) so a broken overlay can never fail silently again.
+
 ## [1.2.1] - 2026-09-29
 
 ### Added
