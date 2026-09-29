@@ -8,7 +8,7 @@ and each shipped task gets its own version number.
 ## [1.2.10] - 2026-09-29
 
 ### Added
-- **Arch Linux support**: releases now include a `.pacman` package (electron-builder `pacman` target) — install with `sudo pacman -U cursor-auto-runner-<version>-x86_64.pacman`.
+- **Arch Linux support**: releases now include a `.pacman` package (electron-builder `pacman` target) — install with `sudo pacman -U cursor-auto-runner-<version>.pacman`.
 - **Chocolatey distribution**: releases build a `.nupkg` and publish it automatically to [community.chocolatey.org](https://community.chocolatey.org/packages/cursor-auto-runner) — `choco install cursor-auto-runner`.
 - **Homebrew tap for macOS**: CI computes the DMG sha256 and updates the `cursor-auto-runner` cask in the `KurtStevenK/homebrew-tap` repository on every tagged release — `brew install --cask KurtStevenK/tap/cursor-auto-runner`.
 - **GitHub Pages landing page**: `landing/` is deployed to https://kurtstevenk.github.io/cursor-auto-runner/ on every push to `master` (`.github/workflows/pages.yml`); the page's download cards cover all install channels.

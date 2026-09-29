@@ -128,7 +128,7 @@ jobs:
             echo "| macOS | \`Cursor Auto Runner-$VERSION.dmg\` | Open the DMG, or \`brew install --cask KurtStevenK/tap/cursor-auto-runner\` |"
             echo "| Linux (Debian/Ubuntu) | \`cursor-auto-runner_${VERSION}_amd64.deb\` | \`sudo apt install ./cursor-auto-runner_${VERSION}_amd64.deb\` |"
             echo "| Linux (any distro) | \`cursor-auto-runner-$VERSION.AppImage\` | \`chmod +x\` and run |"
-            echo "| Linux (Arch) | \`cursor-auto-runner-$VERSION-x86_64.pacman\` | \`sudo pacman -U cursor-auto-runner-$VERSION-x86_64.pacman\` |"
+            echo "| Linux (Arch) | \`cursor-auto-runner-$VERSION.pacman\` | \`sudo pacman -U cursor-auto-runner-$VERSION.pacman\` |"
           } > release-notes.md
 
       - uses: softprops/action-gh-release@v2
@@ -145,10 +145,12 @@ jobs:
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          DMG="artifacts/macos/Cursor Auto Runner-${VERSION}.dmg"
-          SHA=$(shasum -a 256 "$DMG" | cut -d' ' -f1)
+          DMG_X64="artifacts/macos/Cursor Auto Runner-${VERSION}.dmg"
+          DMG_ARM="artifacts/macos/Cursor Auto Runner-${VERSION}-arm64.dmg"
+          SHA_X64=$(shasum -a 256 "$DMG_X64" | cut -d' ' -f1)
+          SHA_ARM=$(shasum -a 256 "$DMG_ARM" | cut -d' ' -f1)
           mkdir -p Casks
-          sed -e "s/PLACEHOLDER/$SHA/" -e "s/\"1.2.10\"/\"$VERSION\"/" packaging/homebrew/cursor-auto-runner.rb > Casks/cursor-auto-runner.rb
+          sed -e "s/__VERSION__/$VERSION/g" -e "s/__SHA_X64__/$SHA_X64/g" -e "s/__SHA_ARM__/$SHA_ARM/g" packaging/homebrew/cursor-auto-runner.rb > Casks/cursor-auto-runner.rb
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/KurtStevenK/homebrew-tap.git" tap
           mkdir -p tap/Casks
           cp Casks/cursor-auto-runner.rb tap/Casks/cursor-auto-runner.rb

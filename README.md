@@ -68,7 +68,7 @@ and shown on the [landing page](https://kurtstevenk.github.io/cursor-auto-runner
 | macOS | `Cursor Auto Runner-<version>.dmg` | Open the DMG (universal; grant Screen Recording & Accessibility) |
 | macOS | Homebrew | `brew install --cask KurtStevenK/tap/cursor-auto-runner` |
 | Linux (Debian/Ubuntu) | `cursor-auto-runner_<version>_amd64.deb` | `sudo apt install ./cursor-auto-runner_<version>_amd64.deb` |
-| Linux (Arch) | `cursor-auto-runner-<version>-x86_64.pacman` | `sudo pacman -U cursor-auto-runner-<version>-x86_64.pacman` |
+| Linux (Arch) | `cursor-auto-runner-<version>.pacman` | `sudo pacman -U cursor-auto-runner-<version>.pacman` |
 | Linux (any distro) | `cursor-auto-runner-<version>.AppImage` | `chmod +x` and run |
 
 ### Install (from source)
