@@ -226,8 +226,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bash packaging/chocolatey/should-push.sh
-          rc=$?
+          rc=0
+          bash packaging/chocolatey/should-push.sh || rc=$?
           if [[ $rc -eq 2 ]]; then
             echo "::notice title=Chocolatey::Skipping push while no approved package version exists (moderation backlog). Run the chocolatey-push workflow after approval."
             exit 0

@@ -5,6 +5,14 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.15] - 2026-09-30
+
+### Added
+- **Chocolatey push** workflow (`.github/workflows/chocolatey-push.yml`) — manually publish a release `.nupkg` after community moderation without re-tagging.
+
+### Fixed
+- Chocolatey skip gate no longer fails the job under `set -e` when `should-push.sh` exits with code 2.
+
 ## [1.2.14] - 2026-09-30
 
 ### Fixed
