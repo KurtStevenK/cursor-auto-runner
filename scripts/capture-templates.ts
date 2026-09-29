@@ -34,21 +34,24 @@ async function captureScreen(): Promise<void> {
 
 const html = `<!DOCTYPE html>
 <html><head><style>
-  html,body{margin:0;overflow:hidden;cursor:crosshair;background:transparent}
-  #shot{position:absolute;inset:0;width:100vw;height:100vh}
+  html,body{margin:0;overflow:hidden;cursor:crosshair;background:transparent;user-select:none;-webkit-user-select:none}
+  #shot{position:absolute;inset:0;width:100vw;height:100vh;pointer-events:none}
   #rect{position:absolute;border:2px solid #22c55e;background:rgba(34,197,94,0.15);display:none;pointer-events:none}
   #hint{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;
-        font:14px 'Segoe UI',sans-serif;padding:10px 18px;border-radius:8px;border:1px solid #22c55e}
+        font:14px 'Segoe UI',sans-serif;padding:10px 18px;border-radius:8px;border:1px solid #22c55e;z-index:10}
 </style></head>
 <body>
-  <img id="shot" />
+  <img id="shot" draggable="false" />
   <div id="rect"></div>
   <div id="hint">Drag a rectangle around the "${name}" button, then release. ESC = cancel.</div>
   <script>
     const { ipcRenderer } = require('electron');
-    let sx=0, sy=0, dragging=false;
+    let sx=0, sy=0, dragging=false, saved=0;
     const rect = document.getElementById('rect');
-    document.addEventListener('mousedown', e => { dragging=true; sx=e.clientX; sy=e.clientY; rect.style.display='block'; });
+    const hint = document.getElementById('hint');
+    // Block native image drag — it swallows mouse events and breaks selection.
+    document.addEventListener('dragstart', e => e.preventDefault());
+    document.addEventListener('mousedown', e => { e.preventDefault(); dragging=true; sx=e.clientX; sy=e.clientY; rect.style.display='block'; });
     document.addEventListener('mousemove', e => {
       if (!dragging) return;
       rect.style.left = Math.min(sx,e.clientX)+'px';
@@ -62,6 +65,11 @@ const html = `<!DOCTYPE html>
       const w=Math.abs(e.clientX-sx), h=Math.abs(e.clientY-sy);
       if (w > 4 && h > 4) ipcRenderer.send('capture-region', { x, y, w, h });
       else rect.style.display='none';
+    });
+    ipcRenderer.on('capture-saved', (_e, file) => {
+      saved++;
+      rect.style.display='none';
+      hint.textContent = 'Saved #' + saved + ': ' + file + ' — drag the next one, or press ESC to finish.';
     });
     document.addEventListener('keydown', e => { if (e.key==='Escape') ipcRenderer.send('capture-cancel'); });
   </script>
@@ -105,14 +113,15 @@ async function main(): Promise<void> {
     fs.mkdirSync(dir, { recursive: true });
     // Add numbered variants (run.png, run-2.png, run-3.png…) instead of
     // overwriting, so the IDE button and agent-window button styles can
-    // both be captured.
+    // both be captured in one session.
     let file = path.join(dir, `${name}.png`);
     for (let i = 2; fs.existsSync(file); i++) {
       file = path.join(dir, `${name}-${i}.png`);
     }
     fs.writeFileSync(file, out.toPNG());
     console.log(`template saved: ${file} (${out.getSize().width}x${out.getSize().height})`);
-    app.exit(0);
+    // Keep the window open so further variants can be captured; ESC finishes.
+    win?.webContents.send('capture-saved', path.basename(file));
   });
   ipcMain.on('capture-cancel', () => app.exit(0));
 }

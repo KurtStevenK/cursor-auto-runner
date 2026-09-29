@@ -5,6 +5,12 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.1.1] - 2026-09-29
+
+### Fixed
+- Template capture tool: the frozen screenshot behaved as a draggable image, so dragging a selection started a native image drag-and-drop and the rectangle was never submitted (ESC was the only way out). Native dragging is now blocked (`draggable="false"`, `dragstart` prevented, `pointer-events: none` on the screenshot).
+- The capture tool no longer exits after the first save — each successful drag saves the next numbered variant (`run.png`, `run-2.png`, …) and shows a confirmation in the hint bar; ESC finishes the session.
+
 ## [1.1.0] - 2026-09-29
 
 ### Added
