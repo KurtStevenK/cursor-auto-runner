@@ -24,7 +24,7 @@
 - **Auto Always Run mode** — clicks *Always Run* when available, falls back to *Run* and also approves *Allow* prompts so your agent never stalls.
 - **Allow buttons** — permission approvals are clicked too, at any position, in both modes.
 - **Repeat clicks** — if a button stays visible after clicking (first click only focused the window, or Cursor asks again), the app clicks it again automatically.
-- **System tray** with a state-colored icon and a simple menu: *Start Auto Run*, *Start Auto Always Run*, *Stop*, *Stats…*, *Quit*.
+- **System tray** with a state-colored icon and a menu: *Start Auto Run*, *Start Auto Always Run*, *Stop*, *Capture templates…*, *Open templates folder*, *Stats…*, *Quit*.
 - **Stats overlay** — a live, frameless mini-window showing clicks for the **session**, **day**, **week**, **month** and **total**, plus a 7-day bar chart.
 - **Multi-monitor** — the Cursor window is located on whatever display it is on; coordinates are resolved across the whole virtual desktop.
 - **IDE + Agent windows** — all Cursor windows are searched (the main IDE and the agent/chat window place their buttons differently — both are handled).
@@ -90,6 +90,8 @@ The app appears in your system tray. Right-click the tray icon:
 | **Start Auto Run** | Clicks every *Run* button that appears in a Cursor window |
 | **Start Auto Always Run** | Prefers *Always Run*, falls back to *Run* |
 | **Stop** | Stops the automation (enabled only while running) |
+| **Capture templates…** | Submenu to capture reference images for *Run*, *Always Run* and *Allow* buttons, each in dark and light theme |
+| **Open templates folder** | Opens the folder where captured templates are stored |
 | **Stats…** | Opens the live stats overlay |
 | **Quit** | Exits the app |
 
