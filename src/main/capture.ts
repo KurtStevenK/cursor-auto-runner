@@ -20,7 +20,17 @@ export interface CaptureCallbacks {
 
 /** Where captured templates are stored (project dir in dev, userData when packaged). */
 export function templatesBaseDir(): string {
-  return app.isPackaged ? app.getPath('userData') : path.resolve(__dirname, '..', '..');
+  if (app.isPackaged) return app.getPath('userData');
+  // In dev the compiled modules live at different depths (dist/src/main for
+  // the app, dist/scripts for the capture CLI), so resolve the project root
+  // by walking up to the directory that contains package.json. This must
+  // match where the DETECTOR looks (see detector.ts) — a mismatch silently
+  // hides freshly captured templates.
+  let dir = path.dirname(__dirname);
+  while (dir !== path.parse(dir).root && !fs.existsSync(path.join(dir, 'package.json'))) {
+    dir = path.dirname(dir);
+  }
+  return dir;
 }
 
 // --- module state: one capture session at a time ---

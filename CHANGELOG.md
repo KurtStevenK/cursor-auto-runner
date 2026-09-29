@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.7] - 2026-09-29
+
+### Fixed
+- **Tray captures in dev went to the wrong folder**: `templatesBaseDir()` resolved relative to the compiled file (`dist/`), but the detector reads templates from the project root — so templates captured via the tray menu in dev were silently ignored. The project root is now found by walking up to the folder containing `package.json` (same for the capture CLI), which is depth-independent. Stray captures from `dist/assets/templates` were moved into `assets/templates` as additional variants.
+
 ## [1.2.6] - 2026-09-29
 
 ### Fixed
