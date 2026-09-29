@@ -92,10 +92,17 @@ async function main(): Promise<void> {
     enableLargerThanScreen: true,
     webPreferences: { nodeIntegration: true, contextIsolation: false },
   });
-  // Freeze the screen behind the selection UI
-  const shotData = shot.image.toDataURL();
-  const htmlWithShot = html.replace('<img id="shot" />', `<img id="shot" src="${shotData}" />`);
-  const tmpFile = path.join(app.getPath('temp'), 'cursor-auto-runner-capture.html');
+  // Freeze the screen behind the selection UI. The screenshot is written
+  // as a file next to the temp HTML because data: URLs fail to load in
+  // this environment.
+  const tmpDir = app.getPath('temp');
+  const shotFile = path.join(tmpDir, 'cursor-auto-runner-shot.png');
+  fs.writeFileSync(shotFile, shot.image.toPNG());
+  const htmlWithShot = html.replace(
+    '<img id="shot" draggable="false" />',
+    `<img id="shot" draggable="false" src="cursor-auto-runner-shot.png" />`
+  );
+  const tmpFile = path.join(tmpDir, 'cursor-auto-runner-capture.html');
   fs.writeFileSync(tmpFile, htmlWithShot);
   await win.loadFile(tmpFile);
   win.show();

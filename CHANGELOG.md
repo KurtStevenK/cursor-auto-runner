@@ -5,6 +5,12 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.1.2] - 2026-09-29
+
+### Fixed
+- Template capture tool showed a white screen instead of the frozen screenshot: the inline `data:` URL image is not loaded by this Electron build. The screenshot is now written to a temp PNG file and referenced relatively from the capture page.
+- Added a screen-capture diagnostic script (`scripts/capture-debug.js`) that dumps every display's thumbnail to disk for troubleshooting.
+
 ## [1.1.1] - 2026-09-29
 
 ### Fixed
