@@ -176,6 +176,6 @@ jobs:
         shell: bash
         run: |
           choco apikey add --key "$CHOCOLATEY_API_KEY" --source https://push.chocolatey.org/
-          for f in artifacts/windows/choco-pkg/*.nupkg; do
+          while IFS= read -r -d '' f; do
             choco push "$f" --source https://push.chocolatey.org/
-          done
+          done < <(find artifacts -name '*.nupkg' -print0)
