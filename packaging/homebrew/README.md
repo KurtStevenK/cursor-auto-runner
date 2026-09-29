@@ -24,7 +24,7 @@ Homebrew maps `KurtStevenK/tap` to the public repository **`KurtStevenK/homebrew
 | Intel | `Cursor.Auto.Runner-<version>.dmg` |
 | ARM64 | `Cursor.Auto.Runner-<version>-arm64.dmg` |
 
-These names come from `artifactName` in [`package.json`](../../package.json) (`build.mac`), match the cask `url` lines in [cursor-auto-runner.rb](cursor-auto-runner.rb), and are what CI hashes before updating the tap.
+These names are produced by [`scripts/rename-mac-dmg-artifacts.js`](../../scripts/rename-mac-dmg-artifacts.js) after `npm run dist:mac` (electron-builder defaults to spaced `productName` basenames), match the cask `url` lines in [cursor-auto-runner.rb](cursor-auto-runner.rb), and are what CI hashes before updating the tap.
 
 ## User upgrade
 
@@ -67,7 +67,7 @@ Compare output to the live tap cask or run `brew install --cask` with a local ta
 | Symptom | Likely cause | Fix |
 |--------|----------------|-----|
 | `brew install` checksum mismatch | Tap SHA-256 does not match the DMG at the cask URL | Re-tag after fixing `artifactName` / CI `DMG_*` paths; confirm release asset names with `gh release view vX.Y.Z --json assets` |
-| 404 on DMG URL | Release asset basename differs from cask (spaces vs dots) | Align `package.json` `artifactName` and `build.yml` paths with [cursor-auto-runner.rb](cursor-auto-runner.rb) |
+| 404 on DMG URL | Release asset basename differs from cask (spaces vs dots) | Ensure `npm run dist:mac` ran the rename script; CI uses the same dotted paths in `build.yml` |
 | Tap not updated | Missing `TAP_TOKEN` or release job failed before tap step | Check **Build releases** logs for **Verify publish secrets** / **Update Homebrew tap** |
 | Stale cask version | Tag built before tap step succeeded | Re-run **Build releases** on the tag or push a patch tag |
 

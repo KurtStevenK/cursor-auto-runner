@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.18",
+  "version": "1.2.19",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish never",
     "dist:win": "npm run compile && electron-builder --win --publish never",
-    "dist:mac": "npm run compile && electron-builder --mac --publish never",
+    "dist:mac": "npm run compile && electron-builder --mac --publish never && node scripts/rename-mac-dmg-artifacts.js",
     "dist:linux": "npm run compile && electron-builder --linux --publish never",
     "rebuild:dev": "electron-rebuild -f -w better-sqlite3 -a x64",
     "test": "npm run compile && node --test dist/tests/*.test.js",
@@ -72,13 +72,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": "x64",
-          "artifactName": "Cursor.Auto.Runner-${version}.${ext}"
-        },
-        {
-          "target": "dmg",
-          "arch": "arm64",
-          "artifactName": "Cursor.Auto.Runner-${version}-arm64.${ext}"
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "assets/icons/icon.png",
