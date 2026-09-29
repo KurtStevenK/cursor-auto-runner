@@ -91,10 +91,24 @@ Or from the terminal:
 
 ```bash
 npm run capture-templates -- run dark          # capture the "Run" button (dark theme)
+npm run capture-templates -- run light         # capture the "Run" button (light theme)
 npm run capture-templates -- always-run dark   # capture the "Always Run" button (dark theme)
+npm run capture-templates -- always-run light  # capture the "Always Run" button (light theme)
 npm run capture-templates -- allow dark        # capture the "Allow" / "Approve" button (dark theme)
-npm run capture-templates -- run light         # light theme variants if you use them
+npm run capture-templates -- allow light       # capture the "Allow" / "Approve" button (light theme)
 ```
+
+The first argument selects the button, the second the theme — all combinations:
+
+| Button | Dark theme | Light theme |
+|---|---|---|
+| **Run** | `npm run capture-templates -- run dark` | `npm run capture-templates -- run light` |
+| **Always Run** | `npm run capture-templates -- always-run dark` | `npm run capture-templates -- always-run light` |
+| **Allow / Approve** | `npm run capture-templates -- allow dark` | `npm run capture-templates -- allow light` |
+
+The same six combinations are available from the tray context menu: right-click the
+tray icon → **Capture templates…** → pick the button, then **(dark)** or **(light)**.
+Omitting an argument defaults to `run dark`.
 
 A fullscreen overlay freezes your screen — drag a rectangle tightly around only the stable button label, release, done. Do not include changing command names, counters or surrounding panel content; overly wide and duplicate captures are rejected.
 The tool stays open: capture further variants (e.g. the same button in the agent window) and press
