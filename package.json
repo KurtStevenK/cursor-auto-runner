@@ -1,0 +1,34 @@
+{
+  "name": "cursor-auto-runner",
+  "productName": "Cursor Auto Runner",
+  "version": "1.0.0",
+  "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
+  "main": "dist/main/main.js",
+  "license": "MIT",
+  "author": "Cursor Auto Runner contributors",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "compile": "tsc -p tsconfig.json",
+    "start": "npm run compile && electron .",
+    "generate:icons": "electron scripts/generate-icons.js",
+    "capture-templates": "electron dist/scripts/capture-templates.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "@nut-tree-fork/nut-js": "^4.2.6",
+    "better-sqlite3": "^12.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2"
+  }
+}
