@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.1.6] - 2026-09-29
+
+### Fixed
+- Logo missing in the overlay header: the image path pointed two levels up (`dist/assets`) instead of three (`<root>/assets`).
+
 ## [1.1.5] - 2026-09-29
 
 ### Fixed
