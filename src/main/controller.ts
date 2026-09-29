@@ -72,6 +72,28 @@ export class ModeController {
             await clickAt(result.x, result.y);
             this.lastClickAt = Date.now();
             this.stats.record(result.mode);
+
+            // Some buttons need to be clicked twice (e.g. the first click
+            // only focuses the window, or Cursor asks again right after).
+            // Re-check the same spot and click again, up to 2 extra times.
+            let last = result;
+            for (let attempt = 0; attempt < 2; attempt++) {
+              await new Promise((r) => setTimeout(r, 600));
+              if (!this.running || token !== this.loopToken) break;
+              const again = await this.detector.detect(clickMode);
+              if (!again) break; // button gone -> approval went through
+              const near = Math.hypot(again.x - last.x, again.y - last.y) < 80;
+              if (!near) break; // different button -> let the next poll handle it
+              try {
+                await again.focus();
+              } catch {
+                /* focus is optional */
+              }
+              await clickAt(again.x, again.y);
+              this.lastClickAt = Date.now();
+              this.stats.record(again.mode);
+              last = again;
+            }
           }
         }
       } catch (err) {

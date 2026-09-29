@@ -1,17 +1,17 @@
 /**
  * Template capture tool — run with: npm run capture-templates -- [name] [theme]
- *   name:  run | always-run        (default: run)
- *   theme: dark | light            (default: dark)
+ *   name:  run | always-run | allow  (default: run)
+ *   theme: dark | light              (default: dark)
  *
  * Freezes your screen behind a fullscreen overlay window, then lets you
- * drag a rectangle around the Run / Always Run button in Cursor.
+ * drag a rectangle around the Run / Always Run / Allow button in Cursor.
  * The crop is saved to assets/templates/<theme>/<name>.png.
  */
 import { app, BrowserWindow, desktopCapturer, ipcMain, screen } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 
-const name = process.argv.find((a) => a === 'run' || a === 'always-run') ?? 'run';
+const name = process.argv.find((a) => a === 'run' || a === 'always-run' || a === 'allow') ?? 'run';
 const theme = process.argv.find((a) => a === 'dark' || a === 'light') ?? 'dark';
 
 let win: BrowserWindow | null = null;

@@ -1,7 +1,7 @@
 /** Shared types and IPC channel names for Cursor Auto Runner. */
 
 export type Mode = 'idle' | 'run' | 'always-run';
-export type ClickMode = 'run' | 'always-run';
+export type ClickMode = 'run' | 'always-run' | 'allow';
 
 export interface DayCount {
   date: string; // YYYY-MM-DD

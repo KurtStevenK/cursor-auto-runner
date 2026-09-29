@@ -47,7 +47,7 @@ export class Detector {
   }
 
   /** Lazily load all template images (per theme) and pre-scale them.
-   *  Multiple captures per mode are supported: run.png, run-2.png, run-3.png… */
+   *  Multiple captures per mode are supported: run.png, run-2.png, run-3.png… (same for always-run and allow). */
   private async prepareVariants(): Promise<TemplateVariant[]> {
     if (this.loadAttempted) return this.variants;
     this.loadAttempted = true;
@@ -57,7 +57,7 @@ export class Detector {
       const themeDir = path.join(dir, theme);
       if (!fs.existsSync(themeDir)) continue;
       const files = fs.readdirSync(themeDir).filter((f) => f.endsWith('.png'));
-      for (const mode of ['always-run', 'run'] as const) {
+      for (const mode of ['always-run', 'run', 'allow'] as const) {
         const matching = files.filter((f) => f === `${mode}.png` || f.startsWith(`${mode}-`));
         for (const fileName of matching) {
           const file = path.join(themeDir, fileName);
@@ -149,7 +149,8 @@ export class Detector {
   /**
    * Search for the button for the requested mode across ALL Cursor
    * windows (IDE + agent windows — they place the button differently).
-   * `always-run` prefers the "Always Run" template and falls back to "Run".
+   * `always-run` prefers Always Run, then Run, then Allow;
+   * `run` prefers Run, then Allow.
    * Returns the absolute physical click point plus a best-effort focus callback.
    */
   async detect(mode: ClickMode): Promise<{ x: number; y: number; mode: ClickMode; focus: () => Promise<boolean> } | null> {
@@ -160,7 +161,8 @@ export class Detector {
     this.windowFound = cursorWindows.length > 0;
 
     const displays = electronScreen.getAllDisplays();
-    const preferred: ClickMode[] = mode === 'always-run' ? ['always-run', 'run'] : ['run'];
+    const preferred: ClickMode[] =
+      mode === 'always-run' ? ['always-run', 'run', 'allow'] : ['run', 'allow'];
     const rank = (v: TemplateVariant) => preferred.indexOf(v.mode) * 10 + (v.theme === 'dark' ? 0 : 5) + SCALES.indexOf(v.scale);
     const ordered = variants.slice().sort((a, b) => rank(a) - rank(b));
 
