@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rendered by CI (windows job of .github/workflows/build.yml):
+     __VERSION__ -> release version, __EXESHA__ -> SHA-256 of the x64 NSIS installer. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>cursor-auto-runner</id>
+    <version>__VERSION__</version>
+    <title>Cursor Auto Runner</title>
+    <authors>KurtStevenK</authors>
+    <owners>KurtStevenK</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>System-tray app that automatically clicks the Run / Always Run and Allow / Approve buttons in the Cursor IDE and tracks click statistics.</description>
+    <summary>Auto-clicks the Run / Approve buttons in the Cursor IDE.</summary>
+    <releaseNotes>https://github.com/KurtStevenK/cursor-auto-runner/releases/tag/v__VERSION__</releaseNotes>
+    <projectUrl>https://github.com/KurtStevenK/cursor-auto-runner</projectUrl>
+    <projectSourceUrl>https://github.com/KurtStevenK/cursor-auto-runner</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/KurtStevenK/cursor-auto-runner/issues</bugTrackerUrl>
+    <packageSourceUrl>https://github.com/KurtStevenK/cursor-auto-runner/tree/master/packaging/chocolatey</packageSourceUrl>
+    <iconUrl>https://raw.githubusercontent.com/KurtStevenK/cursor-auto-runner/master/assets/icons/icon-256.png</iconUrl>
+    <licenseUrl>https://github.com/KurtStevenK/cursor-auto-runner/blob/master/LICENSE</licenseUrl>
+    <tags>cursor ide automation agent electron tray</tags>
+    <copyright>Copyright KurtStevenK</copyright>
+  </metadata>
+</package>

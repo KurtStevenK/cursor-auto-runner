@@ -41,13 +41,25 @@ jobs:
       - run: npm ci
       - run: npm run dist:win
       - run: npm run test:packaged-worker
+      - name: Build Chocolatey package
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          EXE="release/Cursor Auto Runner Setup ${VERSION}.exe"
+          SHA=$(sha256sum "$EXE" | cut -d' ' -f1)
+          PKG=choco-pkg
+          mkdir -p "$PKG/tools"
+          sed -e "s/__VERSION__/$VERSION/g" -e "s/__EXESHA__/$SHA/g" packaging/chocolatey/cursor-auto-runner.nuspec > "$PKG/cursor-auto-runner.nuspec"
+          sed -e "s/__VERSION__/$VERSION/g" -e "s/__EXESHA__/$SHA/g" packaging/chocolatey/tools/chocolateyinstall.ps1 > "$PKG/tools/chocolateyinstall.ps1"
+          (cd "$PKG" && choco pack)
       - uses: actions/upload-artifact@v4
         with:
           name: windows
           path: |
             release/*.exe
             release/*.blockmap
-            release/*.nupkg
+            choco-pkg/*.nupkg
 
   linux:
     needs: quality
@@ -58,6 +70,7 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      - run: sudo apt-get update && sudo apt-get install -y libarchive-tools
       - run: npm run dist:linux
       - uses: actions/upload-artifact@v4
         with:

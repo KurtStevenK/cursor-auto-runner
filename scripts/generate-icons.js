@@ -196,8 +196,9 @@ function main() {
       data: size === 256 ? bmpEntry(256, raw256.rgba) : fs.readFileSync(path.join(OUT, `icon-${size}.png`)),
     })))
   );
-  fs.writeFileSync(path.join(OUT, 'icon.png'), png256);
-  console.log('icon.ico + icon.png written');
+  fs.writeFileSync(path.join(OUT, 'icon-1024.png'), rasterize(1024, appOpts));
+  fs.writeFileSync(path.join(OUT, 'icon.png'), fs.readFileSync(path.join(OUT, 'icon-1024.png')));
+  console.log('icon.ico + icon.png (1024) written');
 
   // Tray icons (one per app state) + macOS monochrome template variants
   const states = {
