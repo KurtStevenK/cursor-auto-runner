@@ -2,7 +2,7 @@
  * Cursor Auto Runner — main process entry point.
  * Wires tray, mode controller, detector, stats store and overlay window.
  */
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import * as path from 'path';
 import { Detector } from './detector';
 import { ModeController } from './controller';
@@ -10,7 +10,8 @@ import { StatsStore } from './stats';
 import { SettingsStore } from './settings';
 import { TrayUI } from './tray';
 import { ensureMacPermissions } from './permissions';
-import { startCapture, stopCapture } from './capture';
+import { startCapture, stopCapture, templatesBaseDir } from './capture';
+import * as fs from 'fs';
 import { IPC, Mode, StatsSnapshot } from '../shared/types';
 
 // Ensure a clean tray/app identity on Windows
@@ -118,6 +119,12 @@ app.whenReady().then(() => {
           }
         },
       }).catch((err) => console.error('[capture] failed:', err));
+    },
+    openTemplatesFolder: () => {
+      // The folder where new captures land (userData when packaged).
+      const dir = path.join(templatesBaseDir(), 'assets', 'templates');
+      fs.mkdirSync(dir, { recursive: true });
+      void shell.openPath(dir);
     },
   });
   tray.show();

@@ -5,6 +5,14 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.1] - 2026-09-29
+
+### Added
+- Tray menu entry **"Open templates folder"** to review the captured button images (opens the folder where new captures are stored).
+
+### Fixed
+- `npm run rebuild:dev` used the wrong binary reference (`@electron/rebuild` — npm tried to launch Electron with it, showing "Unable to find Electron app at …\rebuild"). Now uses the correct `electron-rebuild` bin.
+
 ## [1.2.0] - 2026-09-29
 
 ### Added
