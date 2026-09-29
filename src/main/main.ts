@@ -35,10 +35,10 @@ function sendStats(): void {
 }
 
 function openOverlay(): void {
+  // Toggle: opening while open closes the overlay.
   if (overlay && !overlay.isDestroyed()) {
-    overlay.show();
-    overlay.focus();
-    sendStats();
+    overlay.close();
+    overlay = null;
     return;
   }
   overlay = new BrowserWindow({

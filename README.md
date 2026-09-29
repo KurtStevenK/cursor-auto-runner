@@ -21,7 +21,9 @@
 ## Features
 
 - **Auto Run mode** — clicks the *Run* button whenever it appears in a Cursor window.
-- **Auto Always Run mode** — clicks *Always Run* when available, and falls back to *Run* so your agent never stalls waiting for approval.
+- **Auto Always Run mode** — clicks *Always Run* when available, falls back to *Run* and also approves *Allow* prompts so your agent never stalls.
+- **Allow buttons** — permission approvals are clicked too, at any position, in both modes.
+- **Repeat clicks** — if a button stays visible after clicking (first click only focused the window, or Cursor asks again), the app clicks it again automatically.
 - **System tray** with a state-colored icon and a simple menu: *Start Auto Run*, *Start Auto Always Run*, *Stop*, *Stats…*, *Quit*.
 - **Stats overlay** — a live, frameless mini-window showing clicks for the **session**, **day**, **week**, **month** and **total**, plus a 7-day bar chart.
 - **Multi-monitor** — the Cursor window is located on whatever display it is on; coordinates are resolved across the whole virtual desktop.
@@ -63,12 +65,14 @@ The app matches buttons against *your* screenshots, so teach it what your button
 ```bash
 npm run capture-templates -- run dark          # capture the "Run" button (dark theme)
 npm run capture-templates -- always-run dark   # capture the "Always Run" button (dark theme)
+npm run capture-templates -- allow dark        # capture the "Allow" permission button (dark theme)
 npm run capture-templates -- run light         # light theme variants if you use them
 ```
 
 A fullscreen overlay freezes your screen — drag a rectangle tightly around the button, release, done.
-Repeat for the **other button style too** (e.g. once from the IDE panel, once from the agent window):
-captures are saved as `run.png`, `run-2.png`, `run-3.png`, … and all variants are matched.
+The tool stays open: capture further variants (e.g. the same button in the agent window) and press
+ESC when finished. Captures are saved as `run.png`, `run-2.png`, `run-3.png`, … and all variants
+are matched.
 
 ### Run
 

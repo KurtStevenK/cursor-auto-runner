@@ -9,10 +9,9 @@
 import { app } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { DayCount, Mode, StatsSnapshot } from '../shared/types';
+import { DayCount, ClickMode, Mode, StatsSnapshot } from '../shared/types';
 
 export type { Mode };
-type ClickMode = 'run' | 'always-run';
 
 interface ClickEvent {
   ts: number;

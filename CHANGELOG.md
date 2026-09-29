@@ -5,6 +5,18 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.1.5] - 2026-09-29
+
+### Fixed
+- Stats overlay opened as an empty black window: the overlay HTML/CSS was never copied into `dist` (tsc only compiles TypeScript). `npm run compile` now copies the overlay assets (`scripts/copy-overlay-assets.js`).
+- Overlay is closable again: ✕ button renders with the loaded page, ESC now closes it, and the tray's *Stats…* entry toggles (click again = close).
+
+## [1.1.4] - 2026-09-29
+
+### Added
+- **Allow** button support: permission-approval buttons are captured (`npm run capture-templates -- allow dark`) and auto-clicked at any position — in both Auto Run (Run → Allow) and Auto Always Run (Always Run → Run → Allow) priority.
+- Repeat-click handling: buttons that stay visible after a click (first click only focused the window, or Cursor asks again immediately) are clicked again automatically — up to 3 clicks total, each recorded in the stats.
+
 ## [1.1.3] - 2026-09-29
 
 ### Fixed

@@ -83,6 +83,9 @@ function render(snap: StatsSnapshot): void {
 }
 
 $('close').addEventListener('click', () => window.autoRunner.close());
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') window.autoRunner.close();
+});
 window.autoRunner.onStats(render);
 window.autoRunner.onModeChanged((mode) => renderBadge(mode));
 window.autoRunner.getStats().then(render).catch(() => {});
