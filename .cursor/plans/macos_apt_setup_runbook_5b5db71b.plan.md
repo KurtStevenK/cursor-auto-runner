@@ -4,19 +4,19 @@ overview: "Finish the Debian/Ubuntu APT channel from a Mac: generate the signing
 todos:
   - id: mac-gpg-key
     content: "On Mac: generate APT GPG key and save apt-signing-private.asc (Step 1)"
-    status: pending
+    status: completed
   - id: mac-gh-secret
     content: gh secret set APT_GPG_PRIVATE_KEY on KurtStevenK/cursor-auto-runner (Step 2)
-    status: pending
+    status: completed
   - id: mac-rerun-ci
     content: Re-run failed Build releases workflow for tag v1.2.11 (Step 3)
-    status: pending
+    status: completed
   - id: mac-enable-pages
     content: Enable KurtStevenK/apt GitHub Pages from gh-pages branch (Step 4)
-    status: pending
+    status: completed
   - id: mac-verify-apt
     content: curl InRelease/gpg.key and optional Docker apt-get install test (Steps 5–6)
-    status: pending
+    status: completed
 isProject: false
 ---
 

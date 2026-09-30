@@ -6,3 +6,6 @@ release/
 .DS_Store
 Thumbs.db
 .env
+
+# Local APT signing keyring (see packaging/apt/README.md); never commit private keys
+.gnupg-apt-cursor-auto-runner/

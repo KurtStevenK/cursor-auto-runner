@@ -10,10 +10,10 @@ todos:
     status: pending
   - id: align-dmg-names
     content: "Phase C: Set mac artifactName in package.json; fix build.yml DMG paths; tag release so CI updates tap with matching SHA256"
-    status: pending
+    status: completed
   - id: homebrew-packaging-docs
     content: "Phase D: Add packaging/homebrew/README.md + smoke-test.sh; link from README.md and CHANGELOG"
-    status: pending
+    status: completed
   - id: final-mac-smoke
     content: Re-run packaging/homebrew/smoke-test.sh and brew install on Mac after publish
     status: pending
