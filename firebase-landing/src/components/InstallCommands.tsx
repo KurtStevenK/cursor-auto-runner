@@ -4,7 +4,7 @@ import { links, linuxFiles, releaseMirrorUrl } from '../config';
 
 type Props = { mirrorV: string };
 
-type PlatformTab = 'mac' | 'win' | 'linux';
+type PlatformTab = 'mac' | 'win' | 'linux' | 'dev';
 
 const APT_IMPORT_GPG =
   'curl -fsSL https://kurtstevenk.github.io/apt/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/cursor-auto-runner-archive-keyring.gpg';
@@ -22,6 +22,7 @@ const TABS: { id: PlatformTab; label: string; icon: string }[] = [
   { id: 'mac', label: 'macOS', icon: '🍎' },
   { id: 'win', label: 'Windows', icon: '🪟' },
   { id: 'linux', label: 'Linux', icon: '🐧' },
+  { id: 'dev', label: 'Development', icon: '🛠️' },
 ];
 
 function OsGroup({
@@ -64,11 +65,11 @@ export function InstallCommands({ mirrorV }: Props) {
     <section id="install" className="section install">
       <h2>Install commands</h2>
       <p className="section-sub">
-        Choose your platform — each tab lists copy-ready commands for package managers and direct downloads.
+        Choose your platform — each tab lists copy-ready install commands; Development covers cloning repos and release tooling.
       </p>
 
       <div className="install-tabs-wrap">
-        <div className="install-tabs" role="tablist" aria-label="Install platform">
+        <div className="install-tabs" role="tablist" aria-label="Install platform and development">
           {TABS.map(({ id, label, icon }) => {
             const selected = tab === id;
             return (
@@ -279,44 +280,52 @@ export function InstallCommands({ mirrorV }: Props) {
             </OsGroup>
           </div>
         </div>
-      </div>
 
-      <div className="install-layout install-layout--dev">
-        <OsGroup
-          icon="🛠️"
-          title="Development"
-          description="Repos for hacking on the app, updating the Homebrew cask, or maintaining the Debian APT tree."
-          footer={
-            <a href={links.github} target="_blank" rel="noreferrer">KurtStevenK/cursor-auto-runner on GitHub</a>
-          }
+        <div
+          id={`${baseId}-panel-dev`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-dev`}
+          hidden={tab !== 'dev'}
+          className="install-tabpanel"
         >
-          <CopyCommand
-            label="Clone app"
-            command="gh repo clone KurtStevenK/cursor-auto-runner"
-            hint="npm install && npm run dev — requires Node.js 20+ and Linux/macOS/Windows build deps for native modules."
-          />
-          <CopyCommand
-            label="Clone Homebrew tap (homebrew-tap)"
-            command="gh repo clone KurtStevenK/homebrew-tap"
-            hint="This is what macOS users add with brew tap KurtStevenK/tap. Edit Casks/cursor-auto-runner.rb (version + DMG sha256) after each release."
-          />
-          <CopyCommand
-            label="Clone APT repository"
-            command="gh repo clone KurtStevenK/apt"
-            hint="gh-pages branch hosts the public apt repo; CI runs packaging/apt/publish.sh on release."
-          />
-          <CopyCommand
-            label="Open release in browser"
-            command={`gh release view v${mirrorV} --repo KurtStevenK/cursor-auto-runner --web`}
-            hint="DMG, EXE, AppImage, .deb, and .pacman assets for the mirrored version."
-          />
-          <CopyCommand
-            label="Install GitHub CLI (optional)"
-            command="brew install gh"
-            fullWidth
-            hint="Needed for the gh repo clone commands above. macOS via Homebrew; on Linux see github.com/cli/cli#installation."
-          />
-        </OsGroup>
+          <div className="install-layout">
+            <OsGroup
+              icon="🛠️"
+              title="Development"
+              description="Repos for hacking on the app, updating the Homebrew cask, or maintaining the Debian APT tree."
+              footer={
+                <a href={links.github} target="_blank" rel="noreferrer">KurtStevenK/cursor-auto-runner on GitHub</a>
+              }
+            >
+              <CopyCommand
+                label="Clone app"
+                command="gh repo clone KurtStevenK/cursor-auto-runner"
+                hint="npm install && npm run dev — requires Node.js 20+ and Linux/macOS/Windows build deps for native modules."
+              />
+              <CopyCommand
+                label="Clone Homebrew tap (homebrew-tap)"
+                command="gh repo clone KurtStevenK/homebrew-tap"
+                hint="This is what macOS users add with brew tap KurtStevenK/tap. Edit Casks/cursor-auto-runner.rb (version + DMG sha256) after each release."
+              />
+              <CopyCommand
+                label="Clone APT repository"
+                command="gh repo clone KurtStevenK/apt"
+                hint="gh-pages branch hosts the public apt repo; CI runs packaging/apt/publish.sh on release."
+              />
+              <CopyCommand
+                label="Open release in browser"
+                command={`gh release view v${mirrorV} --repo KurtStevenK/cursor-auto-runner --web`}
+                hint="DMG, EXE, AppImage, .deb, and .pacman assets for the mirrored version."
+              />
+              <CopyCommand
+                label="Install GitHub CLI (optional)"
+                command="brew install gh"
+                fullWidth
+                hint="Needed for the gh repo clone commands above. macOS via Homebrew; on Linux see github.com/cli/cli#installation."
+              />
+            </OsGroup>
+          </div>
+        </div>
       </div>
     </section>
   );

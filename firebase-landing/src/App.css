@@ -334,10 +334,6 @@
   gap: 1.25rem;
 }
 
-.install-layout--dev {
-  margin-top: 1.5rem;
-}
-
 .install-os-group {
   display: flex;
   flex-direction: column;
