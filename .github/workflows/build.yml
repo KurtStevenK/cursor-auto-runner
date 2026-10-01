@@ -9,6 +9,7 @@ name: Build releases
 #  - publishes the Chocolatey package to community.chocolatey.org (secret: CHOCOLATEY_API_KEY)
 #  - updates the cursor-auto-runner cask in KurtStevenK/homebrew-tap (secret: TAP_TOKEN)
 #  - publishes the .deb to KurtStevenK/apt on gh-pages (secrets: TAP_TOKEN, APT_GPG_PRIVATE_KEY)
+#  - optionally scans release installers on VirusTotal (secret: VIRUSTOTAL_API_KEY)
 # Trigger: push a tag like v1.2.11, or run manually from the Actions tab.
 
 on:
@@ -90,6 +91,10 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      - name: Install native app deps (better-sqlite3)
+        run: |
+          python3 -m pip install --upgrade setuptools
+          npx electron-builder install-app-deps
       - name: Require Apple signing secrets on release tags
         if: startsWith(github.ref, 'refs/tags/v')
         env:
@@ -183,6 +188,17 @@ jobs:
         with:
           path: artifacts
 
+      - name: VirusTotal scan release artifacts
+        env:
+          VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${VIRUSTOTAL_API_KEY:-}" ]]; then
+            echo "::notice::VIRUSTOTAL_API_KEY not set — skipping VirusTotal"
+            exit 0
+          fi
+          node scripts/virustotal-scan.js --artifacts-dir artifacts --report virustotal-report.md
+
       - name: Build release notes
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
@@ -203,6 +219,10 @@ jobs:
             echo "| Linux (Debian/Ubuntu) | \`cursor-auto-runner_${VERSION}_amd64.deb\` | \`apt-get install cursor-auto-runner\` after [adding the APT repo](https://github.com/KurtStevenK/cursor-auto-runner/blob/master/packaging/apt/README.md), or \`sudo apt install ./cursor-auto-runner_${VERSION}_amd64.deb\` |"
             echo "| Linux (any distro) | \`cursor-auto-runner-$VERSION.AppImage\` | \`chmod +x\` and run |"
             echo "| Linux (Arch) | \`cursor-auto-runner-$VERSION.pacman\` | \`sudo pacman -U cursor-auto-runner-$VERSION.pacman\` |"
+            if [[ -f virustotal-report.md ]]; then
+              echo ""
+              cat virustotal-report.md
+            fi
           } > release-notes.md
 
       - uses: softprops/action-gh-release@v2

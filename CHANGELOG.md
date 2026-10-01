@@ -5,6 +5,21 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.39] - 2026-10-01
+
+### Added
+- **VirusTotal:** `scripts/virustotal-scan.js`, `npm run scan:virustotal` (reads `.env.local`), CI scan on tagged releases when `VIRUSTOTAL_API_KEY` is set; report table on GitHub Release notes.
+- **[SECURITY.md](SECURITY.md)** — public-repo secret inventory and never-commit list; [`.env.example`](.env.example) for local VT key.
+- **GitHub security:** CodeQL analysis, Dependabot (npm + Actions), dependency review on pull requests; README CI/CodeQL badges.
+
+### Changed
+- **`.gitignore`:** `.env.local`, Apple/APT signing artifacts, service-account JSON patterns.
+- **`scripts/refresh-csc-github-secrets.sh`:** no longer prints generated `CSC_KEY_PASSWORD` to the terminal.
+
+### Fixed
+- **CI macOS:** `electron-builder install-app-deps` + Python `setuptools` before `dist:mac` (node-gyp / distutils on macOS runners).
+- **CI Firebase landing:** prefer `FIREBASE_TOKEN` for Hosting deploy; document Hosting Admin on the Linux SA.
+
 ## [1.2.38] - 2026-10-01
 
 ### Fixed

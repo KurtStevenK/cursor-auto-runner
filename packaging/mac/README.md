@@ -1,5 +1,7 @@
 # macOS signing (Developer ID) & App Store (later)
 
+Never commit `.p12` or private `.key` files — see [SECURITY.md](../../SECURITY.md) and [`.gitignore`](../../.gitignore).
+
 ## Two different Apple certificates
 
 | Certificate | Use |

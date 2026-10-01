@@ -37,5 +37,6 @@ echo "Updated CSC_LINK, CSC_KEY_PASSWORD, APPLE_TEAM_ID on $REPO"
 echo "Local p12: $OUT"
 echo "CSC_KEY_PASSWORD is stored in GitHub Actions secrets (and matches the regenerated .p12)."
 if [[ -z "${CSC_KEY_PASSWORD:-}" ]]; then
-  echo "Generated CSC_KEY_PASSWORD (save in your password manager): $CSC_PASS"
+  echo "A new CSC_KEY_PASSWORD was generated and uploaded to GitHub — it is not printed here."
+  echo "Export CSC_KEY_PASSWORD before running this script if you need a known value in your password manager."
 fi

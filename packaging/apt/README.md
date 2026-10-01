@@ -1,5 +1,7 @@
 # APT repository (`KurtStevenK/apt`)
 
+Never commit `apt-signing-private.asc` or other private keys — see [SECURITY.md](../../SECURITY.md) and [`.gitignore`](../../.gitignore).
+
 Debian and Ubuntu users install with `apt-get install cursor-auto-runner` after adding this signed repository (hosted on GitHub Pages at https://kurtstevenk.github.io/apt/).
 
 ## One-time setup (maintainer)

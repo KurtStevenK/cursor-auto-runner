@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.38",
+  "version": "1.2.39",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -32,7 +32,8 @@
     "bench:matcher": "npm run compile && node scripts/bench-matcher.js",
     "soak:matcher": "npm run compile && node scripts/soak-matcher.js",
     "build:firebase-landing": "npm run build --prefix firebase-landing",
-    "deploy:firebase": "npm run build:firebase-landing && firebase deploy --only hosting,storage --project cursor-auto-runner-linux"
+    "deploy:firebase": "npm run build:firebase-landing && firebase deploy --only hosting,storage --project cursor-auto-runner-linux",
+    "scan:virustotal": "node scripts/virustotal-scan.js --artifacts-dir release"
   },
   "build": {
     "appId": "com.kurtstevenk.cursor-auto-runner",

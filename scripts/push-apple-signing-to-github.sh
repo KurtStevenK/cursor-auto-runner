@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Upload macOS signing + notarization secrets to GitHub Actions.
+# Never commit .p12 or .key files — see SECURITY.md
 set -euo pipefail
 
 REPO="KurtStevenK/cursor-auto-runner"
