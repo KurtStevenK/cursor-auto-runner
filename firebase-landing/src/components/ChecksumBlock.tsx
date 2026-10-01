@@ -20,12 +20,20 @@ function winVerify(asset: ReleaseAsset) {
   return `certutil -hashfile "${asset.name}" SHA256`;
 }
 
-export function ChecksumBlock({ assets, version }: { assets: ReleaseAsset[]; version: string }) {
+export function ChecksumBlock({
+  assets,
+  version,
+  showHeading = true,
+}: {
+  assets: ReleaseAsset[];
+  version: string;
+  showHeading?: boolean;
+}) {
   if (assets.length === 0) return null;
 
   return (
-    <div className="install-checksums">
-      <p className="install-checksums-title">Checksums &amp; verify</p>
+    <div className={`install-checksums${showHeading ? '' : ' install-checksums--standalone'}`}>
+      {showHeading ? <p className="install-checksums-title">Checksums &amp; verify</p> : null}
       {assets.map((asset) => (
         <div key={asset.name} className="install-checksum-asset">
           <a
