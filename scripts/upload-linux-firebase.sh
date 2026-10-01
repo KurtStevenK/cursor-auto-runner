@@ -12,6 +12,11 @@ if ! command -v gcloud >/dev/null 2>&1; then
   exit 1
 fi
 
+# gcloud does not read GOOGLE_APPLICATION_CREDENTIALS on its own.
+if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
+  gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" --quiet
+fi
+
 upload_name() {
   local base
   base=$(basename "$1")
