@@ -115,7 +115,7 @@
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
     "better-sqlite3": "^12.4.1",
-    "jimp": "^0.22.12"
+    "jimp": "^1.6.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
