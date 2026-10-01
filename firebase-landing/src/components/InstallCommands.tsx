@@ -31,7 +31,7 @@ export function InstallCommands({ mirrorV }: Props) {
   return (
     <section id="install" className="section install">
       <h2>Install commands</h2>
-      <p className="section-sub">Grouped by OS — one copy icon per command.</p>
+      <p className="section-sub">Install by OS; clone and tooling under Development.</p>
       <div className="install-os-grid">
         <OsGroup icon="🍎" title="macOS">
           <CopyCommand label="Add tap (first time)" command="brew tap KurtStevenK/tap" />
@@ -40,7 +40,6 @@ export function InstallCommands({ mirrorV }: Props) {
             command="brew install --cask cursor-auto-runner"
             hint="Or without tapping: brew install --cask KurtStevenK/tap/cursor-auto-runner"
           />
-          <CopyCommand label="Clone Homebrew tap" command="gh repo clone KurtStevenK/homebrew-tap" />
         </OsGroup>
 
         <OsGroup
@@ -71,11 +70,18 @@ export function InstallCommands({ mirrorV }: Props) {
             label="AppImage"
             command={`chmod +x cursor-auto-runner-${mirrorV}.AppImage && ./cursor-auto-runner-${mirrorV}.AppImage`}
           />
-          <CopyCommand label="Clone APT repository" command="gh repo clone KurtStevenK/apt" />
         </OsGroup>
 
-        <OsGroup icon="📦" title="Source & releases">
-          <CopyCommand label="Clone app repository" command="gh repo clone KurtStevenK/cursor-auto-runner" />
+        <OsGroup
+          icon="🛠️"
+          title="Development"
+          footer={
+            <a href={links.github} target="_blank" rel="noreferrer">KurtStevenK/cursor-auto-runner on GitHub</a>
+          }
+        >
+          <CopyCommand label="Clone app" command="gh repo clone KurtStevenK/cursor-auto-runner" />
+          <CopyCommand label="Clone Homebrew tap" command="gh repo clone KurtStevenK/homebrew-tap" />
+          <CopyCommand label="Clone APT repository" command="gh repo clone KurtStevenK/apt" />
           <CopyCommand
             label="Open release in browser"
             command={`gh release view v${mirrorV} --repo KurtStevenK/cursor-auto-runner --web`}
