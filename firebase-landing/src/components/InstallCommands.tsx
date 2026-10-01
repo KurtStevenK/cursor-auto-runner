@@ -1,8 +1,8 @@
 import { useId, useState, type ReactNode } from 'react';
 import { ChecksumBlock, assetsForPlatform } from './ChecksumBlock';
 import { CopyCommand } from './CopyCommand';
-import releaseData from '../data/release-1.2.28.json';
 import { links, linuxFiles, releaseMirrorUrl } from '../config';
+import { releaseData } from '../release-data';
 
 type Props = { mirrorV: string };
 

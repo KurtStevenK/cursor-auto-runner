@@ -1,15 +1,15 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { InstallCommands } from './components/InstallCommands';
 import { Scene } from './components/Scene';
-import releaseData from './data/release-1.2.28.json';
 import {
-  LINUX_MIRROR_VERSION,
+  MIRROR_VERSION,
   VERSION,
   links,
   linuxFiles,
   releaseMirrorUrl,
   storageObjectUrl,
 } from './config';
+import { releaseData } from './release-data';
 import './App.css';
 
 const fadeUp = {
@@ -21,7 +21,7 @@ const fadeUp = {
   }),
 };
 
-const mirrorV = LINUX_MIRROR_VERSION;
+const mirrorV = MIRROR_VERSION;
 
 export default function App() {
   const reduceMotion = useReducedMotion();
