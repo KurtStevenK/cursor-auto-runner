@@ -1,5 +1,5 @@
 /** Template loading and validation. Runtime NCC matching lives in the worker. */
-import Jimp from 'jimp';
+import { Jimp } from 'jimp';
 
 export interface GrayImage {
   width: number;

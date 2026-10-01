@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Worker } = require('node:worker_threads');
 const asar = require('@electron/asar');
-const Jimp = require('jimp');
+const { Jimp } = require('jimp');
 
 const resourcesPath = path.join(__dirname, '..', 'release', 'win-unpacked', 'resources');
 const workerPath = path.join(

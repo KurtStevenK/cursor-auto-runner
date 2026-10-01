@@ -40,7 +40,7 @@ export class MatchWorkerClient {
     const worker = new Worker(this.workerPath());
     this.worker = worker;
     worker.on('message', (response: MatchWorkerResponse) => this.handleResponse(response));
-    worker.on('error', (error) => this.handleFailure(error));
+    worker.on('error', (error: Error) => this.handleFailure(error));
     worker.on('exit', (code) => {
       if (this.worker !== worker) return;
       this.worker = null;

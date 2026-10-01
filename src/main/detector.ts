@@ -465,7 +465,7 @@ export class Detector {
   }
 
   private async bitmapBuffer(image: Electron.NativeImage): Promise<ArrayBuffer> {
-    const bitmap = image.getBitmap();
+    const bitmap = image.toBitmap();
     if (
       bitmap.buffer instanceof ArrayBuffer &&
       bitmap.byteOffset === 0 &&
