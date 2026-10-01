@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.25] - 2026-10-01
+
+### Fixed
+- **macOS permissions loop:** Auto Run no longer blocks when System Settings already show Screen Recording and Accessibility ON but Electron’s APIs still report denied (common after Homebrew upgrades with ad-hoc builds). Checks native TCC status, runs a short screen-capture probe, and offers **Try again** with clearer reset steps.
+
 ## [1.2.24] - 2026-10-01
 
 ### Fixed

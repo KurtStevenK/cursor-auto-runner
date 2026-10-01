@@ -165,6 +165,7 @@ updates the Homebrew tap cask, and publishes the `.deb` to the [`KurtStevenK/apt
 | Symptom | Fix |
 |---|---|
 | Nothing is clicked | Capture templates for your theme (`npm run capture-templates`) |
+| **Permissions dialog every time** you start Auto Run (toggles already ON) | Upgrade to **v1.2.25+**. If it persists: quit the app, **remove** Cursor Auto Runner from Screen Recording and Accessibility, reopen from `/Applications`, enable both again, then use **Try again** in the dialog. Common after Homebrew upgrades while the DMG is ad-hoc signed. |
 | Watching the Cursor window but **0 clicks** on macOS | Grant Screen Recording and Accessibility to **Cursor Auto Runner** (not Cursor IDE). Upgrade to the latest build, then re-capture dark-theme Run / Always Run if the UI changed. Run `CURSOR_AUTO_RUNNER_DEBUG_DETECT=1` from Terminal to see match diagnostics. |
 | Clicks stopped after a Cursor update | Cursor's UI changed — re-capture the templates |
 | "Cursor window not found" in the overlay | The Cursor window is minimized or all its windows are hidden — unminimize it |
