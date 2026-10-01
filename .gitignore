@@ -6,7 +6,19 @@ release/
 .DS_Store
 Thumbs.db
 .env
+.env.local
 .tmp/
+
+# Signing & credentials (never commit) — see SECURITY.md
+*.p12
+*.pfx
+DeveloperIDApplication.key
+DeveloperIDApplication-for-ci.p12
+apt-signing-private.asc
+**/apt-signing-private.asc
+**/firebase-sa.json
+**/*service*account*.json
+*.cer
 **/car-linux-releases-sa.json
 .firebase/
 firebase-landing/dist/

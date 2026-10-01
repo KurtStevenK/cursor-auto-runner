@@ -10,10 +10,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/build.yml"><img src="https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/build.yml/badge.svg" alt="Build releases" /></a>
+  <a href="https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/codeql-analysis.yml"><img src="https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/codeql-analysis.yml/badge.svg" alt="CodeQL" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
   <img src="https://img.shields.io/badge/electron-33-47848f" alt="electron" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
-  <img src="https://img.shields.io/badge/version-1.2.30-22c55e" alt="version" />
+  <img src="https://img.shields.io/github/v/release/KurtStevenK/cursor-auto-runner?label=version" alt="version" />
 </p>
 
 ---
@@ -191,6 +193,12 @@ Stats are stored in `%APPDATA%/Cursor Auto Runner/stats.db` (SQLite) or
 `clicks-fallback.json` when the native SQLite module is unavailable.
 See [PERFORMANCE.md](PERFORMANCE.md) for the recorded baseline, acceptance
 measurements and opt-in live diagnostics.
+
+## Security
+
+Signing keys and API tokens stay in GitHub Actions secrets and local `.env.local` (never committed). See [SECURITY.md](SECURITY.md).
+
+Release installers are scanned with [VirusTotal](https://www.virustotal.com) when `VIRUSTOTAL_API_KEY` is configured (CI and `npm run scan:virustotal` locally). The repo uses [CodeQL](https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/codeql-analysis.yml) and [Dependabot](https://github.com/KurtStevenK/cursor-auto-runner/security/dependabot) for dependency and code analysis.
 
 ## Versioning
 

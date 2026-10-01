@@ -27,6 +27,9 @@ Large Linux artifacts (AppImage, `.deb`, `.pacman`) can be mirrored to **Firebas
    - GitHub → `cursor-auto-runner` → Settings → Secrets → Actions:
      - **`FIREBASE_SERVICE_ACCOUNT_LINUX`**: full JSON key contents
      - **`FIREBASE_STORAGE_BUCKET`**: e.g. `cursor-auto-runner-linux.firebasestorage.app` (Console → Storage → bucket name)
+   - For **GitHub Actions Hosting deploy** (`.github/workflows/firebase-landing.yml`), either:
+     - **`FIREBASE_TOKEN`**: `firebase login:ci` (recommended), or
+     - Grant the same service account **Firebase Hosting Admin** (Storage-only keys cannot deploy Hosting).
 
 5. **gcloud** (optional, same Google account):
    ```bash

@@ -25,14 +25,17 @@ jobs:
       - run: npm ci --prefix firebase-landing
       - name: Deploy Hosting (and storage rules)
         env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           FIREBASE_SERVICE_ACCOUNT_LINUX: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LINUX }}
         run: |
           set -euo pipefail
-          if [[ -z "${FIREBASE_SERVICE_ACCOUNT_LINUX:-}" ]]; then
-            echo "::notice::Skipping Firebase deploy (set FIREBASE_SERVICE_ACCOUNT_LINUX)"
+          if [[ -z "${FIREBASE_TOKEN:-}" && -z "${FIREBASE_SERVICE_ACCOUNT_LINUX:-}" ]]; then
+            echo "::notice::Skipping Firebase deploy (set FIREBASE_TOKEN or FIREBASE_SERVICE_ACCOUNT_LINUX with Hosting Admin)"
             exit 0
           fi
-          echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          if [[ -z "${FIREBASE_TOKEN:-}" ]]; then
+            echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
+            export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          fi
           npm run build:firebase-landing
           npx firebase-tools@13.29.1 deploy --only hosting,storage --project cursor-auto-runner-linux --non-interactive
