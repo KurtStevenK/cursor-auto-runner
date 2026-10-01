@@ -88,6 +88,14 @@ export default function App() {
       title: 'Tray-first control',
       text: 'Left-click toggles stats; right-click starts modes and captures templates.',
     },
+    {
+      title: 'Multi-monitor & themes',
+      text: 'Finds Cursor on any display, dark and light UI, with per-display DPI scaling absorbed.',
+    },
+    {
+      title: 'Cursor-safe clicking',
+      text: 'Restores the mouse pointer after each click; cooldown and match checks avoid double clicks.',
+    },
   ];
 
   return (

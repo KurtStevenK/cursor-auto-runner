@@ -1,8 +1,10 @@
-import type { ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { CopyCommand } from './CopyCommand';
 import { links, linuxFiles, releaseMirrorUrl } from '../config';
 
 type Props = { mirrorV: string };
+
+type PlatformTab = 'mac' | 'win' | 'linux';
 
 const APT_IMPORT_GPG =
   'curl -fsSL https://kurtstevenk.github.io/apt/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/cursor-auto-runner-archive-keyring.gpg';
@@ -15,6 +17,12 @@ const HOMEBREW_INSTALL =
 
 const CHOCOLATEY_INSTALL =
   'Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString(\'https://community.chocolatey.org/install.ps1\'))';
+
+const TABS: { id: PlatformTab; label: string; icon: string }[] = [
+  { id: 'mac', label: 'macOS', icon: '🍎' },
+  { id: 'win', label: 'Windows', icon: '🪟' },
+  { id: 'linux', label: 'Linux', icon: '🐧' },
+];
 
 function OsGroup({
   icon,
@@ -44,16 +52,9 @@ function OsGroup({
   );
 }
 
-function LinuxSectionLabel() {
-  return (
-    <p className="install-linux-label" id="install-linux">
-      <span className="install-linux-label-icon" aria-hidden="true">🐧</span>
-      Linux — pick your distro
-    </p>
-  );
-}
-
 export function InstallCommands({ mirrorV }: Props) {
+  const baseId = useId();
+  const [tab, setTab] = useState<PlatformTab>('linux');
   const linux = linuxFiles(mirrorV);
   const appImageUrl = releaseMirrorUrl(mirrorV, linux.appImage);
   const pacmanUrl = releaseMirrorUrl(mirrorV, linux.pacman);
@@ -63,171 +64,224 @@ export function InstallCommands({ mirrorV }: Props) {
     <section id="install" className="section install">
       <h2>Install commands</h2>
       <p className="section-sub">
-        One group per platform or distro. Optional last step in each group installs Homebrew, Chocolatey, etc.
+        Choose your platform — each tab lists copy-ready commands for package managers and direct downloads.
       </p>
-      <div className="install-layout">
-        <OsGroup
-          icon="🍎"
-          title="macOS"
-          description="Homebrew cask installs the signed DMG into /Applications; upgrades with brew upgrade --cask."
+
+      <div className="install-tabs-wrap">
+        <div className="install-tabs" role="tablist" aria-label="Install platform">
+          {TABS.map(({ id, label, icon }) => {
+            const selected = tab === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                id={`${baseId}-tab-${id}`}
+                aria-selected={selected}
+                aria-controls={`${baseId}-panel-${id}`}
+                tabIndex={selected ? 0 : -1}
+                className={`install-tab${selected ? ' install-tab--active' : ''}`}
+                onClick={() => setTab(id)}
+              >
+                <span className="install-tab-icon" aria-hidden="true">{icon}</span>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          id={`${baseId}-panel-mac`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-mac`}
+          hidden={tab !== 'mac'}
+          className="install-tabpanel"
         >
-          <CopyCommand
-            label="Add tap (first time)"
-            command="brew tap KurtStevenK/tap"
-            hint="Same repo as KurtStevenK/homebrew-tap on GitHub — Homebrew exposes it as KurtStevenK/tap. One-time; enables the short cask name below."
-          />
-          <CopyCommand
-            label="Install cask"
-            command="brew install --cask cursor-auto-runner"
-            hint="Installs from Casks/cursor-auto-runner.rb in that tap. Grant Screen Recording and Accessibility after first launch."
-          />
-          <CopyCommand
-            label="One-liner (skip tap step)"
-            command="brew install --cask KurtStevenK/tap/cursor-auto-runner"
-            fullWidth
-            hint="Equivalent to tap + install cask when you do not want a permanent tap on your machine."
-          />
-          <CopyCommand
-            label="Install Homebrew (optional)"
-            command={HOMEBREW_INSTALL}
-            fullWidth
-            hint="Only if brew is not installed yet. Run this before the tap/cask steps. On Apple silicon, add brew to PATH using the lines the installer prints."
-          />
-        </OsGroup>
+          <div className="install-layout">
+            <OsGroup
+              icon="🍎"
+              title="macOS"
+              description="Homebrew cask installs the signed DMG into /Applications; upgrades with brew upgrade --cask."
+            >
+              <CopyCommand
+                label="Add tap (first time)"
+                command="brew tap KurtStevenK/tap"
+                hint="Same repo as KurtStevenK/homebrew-tap on GitHub — Homebrew exposes it as KurtStevenK/tap. One-time; enables the short cask name below."
+              />
+              <CopyCommand
+                label="Install cask"
+                command="brew install --cask cursor-auto-runner"
+                hint="Installs from Casks/cursor-auto-runner.rb in that tap. Grant Screen Recording and Accessibility after first launch."
+              />
+              <CopyCommand
+                label="One-liner (skip tap step)"
+                command="brew install --cask KurtStevenK/tap/cursor-auto-runner"
+                fullWidth
+                hint="Equivalent to tap + install cask when you do not want a permanent tap on your machine."
+              />
+              <CopyCommand
+                label="Install Homebrew (optional)"
+                command={HOMEBREW_INSTALL}
+                fullWidth
+                hint="Only if brew is not installed yet. Run this before the tap/cask steps. On Apple silicon, add brew to PATH using the lines the installer prints."
+              />
+            </OsGroup>
+          </div>
+        </div>
 
-        <OsGroup
-          icon="🪟"
-          title="Windows"
-          description="Chocolatey serves the same NSIS build as the Setup.exe download."
-          footer={
-            <a href={`${links.github}/blob/master/packaging/chocolatey/README.md`} target="_blank" rel="noreferrer">
-              Chocolatey packaging notes
-            </a>
-          }
+        <div
+          id={`${baseId}-panel-win`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-win`}
+          hidden={tab !== 'win'}
+          className="install-tabpanel"
         >
-          <CopyCommand
-            label="Install package"
-            command="choco install cursor-auto-runner"
-            hint="Use an elevated PowerShell or cmd if your org requires it. Upgrade: choco upgrade cursor-auto-runner"
-          />
-          <CopyCommand
-            label="Install Chocolatey (optional)"
-            command={CHOCOLATEY_INSTALL}
-            fullWidth
-            hint="Run in PowerShell as Administrator before choco install. Close and reopen the shell after install. See chocolatey.org/install for troubleshooting."
-          />
-        </OsGroup>
+          <div className="install-layout">
+            <OsGroup
+              icon="🪟"
+              title="Windows"
+              description="Chocolatey serves the same NSIS build as the Setup.exe download."
+              footer={
+                <a href={`${links.github}/blob/master/packaging/chocolatey/README.md`} target="_blank" rel="noreferrer">
+                  Chocolatey packaging notes
+                </a>
+              }
+            >
+              <CopyCommand
+                label="Install package"
+                command="choco install cursor-auto-runner"
+                hint="Use an elevated PowerShell or cmd if your org requires it. Upgrade: choco upgrade cursor-auto-runner"
+              />
+              <CopyCommand
+                label="Install Chocolatey (optional)"
+                command={CHOCOLATEY_INSTALL}
+                fullWidth
+                hint="Run in PowerShell as Administrator before choco install. Close and reopen the shell after install. See chocolatey.org/install for troubleshooting."
+              />
+            </OsGroup>
+          </div>
+        </div>
 
-        <LinuxSectionLabel />
-
-        <OsGroup
-          icon="🐧"
-          title="Debian"
-          description="Signed APT repo (amd64). Recommended on Debian 11+; use AppImage on very old glibc if the .deb refuses to start."
-          footer={
-            <a href={links.aptReadme} target="_blank" rel="noreferrer">
-              Full APT repo documentation
-            </a>
-          }
+        <div
+          id={`${baseId}-panel-linux`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-linux`}
+          hidden={tab !== 'linux'}
+          className="install-tabpanel"
         >
-          <CopyCommand
-            label="Import repo signing key"
-            command={APT_IMPORT_GPG}
-            hint="One-time per machine. Stores the KurtStevenK/apt signing key for apt."
-          />
-          <CopyCommand
-            label="Add apt source"
-            command={APT_ADD_SOURCE}
-            hint="Points apt at https://kurtstevenk.github.io/apt stable main."
-          />
-          <CopyCommand
-            label="Update package lists"
-            command="sudo apt-get update"
-            hint="Run after adding the source so apt sees cursor-auto-runner."
-          />
-          <CopyCommand
-            label="Install package"
-            command="sudo apt-get install cursor-auto-runner"
-            hint="Installs menu entry and binary; future releases: sudo apt-get upgrade."
-          />
-          <CopyCommand
-            label="Or install local .deb (optional)"
-            command={`curl -fLO '${debUrl}' && sudo apt install ./${linux.deb}`}
-            fullWidth
-            hint="Alternative to the APT repo above — one version only. Same .deb on GitHub Releases or under Downloads."
-          />
-        </OsGroup>
+          <div className="install-layout">
+            <OsGroup
+              icon="🐧"
+              title="Debian"
+              description="Signed APT repo (amd64). Recommended on Debian 11+; use AppImage on very old glibc if the .deb refuses to start."
+              footer={
+                <a href={links.aptReadme} target="_blank" rel="noreferrer">
+                  Full APT repo documentation
+                </a>
+              }
+            >
+              <CopyCommand
+                label="Import repo signing key"
+                command={APT_IMPORT_GPG}
+                hint="One-time per machine. Stores the KurtStevenK/apt signing key for apt."
+              />
+              <CopyCommand
+                label="Add apt source"
+                command={APT_ADD_SOURCE}
+                hint="Points apt at https://kurtstevenk.github.io/apt stable main."
+              />
+              <CopyCommand
+                label="Update package lists"
+                command="sudo apt-get update"
+                hint="Run after adding the source so apt sees cursor-auto-runner."
+              />
+              <CopyCommand
+                label="Install package"
+                command="sudo apt-get install cursor-auto-runner"
+                hint="Installs menu entry and binary; future releases: sudo apt-get upgrade."
+              />
+              <CopyCommand
+                label="Or install local .deb (optional)"
+                command={`curl -fLO '${debUrl}' && sudo apt install ./${linux.deb}`}
+                fullWidth
+                hint="Alternative to the APT repo above — one version only. Same .deb on GitHub Releases or under Downloads."
+              />
+            </OsGroup>
 
-        <OsGroup
-          icon="🐧"
-          title="Ubuntu"
-          description="Same KurtStevenK/apt repository as Debian — typical targets: Ubuntu 22.04 LTS and 24.04 (amd64)."
-          footer={
-            <a href={links.aptRepo} target="_blank" rel="noreferrer">
-              APT repo on GitHub Pages
-            </a>
-          }
-        >
-          <CopyCommand
-            label="Import repo signing key"
-            command={APT_IMPORT_GPG}
-            hint="Identical to Debian; safe to repeat if the keyring file already exists."
-          />
-          <CopyCommand
-            label="Add apt source"
-            command={APT_ADD_SOURCE}
-            hint="Uses signed-by keyring — no apt-key deprecated workflow."
-          />
-          <CopyCommand
-            label="Update package lists"
-            command="sudo apt-get update"
-          />
-          <CopyCommand
-            label="Install package"
-            command="sudo apt-get install cursor-auto-runner"
-            hint="Tray app needs a desktop session (Wayland/X11). Grant accessibility if your distro prompts for it."
-          />
-        </OsGroup>
+            <OsGroup
+              icon="🐧"
+              title="Ubuntu"
+              description="Same KurtStevenK/apt repository as Debian — typical targets: Ubuntu 22.04 LTS and 24.04 (amd64)."
+              footer={
+                <a href={links.aptRepo} target="_blank" rel="noreferrer">
+                  APT repo on GitHub Pages
+                </a>
+              }
+            >
+              <CopyCommand
+                label="Import repo signing key"
+                command={APT_IMPORT_GPG}
+                hint="Identical to Debian; safe to repeat if the keyring file already exists."
+              />
+              <CopyCommand
+                label="Add apt source"
+                command={APT_ADD_SOURCE}
+                hint="Uses signed-by keyring — no apt-key deprecated workflow."
+              />
+              <CopyCommand
+                label="Update package lists"
+                command="sudo apt-get update"
+              />
+              <CopyCommand
+                label="Install package"
+                command="sudo apt-get install cursor-auto-runner"
+                hint="Tray app needs a desktop session (Wayland/X11). Grant accessibility if your distro prompts for it."
+              />
+            </OsGroup>
 
-        <OsGroup
-          icon="📦"
-          title="AppImage (any distro)"
-          description="Portable binary — no root, no package manager. Best when APT/pacman does not fit or you want a single file."
-        >
-          <CopyCommand
-            label="Download AppImage"
-            command={`curl -fLO '${appImageUrl}'`}
-            hint="Firebase mirror; same file as GitHub Releases. Or pick AppImage under Downloads above."
-          />
-          <CopyCommand
-            label="Run AppImage"
-            command={`chmod +x ${linux.appImage} && ./${linux.appImage}`}
-            hint="Run from the folder where you saved the file. If it fails to start, install FUSE (e.g. sudo apt install libfuse2 on Debian/Ubuntu)."
-          />
-        </OsGroup>
+            <OsGroup
+              icon="📦"
+              title="AppImage (any distro)"
+              description="Portable binary — no root, no package manager. Best when APT/pacman does not fit or you want a single file."
+            >
+              <CopyCommand
+                label="Download AppImage"
+                command={`curl -fLO '${appImageUrl}'`}
+                hint="Firebase mirror; same file as GitHub Releases. Or pick AppImage under Downloads above."
+              />
+              <CopyCommand
+                label="Run AppImage"
+                command={`chmod +x ${linux.appImage} && ./${linux.appImage}`}
+                hint="Run from the folder where you saved the file. If it fails to start, install FUSE (e.g. sudo apt install libfuse2 on Debian/Ubuntu)."
+              />
+            </OsGroup>
 
-        <OsGroup
-          icon="🐧"
-          title="Arch Linux"
-          description="Official release ships a .pacman package (not in AUR). Install with pacman -U after download."
-          footer={
-            <a href={`${links.github}/releases/latest`} target="_blank" rel="noreferrer">
-              .pacman on GitHub Releases
-            </a>
-          }
-        >
-          <CopyCommand
-            label="Download .pacman"
-            command={`curl -fLO '${pacmanUrl}'`}
-            hint={`File name: ${linux.pacman}. Also attached to each GitHub release and listed under Linux downloads (.pacman link).`}
-          />
-          <CopyCommand
-            label="Install package"
-            command={`sudo pacman -U ${linux.pacman}`}
-            hint="Installs system-wide. Upgrade: download the new .pacman and run pacman -U again (pacman may ask to replace the existing package)."
-          />
-        </OsGroup>
+            <OsGroup
+              icon="🐧"
+              title="Arch Linux"
+              description="Official release ships a .pacman package (not in AUR). Install with pacman -U after download."
+              footer={
+                <a href={`${links.github}/releases/latest`} target="_blank" rel="noreferrer">
+                  .pacman on GitHub Releases
+                </a>
+              }
+            >
+              <CopyCommand
+                label="Download .pacman"
+                command={`curl -fLO '${pacmanUrl}'`}
+                hint={`File name: ${linux.pacman}. Also attached to each GitHub release and listed under Linux downloads (.pacman link).`}
+              />
+              <CopyCommand
+                label="Install package"
+                command={`sudo pacman -U ${linux.pacman}`}
+                hint="Installs system-wide. Upgrade: download the new .pacman and run pacman -U again (pacman may ask to replace the existing package)."
+              />
+            </OsGroup>
+          </div>
+        </div>
+      </div>
 
+      <div className="install-layout install-layout--dev">
         <OsGroup
           icon="🛠️"
           title="Development"
