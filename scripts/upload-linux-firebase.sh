@@ -12,6 +12,16 @@ if ! command -v gcloud >/dev/null 2>&1; then
   exit 1
 fi
 
+upload_name() {
+  local base
+  base=$(basename "$1")
+  if [[ "$base" == *".AppImage" ]]; then
+    echo "cursor-auto-runner-${VERSION}.AppImage"
+  else
+    echo "$base"
+  fi
+}
+
 shopt -s nullglob
 appimage=""
 for candidate in \
@@ -30,16 +40,6 @@ for f in \
   "$DIR"/cursor-auto-runner-"${VERSION}".pacman; do
   [[ -f "$f" ]] && files+=("$f")
 done
-# Normalize AppImage name on upload for stable public URLs
-upload_name() {
-  local base
-  base=$(basename "$1")
-  if [[ "$base" == *".AppImage" ]]; then
-    echo "cursor-auto-runner-${VERSION}.AppImage"
-  else
-    echo "$base"
-  fi
-}
 
 if ((${#files[@]} == 0)); then
   echo "No Linux artifacts in $DIR for version $VERSION" >&2

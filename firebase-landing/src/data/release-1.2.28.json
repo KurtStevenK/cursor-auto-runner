@@ -1,0 +1,45 @@
+{
+  "version": "1.2.28",
+  "assets": [
+    {
+      "name": "Cursor.Auto.Runner-1.2.28-arm64.dmg",
+      "sha256": "20489b2b3e68e2f3f3affd6eeffc23cbefebc5938bef85da6ab90b12250f752f",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.28.dmg",
+      "sha256": "dac225701c6e4214ec30435db097959974a55d750bf46d4eceb7cc748b8ee9fc",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.28-arm64-mac.zip",
+      "sha256": "ab0aa72d7fe58d9da1eaf07a340a9ad34d67117dca2331d1fefdb4a26260c0cb",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.28-mac.zip",
+      "sha256": "8389f5c467c06dbec691800b61947ba833c42f3051700b16f53f2f18636a64a0",
+      "platform": "macOS"
+    },
+    {
+      "name": "cursor-auto-runner-1.2.28.AppImage",
+      "sha256": "93d61a8d4372832b153d1f925fcc28ef622763fbdf425610189cfd097192dc59",
+      "platform": "Linux"
+    },
+    {
+      "name": "cursor-auto-runner_1.2.28_amd64.deb",
+      "sha256": "9f13390ca1fe3113e4f876b952bf8de7ec3c767c4fb812f57828ea00241d2deb",
+      "platform": "Linux"
+    },
+    {
+      "name": "cursor-auto-runner-1.2.28.pacman",
+      "sha256": "d0ba7416b801cdc5448676431c750f4e27ecd44c91279b60b04dbbf479db250d",
+      "platform": "Linux"
+    },
+    {
+      "name": "Cursor.Auto.Runner.Setup.1.2.28.exe",
+      "sha256": "6f8fbd4624ae36ed2c7f19a69a6affc03587d14f12f1c04c84637315c8e1c04b",
+      "platform": "Windows"
+    }
+  ]
+}

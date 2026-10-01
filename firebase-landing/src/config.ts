@@ -14,9 +14,19 @@ export const links = {
   ghPages: 'https://kurtstevenk.github.io/cursor-auto-runner/',
 };
 
-/** Public download URL for objects under `linux/<version>/`. */
+function storageUrl(objectPath: string) {
+  const encoded = objectPath.split('/').map(encodeURIComponent).join('%2F');
+  return `https://firebasestorage.googleapis.com/v0/b/${STORAGE_BUCKET}/o/${encoded}?alt=media`;
+}
+
+/** Legacy Linux path: `linux/<version>/<file>`. */
 export function storageObjectUrl(version: string, fileName: string) {
-  return `https://firebasestorage.googleapis.com/v0/b/${STORAGE_BUCKET}/o/linux%2F${version}%2F${encodeURIComponent(fileName)}?alt=media`;
+  return storageUrl(`linux/${version}/${fileName}`);
+}
+
+/** All-platform mirror: `releases/<version>/<file>`. */
+export function releaseMirrorUrl(version: string, fileName: string) {
+  return storageUrl(`releases/${version}/${fileName}`);
 }
 
 export const linuxFiles = (version = VERSION) => ({
