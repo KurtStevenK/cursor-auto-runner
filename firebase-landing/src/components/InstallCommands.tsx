@@ -9,14 +9,16 @@ function OsGroup({
   title,
   children,
   footer,
+  className = '',
 }: {
   icon: string;
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="install-os-group">
+    <div className={`install-os-group ${className}`.trim()}>
       <h3 className="install-os-title">
         <span className="install-os-icon" aria-hidden="true">{icon}</span>
         {title}
@@ -32,7 +34,8 @@ export function InstallCommands({ mirrorV }: Props) {
     <section id="install" className="section install">
       <h2>Install commands</h2>
       <p className="section-sub">Install by OS; clone and tooling under Development.</p>
-      <div className="install-os-grid">
+      <div className="install-layout">
+        <div className="install-platform-grid">
         <OsGroup icon="🍎" title="macOS">
           <CopyCommand label="Add tap (first time)" command="brew tap KurtStevenK/tap" />
           <CopyCommand
@@ -71,8 +74,10 @@ export function InstallCommands({ mirrorV }: Props) {
             command={`chmod +x cursor-auto-runner-${mirrorV}.AppImage && ./cursor-auto-runner-${mirrorV}.AppImage`}
           />
         </OsGroup>
+        </div>
 
         <OsGroup
+          className="install-dev-panel"
           icon="🛠️"
           title="Development"
           footer={

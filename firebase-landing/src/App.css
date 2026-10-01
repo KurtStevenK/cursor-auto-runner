@@ -267,19 +267,49 @@
   gap: 1rem;
 }
 
-.install-os-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+.install-layout {
+  display: flex;
+  flex-direction: column;
   gap: 1.25rem;
-  align-items: start;
+}
+
+.install-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+@media (max-width: 960px) {
+  .install-platform-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .install-os-group {
+  display: flex;
+  flex-direction: column;
   padding: 1.25rem 1.35rem 1.1rem;
   border-radius: 18px;
   background: var(--glass);
   border: 1px solid var(--stroke);
   backdrop-filter: blur(14px);
+}
+
+.install-os-commands {
+  flex: 1;
+}
+
+.install-dev-panel .install-os-commands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .install-dev-panel .install-os-commands {
+    grid-template-columns: 1fr;
+  }
 }
 
 .install-os-title {
@@ -302,8 +332,8 @@
 }
 
 .install-os-footer {
-  margin-top: 0.85rem;
-  padding-top: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.85rem;
   border-top: 1px solid rgba(94, 255, 200, 0.12);
   font-size: 0.85rem;
 }
