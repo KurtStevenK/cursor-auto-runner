@@ -1,0 +1,25 @@
+name: CI
+
+# Runs on every PR and on master merges so branch protection can require this check.
+# Full multi-platform release builds still run only on version tags (build.yml).
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  quality:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npx electron-builder install-app-deps
+      - run: npm run test:stats
+      - run: npm run bench:matcher
