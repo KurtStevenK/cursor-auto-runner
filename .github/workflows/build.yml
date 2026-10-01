@@ -90,12 +90,61 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
-      - run: npm run dist:mac
+      - name: Require Apple signing secrets on release tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -z "${CSC_LINK:-}" ]] && missing+=(CSC_LINK)
+          [[ -z "${CSC_KEY_PASSWORD:-}" ]] && missing+=(CSC_KEY_PASSWORD)
+          [[ -z "${APPLE_TEAM_ID:-}" ]] && missing+=(APPLE_TEAM_ID)
+          if ((${#missing[@]} > 0)); then
+            echo "::error::Missing GitHub Actions secrets for signed macOS releases: ${missing[*]}. See packaging/mac/README.md and scripts/push-apple-signing-to-github.sh"
+            exit 1
+          fi
+          if [[ -z "${APPLE_ID:-}" || -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]]; then
+            echo "::warning::APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD not set — macOS builds will be Developer ID signed but not notarized."
+          fi
+      - name: Build signed macOS DMGs
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npm run dist:mac
+      - name: Verify macOS code signature (when CSC_LINK is set)
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${CSC_LINK:-}" ]]; then
+            echo "::warning::CSC_LINK not set — DMGs are ad-hoc signed; Gatekeeper may block Homebrew installs."
+            exit 0
+          fi
+          for APP in "release/mac-arm64/Cursor Auto Runner.app" "release/mac/Cursor Auto Runner.app"; do
+            [[ -d "$APP" ]] || continue
+            codesign --verify --deep --strict --verbose=2 "$APP"
+            if [[ -n "${APPLE_ID:-}" && -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]]; then
+              spctl -a -t exec -vv "$APP"
+            else
+              echo "::notice::Skipping spctl (notarization secrets not set)"
+            fi
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: macos
           path: |
             release/*.dmg
+            release/*.zip
             release/*.blockmap
 
   release:
@@ -126,7 +175,7 @@ jobs:
             echo "| Platform | File | Install |"
             echo "|---|---|---|"
             echo "| Windows | \`Cursor.Auto.Runner.Setup.$VERSION.exe\` | Run the installer, or \`choco install cursor-auto-runner\` |"
-            echo "| macOS | \`Cursor.Auto.Runner-$VERSION.dmg\` | Open the DMG, or \`brew install --cask KurtStevenK/tap/cursor-auto-runner\` |"
+            echo "| macOS | \`Cursor.Auto.Runner-$VERSION.dmg\` (or \`-arm64.dmg\`, \`.zip\`) | Open the DMG / unzip the app, or \`brew install --cask KurtStevenK/tap/cursor-auto-runner\` |"
             echo "| Linux (Debian/Ubuntu) | \`cursor-auto-runner_${VERSION}_amd64.deb\` | \`apt-get install cursor-auto-runner\` after [adding the APT repo](https://github.com/KurtStevenK/cursor-auto-runner/blob/master/packaging/apt/README.md), or \`sudo apt install ./cursor-auto-runner_${VERSION}_amd64.deb\` |"
             echo "| Linux (any distro) | \`cursor-auto-runner-$VERSION.AppImage\` | \`chmod +x\` and run |"
             echo "| Linux (Arch) | \`cursor-auto-runner-$VERSION.pacman\` | \`sudo pacman -U cursor-auto-runner-$VERSION.pacman\` |"

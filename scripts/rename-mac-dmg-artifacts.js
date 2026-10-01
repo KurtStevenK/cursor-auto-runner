@@ -23,6 +23,11 @@ const renames = [
     `Cursor Auto Runner-${version}-arm64.dmg.blockmap`,
     `Cursor.Auto.Runner-${version}-arm64.dmg.blockmap`,
   ],
+  [`Cursor Auto Runner-${version}-mac.zip`, `Cursor.Auto.Runner-${version}-mac.zip`],
+  [
+    `Cursor Auto Runner-${version}-arm64-mac.zip`,
+    `Cursor.Auto.Runner-${version}-arm64-mac.zip`,
+  ],
 ];
 
 for (const [from, to] of renames) {
