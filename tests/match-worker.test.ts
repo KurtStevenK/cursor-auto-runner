@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as path from 'node:path';
 import { Worker } from 'node:worker_threads';
-import Jimp from 'jimp';
+import { Jimp } from 'jimp';
 import type { MatchWorkerRequest, MatchWorkerResponse } from '../src/shared/match-protocol';
 import { loadTemplate } from '../src/main/matcher';
 import { resizeGray } from '../src/worker/matcher-core';

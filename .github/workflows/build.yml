@@ -27,6 +27,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Pin MSVC for node-gyp on windows-latest
+        run: npm config set msvs_version 2022
       - run: npm ci
       - run: npm test
       - run: npx electron-builder install-app-deps
@@ -41,6 +43,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+      - name: Pin MSVC for node-gyp on windows-latest
+        run: npm config set msvs_version 2022
       - run: npm ci
       - run: npm run dist:win
       - run: npm run test:packaged-worker

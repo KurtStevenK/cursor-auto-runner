@@ -14,7 +14,9 @@ and each shipped task gets its own version number.
 
 ### Changed
 - **CI:** bump pinned GitHub Actions (checkout, setup-node, artifacts, CodeQL, Pages, dependency-review, action-gh-release).
-- **Build:** `electron-builder` 25 → 26; TypeScript 5 → 7.
+- **Build:** `electron-builder` 25 → 26; TypeScript 5 → 7; Electron 33 → 44; `jimp` 0 → 1; `better-sqlite3` 12 → 13; `@types/node` 22 → 26.
+- **Detector:** use `NativeImage.toBitmap()` (Electron 44 deprecates `getBitmap()`).
+- **CI:** pin `msvs_version` 2022 on Windows so `node-gyp` can compile native modules on runners with VS 18.
 - **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
 
 ## [1.2.41] - 2026-10-01
