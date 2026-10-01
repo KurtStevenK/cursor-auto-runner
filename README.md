@@ -165,6 +165,7 @@ updates the Homebrew tap cask, and publishes the `.deb` to the [`KurtStevenK/apt
 | Symptom | Fix |
 |---|---|
 | Nothing is clicked | Capture templates for your theme (`npm run capture-templates`) |
+| Watching the Cursor window but **0 clicks** on macOS | Grant Screen Recording and Accessibility to **Cursor Auto Runner** (not Cursor IDE). Upgrade to the latest build, then re-capture dark-theme Run / Always Run if the UI changed. Run `CURSOR_AUTO_RUNNER_DEBUG_DETECT=1` from Terminal to see match diagnostics. |
 | Clicks stopped after a Cursor update | Cursor's UI changed — re-capture the templates |
 | "Cursor window not found" in the overlay | The Cursor window is minimized or all its windows are hidden — unminimize it |
 | Wrong clicks on a scaled monitor | Re-capture templates on that display (multi-scale matching covers common cases) |
