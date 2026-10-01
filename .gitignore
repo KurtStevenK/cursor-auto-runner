@@ -6,6 +6,11 @@ release/
 .DS_Store
 Thumbs.db
 .env
+.tmp/
+**/car-linux-releases-sa.json
+.firebase/
+firebase-landing/dist/
+firebase-landing/node_modules/
 
 # Local APT signing keyring (see packaging/apt/README.md); never commit private keys
 .gnupg-apt-cursor-auto-runner/

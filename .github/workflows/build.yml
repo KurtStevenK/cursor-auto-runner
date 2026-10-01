@@ -190,6 +190,22 @@ jobs:
           body_path: release-notes.md
           generate_release_notes: true
 
+      - name: Mirror Linux artifacts to Firebase Storage
+        env:
+          FIREBASE_SERVICE_ACCOUNT_LINUX: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LINUX }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${FIREBASE_SERVICE_ACCOUNT_LINUX:-}" || -z "${FIREBASE_STORAGE_BUCKET:-}" ]]; then
+            echo "::notice::Skipping Firebase Linux mirror (set FIREBASE_SERVICE_ACCOUNT_LINUX and FIREBASE_STORAGE_BUCKET)"
+            exit 0
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          chmod +x scripts/upload-linux-firebase.sh
+          bash scripts/upload-linux-firebase.sh "$VERSION" artifacts/linux
+
       - name: Verify publish secrets
         env:
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
