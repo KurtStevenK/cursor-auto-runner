@@ -3,43 +3,51 @@
  * capture) and Accessibility (for window control / synthetic clicks).
  * Windows and Linux need no special permissions.
  */
-import { systemPreferences, dialog, shell } from 'electron';
+import { dialog, shell } from 'electron';
 import * as path from 'path';
+import { formatMacPermissionDialogDetail } from './mac-permission-detail';
+import { macPermissionsSnapshot, macScreenRecordingGranted } from './mac-permission-status';
 
 /** Warm up Screen Recording checks before desktopCapturer (macOS). */
 export async function ensureMacScreenCapture(): Promise<void> {
   if (process.platform !== 'darwin') return;
-  systemPreferences.getMediaAccessStatus('screen');
+  await macScreenRecordingGranted();
 }
 
 /** Returns true when all required macOS permissions are granted (or not on macOS at all). */
 export async function ensureMacPermissions(): Promise<boolean> {
   if (process.platform !== 'darwin') return true;
 
-  await ensureMacScreenCapture();
-  const screenOk = systemPreferences.getMediaAccessStatus('screen') === 'granted';
-  const accessOk = systemPreferences.isTrustedAccessibilityClient(false);
-  if (screenOk && accessOk) return true;
+  for (;;) {
+    const snapshot = await macPermissionsSnapshot();
+    if (snapshot.screenOk && snapshot.accessOk) return true;
 
-  const { response } = await dialog.showMessageBox({
-    type: 'warning',
-    title: 'Cursor Auto Runner — permissions needed',
-    message: 'macOS permissions required',
-    detail:
-      'Cursor Auto Runner needs two permissions to work:\n\n' +
-      '1. Screen Recording — to watch the Cursor window for the Run button.\n' +
-      '2. Accessibility — to move the mouse and click.\n\n' +
-      'Grant both in System Settings → Privacy & Security, then start Auto Run again.',
-    buttons: ['Open Screen Recording', 'Open Accessibility', 'Later'],
-    defaultId: 0,
-    icon: path.join(appIconDir(), 'icon-128.png'),
-  });
-  if (response === 0) {
-    await shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture');
-  } else if (response === 1) {
-    await shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility');
+    const { response } = await dialog.showMessageBox({
+      type: 'warning',
+      title: 'Cursor Auto Runner — permissions needed',
+      message: 'macOS permissions required',
+      detail: formatMacPermissionDialogDetail(snapshot),
+      buttons: ['Try again', 'Open Screen Recording', 'Open Accessibility', 'Cancel'],
+      defaultId: 0,
+      cancelId: 3,
+      icon: path.join(appIconDir(), 'icon-128.png'),
+    });
+
+    if (response === 3) return false;
+    if (response === 1) {
+      await shell.openExternal(
+        'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
+      );
+      continue;
+    }
+    if (response === 2) {
+      await shell.openExternal(
+        'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'
+      );
+      continue;
+    }
+    /* Try again (0) or fall-through: re-check */
   }
-  return false;
 }
 
 function appIconDir(): string {
