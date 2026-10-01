@@ -1,0 +1,45 @@
+{
+  "version": "1.2.41",
+  "assets": [
+    {
+      "name": "cursor-auto-runner-1.2.41.pacman",
+      "sha256": "10a0a5d87c87bc96c60497a6c7d342682d5fd85579f6385d77d91386ecb16c34",
+      "platform": "Linux"
+    },
+    {
+      "name": "cursor-auto-runner_1.2.41_amd64.deb",
+      "sha256": "23ff8495a2912dfa479e7db188634ae525afe3bcb0ae7a40c3087fb31383132c",
+      "platform": "Linux"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.41-arm64-mac.zip",
+      "sha256": "407e95757e4375faf003682113968961a80b458f619efa7b39f5507009c9fe50",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.41-arm64.dmg",
+      "sha256": "059264e433268ff2640e3d0010a2b66b5daaf5748f0cea1454016d1c4a0c6951",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.41-mac.zip",
+      "sha256": "40b8c6e7f284ea5115e11e5218281c6fc7fb2b29e9e7238fbd6edb4fea53d6e1",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.41.AppImage",
+      "sha256": "33167f5661f262f5d7a68e66f10958f1731ee9aed28bd3c8b66c1176f25f761f",
+      "platform": "Linux"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.41.dmg",
+      "sha256": "cdd57fa5d20aaf72231ce944c17d95372af14a6e7b05b41c96a856abe38fd0b0",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner.Setup.1.2.41.exe",
+      "sha256": "ccd2017ec91475a171867ecd3c95659b38bbc6934ca505506bcf5df20052716e",
+      "platform": "Windows"
+    }
+  ]
+}

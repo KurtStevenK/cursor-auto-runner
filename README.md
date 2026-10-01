@@ -10,12 +10,34 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest"><img src="https://img.shields.io/github/v/release/KurtStevenK/cursor-auto-runner?label=release" alt="release" /></a>
+  <a href="https://cursor-auto-runner-linux.web.app"><img src="https://img.shields.io/badge/download-Firebase_landing-red" alt="download" /></a>
+  <img src="https://img.shields.io/badge/license-MIT-yellow" alt="license" />
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
+  <img src="https://img.shields.io/badge/electron-33-47848f?logo=electron&logoColor=white" alt="electron" />
+  <img src="https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white" alt="node" />
+  <a href="https://github.com/KurtStevenK/cursor-auto-runner"><img src="https://img.shields.io/badge/source-open_on_GitHub-181717?logo=github" alt="source" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest"><img src="https://img.shields.io/badge/%CE%A3_release_binaries-VirusTotal_scanned-green" alt="VirusTotal scanned" /></a>
+  <img src="https://img.shields.io/badge/VT_API_quota-4%2Fmin_%7C_500%2Fday-blue" alt="VirusTotal API quota" />
+  <a href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest"><img src="https://img.shields.io/badge/SHA256-VT_report_links-blue" alt="SHA256 in release notes" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/KurtStevenK/cursor-auto-runner/security/dependabot"><img src="https://img.shields.io/badge/dependabot-enabled-0366d6?logo=dependabot&logoColor=white" alt="dependabot" /></a>
+  <a href="SECURITY.md"><img src="https://img.shields.io/badge/security-policy-0366d6?logo=github" alt="security policy" /></a>
+  <img src="https://img.shields.io/badge/context--isolation-enabled-brightgreen" alt="context isolation" />
+  <img src="https://img.shields.io/badge/nodeIntegration-disabled-brightgreen" alt="nodeIntegration disabled" />
+  <img src="https://img.shields.io/badge/single--instance-enabled-brightgreen" alt="single instance" />
+</p>
+
+<p align="center">
   <a href="https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/build.yml"><img src="https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/build.yml/badge.svg" alt="Build releases" /></a>
   <a href="https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/codeql-analysis.yml"><img src="https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/codeql-analysis.yml/badge.svg" alt="CodeQL" /></a>
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
-  <img src="https://img.shields.io/badge/electron-33-47848f" alt="electron" />
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="license" />
-  <img src="https://img.shields.io/github/v/release/KurtStevenK/cursor-auto-runner?label=version" alt="version" />
+  <a href="packaging/homebrew/README.md"><img src="https://img.shields.io/badge/Homebrew-cursor--auto--runner-FBB040?logo=homebrew&logoColor=white" alt="Homebrew" /></a>
+  <img src="https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white" alt="CI" />
 </p>
 
 ---
@@ -50,6 +72,33 @@ Tray menu ──► Mode controller ──► Detector (window crops)
                    │
               Stats overlay (throttled IPC)
 ```
+
+## Security & trust
+
+This repository is **public and auditable** (MIT). Installers are built in [GitHub Actions](.github/workflows/build.yml) from tagged releases — not hand-uploaded binaries. The app does not load a remote web app; the stats overlay is **local HTML** only.
+
+### Top facts
+
+| # | What we do |
+|---|------------|
+| 1 | **VirusTotal on every release** (when `VIRUSTOTAL_API_KEY` is set in CI) — `Setup.exe`, `.dmg`, `.deb`, and `.AppImage` scanned (~70 engines); detection counts and **report links** (`virustotal.com/gui/file/{sha256}`) in GitHub Release notes |
+| 2 | **Quota-safe VT API use** — Free tier **4 req/min, 500/day**; script paces uploads (~16 s between files); large installers use VT’s `upload_url` path for files **> 32 MB** |
+| 3 | **Electron hardening (stats UI)** — Context isolation, `nodeIntegration: false`, minimal `contextBridge` preload ([`preload.ts`](src/main/preload.ts)); see [SECURITY.md](SECURITY.md) |
+| 4 | **No arbitrary browsing** — No embedded portal; `shell.openExternal` is used for macOS **System Settings** permission links only |
+| 5 | **Sensitive OS access (by design)** — Screen capture and synthetic clicks need **Screen Recording** (macOS) and normal desktop automation permissions; stats stay in local SQLite under your profile |
+| 6 | **Single-instance lock** — One tray process only |
+| 7 | **Dependabot** — Weekly npm + GitHub Actions update PRs |
+| 8 | **Reproducible CI builds** — [Build releases](.github/workflows/build.yml) on every `v*` tag (Windows, macOS, Linux) |
+| 9 | **Homebrew checksums** — [`cursor-auto-runner` cask](packaging/homebrew/README.md) pins version + **SHA256** each release |
+| 10 | **Responsible disclosure** — [GitHub Security Advisories](https://github.com/KurtStevenK/cursor-auto-runner/security/advisories/new) or the maintainer in [`package.json`](package.json) ([SECURITY.md](SECURITY.md)) |
+
+### Verify a download
+
+1. Download from [GitHub Releases](https://github.com/KurtStevenK/cursor-auto-runner/releases/latest), [Firebase landing](https://cursor-auto-runner-linux.web.app), or your package manager (Homebrew / APT / Chocolatey).
+2. Open the release notes **VirusTotal** table (when present) and review the full multi-engine report — not a single flag.
+3. On macOS via Homebrew, compare the DMG **SHA256** to the value in the [tap cask](https://github.com/KurtStevenK/homebrew-tap/blob/main/Casks/cursor-auto-runner.rb).
+
+> **Note:** macOS DMGs are **Developer ID signed and notarized** when Apple secrets in [packaging/mac/README.md](packaging/mac/README.md) are set on GitHub Actions. Without those secrets the macOS job still publishes an unsigned DMG. Windows Authenticode is not configured. Some AV engines flag new Electron apps heuristically — read the **full** VirusTotal report. Local scans: `npm run scan:virustotal` after `npm run dist` (key in `.env.local`; see [.env.example](.env.example)).
 
 ## Getting started
 
@@ -193,12 +242,6 @@ Stats are stored in `%APPDATA%/Cursor Auto Runner/stats.db` (SQLite) or
 `clicks-fallback.json` when the native SQLite module is unavailable.
 See [PERFORMANCE.md](PERFORMANCE.md) for the recorded baseline, acceptance
 measurements and opt-in live diagnostics.
-
-## Security
-
-Signing keys and API tokens stay in GitHub Actions secrets and local `.env.local` (never committed). See [SECURITY.md](SECURITY.md).
-
-Release installers are scanned with [VirusTotal](https://www.virustotal.com) when `VIRUSTOTAL_API_KEY` is configured (CI and `npm run scan:virustotal` locally). The repo uses [CodeQL](https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/codeql-analysis.yml) and [Dependabot](https://github.com/KurtStevenK/cursor-auto-runner/security/dependabot) for dependency and code analysis.
 
 ## Versioning
 

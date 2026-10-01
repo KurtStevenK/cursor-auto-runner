@@ -9,6 +9,11 @@ and each shipped task gets its own version number.
 
 ### Added
 - **Protected `master`:** PR-only merges; [AGENTS.md](AGENTS.md) and **CI** workflow for branch protection; Cursor rule for shipping/releases.
+- **Firebase landing release data:** `scripts/sync-firebase-release-data.js` refreshes checksum manifest from GitHub Releases; CI runs it before Hosting deploy; release job mirrors all platforms via `mirror-release-firebase.sh`.
+- **README:** security & trust section with VirusTotal, Electron hardening, and verify-download steps.
+
+### Changed
+- **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
 
 ## [1.2.41] - 2026-10-01
 
