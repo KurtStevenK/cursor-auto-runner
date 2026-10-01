@@ -5,6 +5,17 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.38] - 2026-10-01
+
+### Fixed
+- **CI macOS:** sign from the imported keychain only (omit `CSC_LINK` during `dist:mac` so electron-builder does not spawn a second temp keychain).
+
+### Added
+- **`.github/workflows/firebase-landing.yml`** — deploy Firebase Hosting when `firebase-landing/` changes on `master`.
+
+### Changed
+- **Firebase landing:** download URLs use `LINUX_MIRROR_VERSION` for DMG/EXE filenames.
+
 ## [1.2.37] - 2026-10-01
 
 ### Fixed
