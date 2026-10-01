@@ -74,17 +74,24 @@ export function InstallCommands({ mirrorV }: Props) {
           <CopyCommand
             label="Add tap (first time)"
             command="brew tap KurtStevenK/tap"
-            hint="Registers KurtStevenK/tap so the short cask name works."
+            hint="Same repo as KurtStevenK/homebrew-tap on GitHub — Homebrew exposes it as KurtStevenK/tap. One-time; enables the short cask name below."
           />
           <CopyCommand
             label="Install cask"
             command="brew install --cask cursor-auto-runner"
-            hint="Grant Screen Recording and Accessibility after first launch. One-liner without tap: brew install --cask KurtStevenK/tap/cursor-auto-runner"
+            hint="Installs from Casks/cursor-auto-runner.rb in that tap. Grant Screen Recording and Accessibility after first launch."
+          />
+          <CopyCommand
+            label="One-liner (skip tap step)"
+            command="brew install --cask KurtStevenK/tap/cursor-auto-runner"
+            fullWidth
+            hint="Equivalent to tap + install cask when you do not want a permanent tap on your machine."
           />
           <CopyCommand
             label="Install Homebrew (optional)"
             command={HOMEBREW_INSTALL}
-            hint="Only if brew is not installed yet. Follow the installer prompts; on Apple silicon you may need to add brew to your PATH (installer prints the exact lines)."
+            fullWidth
+            hint="Only if brew is not installed yet. Run this before the tap/cask steps. On Apple silicon, add brew to PATH using the lines the installer prints."
           />
         </OsGroup>
 
@@ -106,7 +113,8 @@ export function InstallCommands({ mirrorV }: Props) {
           <CopyCommand
             label="Install Chocolatey (optional)"
             command={CHOCOLATEY_INSTALL}
-            hint="Run in PowerShell as Administrator. Close and reopen the shell, then run choco install. See chocolatey.org/install for troubleshooting."
+            fullWidth
+            hint="Run in PowerShell as Administrator before choco install. Close and reopen the shell after install. See chocolatey.org/install for troubleshooting."
           />
         </OsGroup>
 
@@ -145,7 +153,8 @@ export function InstallCommands({ mirrorV }: Props) {
           <CopyCommand
             label="Or install local .deb (optional)"
             command={`curl -fLO '${debUrl}' && sudo apt install ./${linux.deb}`}
-            hint="Skip the repo if you only want this version once. Download also on GitHub Releases or the Downloads section above."
+            fullWidth
+            hint="Alternative to the APT repo above — one version only. Same .deb on GitHub Releases or under Downloads."
           />
         </OsGroup>
 
@@ -233,9 +242,9 @@ export function InstallCommands({ mirrorV }: Props) {
             hint="npm install && npm run dev — requires Node.js 20+ and Linux/macOS/Windows build deps for native modules."
           />
           <CopyCommand
-            label="Clone Homebrew tap"
+            label="Clone Homebrew tap (homebrew-tap)"
             command="gh repo clone KurtStevenK/homebrew-tap"
-            hint="Bump Casks/cursor-auto-runner.rb after each macOS release."
+            hint="This is what macOS users add with brew tap KurtStevenK/tap. Edit Casks/cursor-auto-runner.rb (version + DMG sha256) after each release."
           />
           <CopyCommand
             label="Clone APT repository"
@@ -250,7 +259,8 @@ export function InstallCommands({ mirrorV }: Props) {
           <CopyCommand
             label="Install GitHub CLI (optional)"
             command="brew install gh"
-            hint="macOS/Homebrew. On Linux see https://github.com/cli/cli#installation (apt, dnf, pacman, etc.). Needed for gh repo clone shortcuts."
+            fullWidth
+            hint="Needed for the gh repo clone commands above. macOS via Homebrew; on Linux see github.com/cli/cli#installation."
           />
         </OsGroup>
       </div>

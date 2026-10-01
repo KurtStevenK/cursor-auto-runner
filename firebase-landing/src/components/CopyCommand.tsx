@@ -4,9 +4,11 @@ type Props = {
   label: string;
   command: string;
   hint?: string;
+  /** Span full width below the 2-column command grid (prereqs, alternates). */
+  fullWidth?: boolean;
 };
 
-export function CopyCommand({ label, command, hint }: Props) {
+export function CopyCommand({ label, command, hint, fullWidth }: Props) {
   const [copied, setCopied] = useState(false);
 
   const copy = useCallback(async () => {
@@ -20,7 +22,7 @@ export function CopyCommand({ label, command, hint }: Props) {
   }, [command]);
 
   return (
-    <div className="copy-cmd">
+    <div className={`copy-cmd${fullWidth ? ' copy-cmd--full' : ''}`}>
       <div className="copy-cmd-head">
         <span className="label">{label}</span>
         <button

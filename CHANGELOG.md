@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.36] - 2026-10-01
+
+### Changed
+- **Firebase landing:** optional/alternate install commands span full width; clarify `brew tap KurtStevenK/tap` ↔ `homebrew-tap` repo; separate one-liner cask copy block.
+
 ## [1.2.35] - 2026-10-01
 
 ### Changed
