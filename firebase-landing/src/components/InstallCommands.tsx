@@ -1,8 +1,20 @@
 import type { ReactNode } from 'react';
 import { CopyCommand } from './CopyCommand';
-import { links } from '../config';
+import { links, linuxFiles, releaseMirrorUrl } from '../config';
 
 type Props = { mirrorV: string };
+
+const APT_IMPORT_GPG =
+  'curl -fsSL https://kurtstevenk.github.io/apt/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/cursor-auto-runner-archive-keyring.gpg';
+
+const APT_ADD_SOURCE =
+  'echo "deb [signed-by=/usr/share/keyrings/cursor-auto-runner-archive-keyring.gpg] https://kurtstevenk.github.io/apt stable main" | sudo tee /etc/apt/sources.list.d/cursor-auto-runner.list';
+
+const HOMEBREW_INSTALL =
+  '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"';
+
+const CHOCOLATEY_INSTALL =
+  'Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString(\'https://community.chocolatey.org/install.ps1\'))';
 
 function OsGroup({
   icon,
@@ -32,70 +44,185 @@ function OsGroup({
   );
 }
 
+function LinuxSectionLabel() {
+  return (
+    <p className="install-linux-label" id="install-linux">
+      <span className="install-linux-label-icon" aria-hidden="true">🐧</span>
+      Linux — pick your distro
+    </p>
+  );
+}
+
 export function InstallCommands({ mirrorV }: Props) {
+  const linux = linuxFiles(mirrorV);
+  const appImageUrl = releaseMirrorUrl(mirrorV, linux.appImage);
+  const pacmanUrl = releaseMirrorUrl(mirrorV, linux.pacman);
+  const debUrl = releaseMirrorUrl(mirrorV, linux.deb);
+
   return (
     <section id="install" className="section install">
       <h2>Install commands</h2>
-      <p className="section-sub">Install by OS; clone and tooling under Development.</p>
+      <p className="section-sub">
+        One group per platform or distro. Optional last step in each group installs Homebrew, Chocolatey, etc.
+      </p>
       <div className="install-layout">
         <OsGroup
           icon="🍎"
           title="macOS"
-          description="Homebrew installs the signed DMG into /Applications and upgrades with brew upgrade --cask."
+          description="Homebrew cask installs the signed DMG into /Applications; upgrades with brew upgrade --cask."
         >
           <CopyCommand
             label="Add tap (first time)"
             command="brew tap KurtStevenK/tap"
-            hint="Registers the KurtStevenK/tap formulae so the short cask name works. Needs Homebrew on your Mac."
+            hint="Registers KurtStevenK/tap so the short cask name works."
           />
           <CopyCommand
             label="Install cask"
             command="brew install --cask cursor-auto-runner"
-            hint="After install, grant Screen Recording and Accessibility. Skip the tap step with: brew install --cask KurtStevenK/tap/cursor-auto-runner"
+            hint="Grant Screen Recording and Accessibility after first launch. One-liner without tap: brew install --cask KurtStevenK/tap/cursor-auto-runner"
+          />
+          <CopyCommand
+            label="Install Homebrew (optional)"
+            command={HOMEBREW_INSTALL}
+            hint="Only if brew is not installed yet. Follow the installer prompts; on Apple silicon you may need to add brew to your PATH (installer prints the exact lines)."
           />
         </OsGroup>
 
         <OsGroup
           icon="🪟"
           title="Windows"
-          description="Same NSIS installer as the direct download; Chocolatey handles upgrades and uninstall."
+          description="Chocolatey serves the same NSIS build as the Setup.exe download."
           footer={
             <a href={`${links.github}/blob/master/packaging/chocolatey/README.md`} target="_blank" rel="noreferrer">
-              Chocolatey notes
+              Chocolatey packaging notes
             </a>
           }
         >
           <CopyCommand
-            label="Chocolatey"
+            label="Install package"
             command="choco install cursor-auto-runner"
-            hint="Run in an elevated shell if your Chocolatey policy requires it. Upgrade later with choco upgrade cursor-auto-runner."
+            hint="Use an elevated PowerShell or cmd if your org requires it. Upgrade: choco upgrade cursor-auto-runner"
+          />
+          <CopyCommand
+            label="Install Chocolatey (optional)"
+            command={CHOCOLATEY_INSTALL}
+            hint="Run in PowerShell as Administrator. Close and reopen the shell, then run choco install. See chocolatey.org/install for troubleshooting."
+          />
+        </OsGroup>
+
+        <LinuxSectionLabel />
+
+        <OsGroup
+          icon="🐧"
+          title="Debian"
+          description="Signed APT repo (amd64). Recommended on Debian 11+; use AppImage on very old glibc if the .deb refuses to start."
+          footer={
+            <a href={links.aptReadme} target="_blank" rel="noreferrer">
+              Full APT repo documentation
+            </a>
+          }
+        >
+          <CopyCommand
+            label="Import repo signing key"
+            command={APT_IMPORT_GPG}
+            hint="One-time per machine. Stores the KurtStevenK/apt signing key for apt."
+          />
+          <CopyCommand
+            label="Add apt source"
+            command={APT_ADD_SOURCE}
+            hint="Points apt at https://kurtstevenk.github.io/apt stable main."
+          />
+          <CopyCommand
+            label="Update package lists"
+            command="sudo apt-get update"
+            hint="Run after adding the source so apt sees cursor-auto-runner."
+          />
+          <CopyCommand
+            label="Install package"
+            command="sudo apt-get install cursor-auto-runner"
+            hint="Installs menu entry and binary; future releases: sudo apt-get upgrade."
+          />
+          <CopyCommand
+            label="Or install local .deb (optional)"
+            command={`curl -fLO '${debUrl}' && sudo apt install ./${linux.deb}`}
+            hint="Skip the repo if you only want this version once. Download also on GitHub Releases or the Downloads section above."
           />
         </OsGroup>
 
         <OsGroup
           icon="🐧"
-          title="Linux"
-          description="Use APT for system-wide installs and updates, or AppImage when you want a single file with no package manager."
+          title="Ubuntu"
+          description="Same KurtStevenK/apt repository as Debian — typical targets: Ubuntu 22.04 LTS and 24.04 (amd64)."
           footer={
-            <a href={links.apt} target="_blank" rel="noreferrer">APT repo setup guide</a>
+            <a href={links.aptRepo} target="_blank" rel="noreferrer">
+              APT repo on GitHub Pages
+            </a>
           }
         >
           <CopyCommand
-            label="APT (Debian/Ubuntu)"
-            command="sudo apt-get install cursor-auto-runner"
-            hint="Add the KurtStevenK/apt repo once (see link below), then apt update. Delivers .deb with desktop entry and upgrades via apt."
+            label="Import repo signing key"
+            command={APT_IMPORT_GPG}
+            hint="Identical to Debian; safe to repeat if the keyring file already exists."
           />
           <CopyCommand
-            label="AppImage"
-            command={`chmod +x cursor-auto-runner-${mirrorV}.AppImage && ./cursor-auto-runner-${mirrorV}.AppImage`}
-            hint={`Download cursor-auto-runner-${mirrorV}.AppImage from Downloads above first. chmod makes it executable; run from any folder. Install libfuse2 if the AppImage will not start.`}
+            label="Add apt source"
+            command={APT_ADD_SOURCE}
+            hint="Uses signed-by keyring — no apt-key deprecated workflow."
+          />
+          <CopyCommand
+            label="Update package lists"
+            command="sudo apt-get update"
+          />
+          <CopyCommand
+            label="Install package"
+            command="sudo apt-get install cursor-auto-runner"
+            hint="Tray app needs a desktop session (Wayland/X11). Grant accessibility if your distro prompts for it."
+          />
+        </OsGroup>
+
+        <OsGroup
+          icon="📦"
+          title="AppImage (any distro)"
+          description="Portable binary — no root, no package manager. Best when APT/pacman does not fit or you want a single file."
+        >
+          <CopyCommand
+            label="Download AppImage"
+            command={`curl -fLO '${appImageUrl}'`}
+            hint="Firebase mirror; same file as GitHub Releases. Or pick AppImage under Downloads above."
+          />
+          <CopyCommand
+            label="Run AppImage"
+            command={`chmod +x ${linux.appImage} && ./${linux.appImage}`}
+            hint="Run from the folder where you saved the file. If it fails to start, install FUSE (e.g. sudo apt install libfuse2 on Debian/Ubuntu)."
+          />
+        </OsGroup>
+
+        <OsGroup
+          icon="🐧"
+          title="Arch Linux"
+          description="Official release ships a .pacman package (not in AUR). Install with pacman -U after download."
+          footer={
+            <a href={`${links.github}/releases/latest`} target="_blank" rel="noreferrer">
+              .pacman on GitHub Releases
+            </a>
+          }
+        >
+          <CopyCommand
+            label="Download .pacman"
+            command={`curl -fLO '${pacmanUrl}'`}
+            hint={`File name: ${linux.pacman}. Also attached to each GitHub release and listed under Linux downloads (.pacman link).`}
+          />
+          <CopyCommand
+            label="Install package"
+            command={`sudo pacman -U ${linux.pacman}`}
+            hint="Installs system-wide. Upgrade: download the new .pacman and run pacman -U again (pacman may ask to replace the existing package)."
           />
         </OsGroup>
 
         <OsGroup
           icon="🛠️"
           title="Development"
-          description="Clone these when you ship a release, refresh the Homebrew cask SHA256s, or maintain the Debian repo."
+          description="Repos for hacking on the app, updating the Homebrew cask, or maintaining the Debian APT tree."
           footer={
             <a href={links.github} target="_blank" rel="noreferrer">KurtStevenK/cursor-auto-runner on GitHub</a>
           }
@@ -103,22 +230,27 @@ export function InstallCommands({ mirrorV }: Props) {
           <CopyCommand
             label="Clone app"
             command="gh repo clone KurtStevenK/cursor-auto-runner"
-            hint="Main Electron app: npm install, npm run dev for local tray testing, npm run dist:* for installers."
+            hint="npm install && npm run dev — requires Node.js 20+ and Linux/macOS/Windows build deps for native modules."
           />
           <CopyCommand
             label="Clone Homebrew tap"
             command="gh repo clone KurtStevenK/homebrew-tap"
-            hint="Edit Casks/cursor-auto-runner.rb after each macOS release (version + sha256 for arm64 and x64)."
+            hint="Bump Casks/cursor-auto-runner.rb after each macOS release."
           />
           <CopyCommand
             label="Clone APT repository"
             command="gh repo clone KurtStevenK/apt"
-            hint="Hosts apt metadata and .deb layout consumed by the release workflow and KurtStevenK/apt users."
+            hint="gh-pages branch hosts the public apt repo; CI runs packaging/apt/publish.sh on release."
           />
           <CopyCommand
             label="Open release in browser"
             command={`gh release view v${mirrorV} --repo KurtStevenK/cursor-auto-runner --web`}
-            hint="Opens GitHub Releases for the mirrored version — grab assets if Firebase or a package mirror is slow."
+            hint="DMG, EXE, AppImage, .deb, and .pacman assets for the mirrored version."
+          />
+          <CopyCommand
+            label="Install GitHub CLI (optional)"
+            command="brew install gh"
+            hint="macOS/Homebrew. On Linux see https://github.com/cli/cli#installation (apt, dnf, pacman, etc.). Needed for gh repo clone shortcuts."
           />
         </OsGroup>
       </div>

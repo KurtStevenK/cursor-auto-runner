@@ -11,6 +11,8 @@ export const links = {
   releaseTag: (v: string) => `${GITHUB}/releases/tag/v${v}`,
   homebrew: 'https://github.com/KurtStevenK/homebrew-tap',
   apt: 'https://github.com/KurtStevenK/apt',
+  aptRepo: 'https://kurtstevenk.github.io/apt/',
+  aptReadme: `${GITHUB}/blob/master/packaging/apt/README.md`,
   ghPages: 'https://kurtstevenk.github.io/cursor-auto-runner/',
 };
 
