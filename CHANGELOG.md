@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.32] - 2026-10-01
+
+### Fixed
+- **CI macOS signing:** import `.p12` into a dedicated keychain before `electron-builder` (fixes `set-key-partition-list` / wrong passphrase on GitHub runners).
+
 ## [1.2.31] - 2026-10-01
 
 ### Added
