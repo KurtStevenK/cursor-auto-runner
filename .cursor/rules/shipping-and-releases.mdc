@@ -1,0 +1,12 @@
+---
+description: How to ship code and releases when master is protected
+alwaysApply: true
+---
+
+# Shipping (protected `master`)
+
+Read [AGENTS.md](../../AGENTS.md) for the full runbook.
+
+- Never `git push origin master`. Use a PR; merge when **CI** (`quality`) is green.
+- Releases: merge version/changelog to `master`, then `git tag vX.Y.Z` and `git push origin vX.Y.Z` only.
+- Merges to `master` auto-deploy landing/Firebase (path filters). Tags trigger **Build releases**.
