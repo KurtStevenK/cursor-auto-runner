@@ -5,7 +5,15 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## Unreleased
+
+### Added
+- **Protected `master`:** PR-only merges; [AGENTS.md](AGENTS.md) and **CI** workflow for branch protection; Cursor rule for shipping/releases.
+
 ## [1.2.41] - 2026-10-01
+
+### Added
+- **Firebase full mirror:** CI uploads every release’s installers to `releases/<version>/` on Storage (not only `linux/`); landing mirror version follows root `package.json`.
 
 ### Fixed
 - **CI Linux mirror:** `gcloud storage cp` now signs in with `GOOGLE_APPLICATION_CREDENTIALS` before upload. v1.2.40 built the installers, then the release job stopped here and never updated Homebrew or APT.
