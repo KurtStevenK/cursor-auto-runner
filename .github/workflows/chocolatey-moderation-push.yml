@@ -1,0 +1,75 @@
+name: Chocolatey moderation resubmit
+
+# Build a fresh .nupkg (jsDelivr iconUrl) and push to push.chocolatey.org
+# without should-push guard — for fixing a version already in moderation (e.g. 1.2.10).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version (e.g. 1.2.10)
+        required: true
+        default: "1.2.10"
+
+jobs:
+  push:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Download NSIS installer from GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ inputs.version }}"
+          mkdir -p release
+          gh release download "v${VERSION}" \
+            --repo "${{ github.repository }}" \
+            --pattern "Cursor.Auto.Runner.Setup.${VERSION}.exe" \
+            --dir release
+          ls -la release
+
+      - name: Build Chocolatey package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ inputs.version }}"
+          EXE="release/Cursor Auto Runner Setup ${VERSION}.exe"
+          if [[ ! -f "$EXE" ]]; then
+            EXE="release/Cursor.Auto.Runner.Setup.${VERSION}.exe"
+          fi
+          if [[ ! -f "$EXE" ]]; then
+            echo "Installer not found" >&2
+            ls -la release || true
+            exit 1
+          fi
+          SHA=$(sha256sum "$EXE" | cut -d' ' -f1)
+          PKG=choco-pkg
+          mkdir -p "$PKG/tools"
+          sed -e "s/__VERSION__/$VERSION/g" -e "s/__EXESHA__/$SHA/g" packaging/chocolatey/cursor-auto-runner.nuspec > "$PKG/cursor-auto-runner.nuspec"
+          sed -e "s/__VERSION__/$VERSION/g" -e "s/__EXESHA__/$SHA/g" packaging/chocolatey/tools/chocolateyinstall.ps1 > "$PKG/tools/chocolateyinstall.ps1"
+          grep iconUrl "$PKG/cursor-auto-runner.nuspec"
+          (cd "$PKG" && choco pack)
+          ls -la "$PKG"/*.nupkg
+
+      - name: Push to Chocolatey (moderation queue)
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${CHOCOLATEY_API_KEY:-}" ]]; then
+            echo "CHOCOLATEY_API_KEY secret is required" >&2
+            exit 1
+          fi
+          choco apikey add --key "$CHOCOLATEY_API_KEY" --source https://push.chocolatey.org/
+          while IFS= read -r -d '' f; do
+            echo "Pushing $f"
+            choco push "$f" --source https://push.chocolatey.org/
+          done < <(find choco-pkg -name '*.nupkg' -print0)

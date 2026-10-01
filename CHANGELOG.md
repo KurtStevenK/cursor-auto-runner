@@ -5,6 +5,13 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.31] - 2026-10-01
+
+### Added
+- **`scripts/refresh-csc-github-secrets.sh`** — regenerate CI `.p12` and update `CSC_LINK` / `CSC_KEY_PASSWORD` on GitHub.
+- **`.github/workflows/chocolatey-moderation-push.yml`** — rebuild and `choco push` a corrected nuspec (e.g. jsDelivr `iconUrl`) while a version is still in moderation.
+- **`scripts/build-chocolatey-nupkg.sh`** — local nupkg build when `choco` is on PATH.
+
 ## [1.2.30] - 2026-10-01
 
 ### Added
