@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.37] - 2026-10-01
+
+### Fixed
+- **Firebase landing:** Downloads intro no longer wraps “Releases” alone (wider section subtext, keep “GitHub Releases” on one line).
+
 ## [1.2.36] - 2026-10-01
 
 ### Changed

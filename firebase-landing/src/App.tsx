@@ -150,7 +150,10 @@ export default function App() {
           <h2>Downloads</h2>
           <p className="section-sub">
             Public mirrors on Firebase Storage (<code>releases/{mirrorV}/</code>). Fallback:{' '}
-            <a href={links.releases} target="_blank" rel="noreferrer">GitHub Releases</a>.
+            <a href={links.releases} target="_blank" rel="noreferrer">
+              GitHub&nbsp;Releases
+            </a>
+            .
           </p>
           <div className="dl-grid">
             {downloads.map((card, i) => (
