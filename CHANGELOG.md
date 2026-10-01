@@ -13,7 +13,8 @@ and each shipped task gets its own version number.
 - **README:** security & trust section with VirusTotal, Electron hardening, and verify-download steps.
 
 ### Changed
-- **CI:** bump pinned GitHub Actions (checkout, setup-node, artifacts, CodeQL, Pages, dependency-review, action-gh-release).
+- **Firebase landing:** React 19, Vite 8, TypeScript 7, framer-motion 13, @react-three/fiber 9 / drei 10.
+- **CI:** bump pinned GitHub Actions (checkout, setup-node, artifacts, CodeQL, Pages, dependency-review, action-gh-release); add `firebase-landing` build job.
 - **Build:** `electron-builder` 25 → 26; TypeScript 5 → 7; Electron 33 → 44; `jimp` 0 → 1; `better-sqlite3` 12 → 13; `@types/node` 22 → 26.
 - **Detector:** use `NativeImage.toBitmap()` (Electron 44 deprecates `getBitmap()`).
 - **CI:** override `node-gyp` to 13.0.2 (VS 2026 / Python 3.14); run Windows jobs on `windows-2022` for reliable native module builds.

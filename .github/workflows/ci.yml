@@ -23,3 +23,15 @@ jobs:
       - run: npx electron-builder install-app-deps
       - run: npm run test:stats
       - run: npm run bench:matcher
+
+  firebase-landing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: firebase-landing/package-lock.json
+      - run: npm ci --prefix firebase-landing
+      - run: npm run build --prefix firebase-landing
