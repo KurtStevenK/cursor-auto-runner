@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { InstallCommands } from './components/InstallCommands';
 import { Scene } from './components/Scene';
 import {
@@ -12,12 +12,12 @@ import {
 import { releaseData } from './release-data';
 import './App.css';
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
   show: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.65, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.08, duration: 0.65, ease: [0.22, 1, 0.36, 1] as const },
   }),
 };
 
