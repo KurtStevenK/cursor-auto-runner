@@ -36,7 +36,7 @@ export default function App() {
     {
       os: 'Linux',
       icon: '🐧',
-      blurb: 'Firebase mirror (same bytes as GitHub Releases).',
+      blurb: 'AppImage, .deb, and Arch .pacman on Firebase (same bytes as GitHub Releases).',
       primary: {
         label: 'AppImage',
         href: releaseMirrorUrl(mirrorV, linuxMirror.appImage),

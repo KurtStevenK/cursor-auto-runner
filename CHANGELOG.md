@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.35] - 2026-10-01
+
+### Changed
+- **Firebase landing:** separate install groups for Debian, Ubuntu, AppImage, and Arch (.pacman); optional Homebrew/Chocolatey/gh CLI install commands at the end of each group.
+
 ## [1.2.34] - 2026-10-01
 
 ### Changed
