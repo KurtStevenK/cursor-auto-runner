@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.41] - 2026-10-01
+
+### Fixed
+- **CI Linux mirror:** `gcloud storage cp` now signs in with `GOOGLE_APPLICATION_CREDENTIALS` before upload. v1.2.40 built the installers, then the release job stopped here and never updated Homebrew or APT.
+
 ## [1.2.40] - 2026-10-01
 
 ### Fixed
