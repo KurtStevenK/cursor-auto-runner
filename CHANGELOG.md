@@ -17,6 +17,11 @@ and each shipped task gets its own version number.
 - **Build:** `electron-builder` 25 → 26; TypeScript 5 → 7.
 - **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
 
+## [1.2.42] - 2026-10-02
+
+### Fixed
+- **macOS releases:** CI now has `APPLE_ID` and `APPLE_APP_SPECIFIC_PASSWORD` so Developer ID builds are **notarized** (Gatekeeper / Homebrew installs).
+
 ## [1.2.41] - 2026-10-01
 
 ### Added
