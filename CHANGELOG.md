@@ -5,6 +5,14 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.26] - 2026-10-01
+
+### Fixed
+- **Chocolatey moderation:** `iconUrl` now uses jsDelivr (`cdn.jsdelivr.net/gh/...`) instead of `raw.githubusercontent.com`, per community package requirements.
+
+### Changed
+- **Windows:** `app.setAppUserModelId` aligned to `com.kurtstevenk.cursor-auto-runner`.
+
 ## [1.2.25] - 2026-10-01
 
 ### Fixed

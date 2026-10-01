@@ -16,7 +16,7 @@ import { IPC, Mode, StatsSnapshot, DEFAULT_SETTINGS } from '../shared/types';
 import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
 
 // Ensure a clean tray/app identity on Windows
-app.setAppUserModelId('com.gf-elektro.cursor-auto-runner');
+app.setAppUserModelId('com.kurtstevenk.cursor-auto-runner');
 
 // Packaged GUI apps have no terminal; ignore broken stdout during shutdown.
 process.stdout?.on?.('error', () => {});

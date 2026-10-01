@@ -4,10 +4,10 @@ overview: One-time GitHub setup for `KurtStevenK/homebrew-tap`, macOS terminal r
 todos:
   - id: github-tap-secrets
     content: "Phase A: Create KurtStevenK/homebrew-tap (public), set TAP_TOKEN on cursor-auto-runner, trigger tag or re-run release workflow"
-    status: pending
+    status: completed
   - id: mac-verify-brew
     content: "Phase B: On Mac — gh release assets, brew install --cask, checksum curl/shasum if needed, app permissions smoke"
-    status: pending
+    status: completed
   - id: align-dmg-names
     content: "Phase C: Set mac artifactName in package.json; fix build.yml DMG paths; tag release so CI updates tap with matching SHA256"
     status: completed
@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: final-mac-smoke
     content: Re-run packaging/homebrew/smoke-test.sh and brew install on Mac after publish
-    status: pending
+    status: completed
 isProject: false
 ---
 
