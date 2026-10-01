@@ -14,7 +14,7 @@ and each shipped task gets its own version number.
 
 ### Changed
 - **CI:** bump pinned GitHub Actions (checkout, setup-node, artifacts, CodeQL, Pages, dependency-review, action-gh-release).
-- **Build:** `electron-builder` 25 → 26.
+- **Build:** `electron-builder` 25 → 26; TypeScript 5 → 7.
 - **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
 
 ## [1.2.41] - 2026-10-01
