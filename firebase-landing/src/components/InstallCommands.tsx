@@ -1,5 +1,7 @@
 import { useId, useState, type ReactNode } from 'react';
+import { ChecksumBlock, assetsForPlatform } from './ChecksumBlock';
 import { CopyCommand } from './CopyCommand';
+import releaseData from '../data/release-1.2.28.json';
 import { links, linuxFiles, releaseMirrorUrl } from '../config';
 
 type Props = { mirrorV: string };
@@ -30,6 +32,7 @@ function OsGroup({
   title,
   description,
   children,
+  checksum,
   footer,
   className = '',
 }: {
@@ -37,6 +40,7 @@ function OsGroup({
   title: string;
   description?: string;
   children: ReactNode;
+  checksum?: ReactNode;
   footer?: ReactNode;
   className?: string;
 }) {
@@ -48,6 +52,7 @@ function OsGroup({
       </h3>
       {description ? <p className="install-os-desc">{description}</p> : null}
       <div className="install-os-commands">{children}</div>
+      {checksum}
       {footer ? <div className="install-os-footer">{footer}</div> : null}
     </div>
   );
@@ -60,12 +65,20 @@ export function InstallCommands({ mirrorV }: Props) {
   const appImageUrl = releaseMirrorUrl(mirrorV, linux.appImage);
   const pacmanUrl = releaseMirrorUrl(mirrorV, linux.pacman);
   const debUrl = releaseMirrorUrl(mirrorV, linux.deb);
+  const checksumV = releaseData.version;
+  const macAssets = assetsForPlatform('macOS');
+  const winAssets = assetsForPlatform('Windows');
+  const linuxAssets = assetsForPlatform('Linux');
+  const debChecksum = linuxAssets.filter((a) => a.name.includes('_amd64.deb'));
+  const appImageChecksum = linuxAssets.filter((a) => a.name.endsWith('.AppImage'));
+  const pacmanChecksum = linuxAssets.filter((a) => a.name.endsWith('.pacman'));
 
   return (
     <section id="install" className="section install">
-      <h2>Install commands</h2>
+      <h2>Install &amp; verify</h2>
       <p className="section-sub">
-        Choose your platform — each tab lists copy-ready install commands; Development covers cloning repos and release tooling.
+        Choose your platform — install commands and SHA-256 verify steps live in the same group. Mirrors
+        under <code>releases/{checksumV}/</code> on Firebase Storage.
       </p>
 
       <div className="install-tabs-wrap">
@@ -103,6 +116,7 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="🍎"
               title="macOS"
               description="Homebrew cask installs the signed DMG into /Applications; upgrades with brew upgrade --cask."
+              checksum={<ChecksumBlock version={checksumV} assets={macAssets} />}
             >
               <CopyCommand
                 label="Add tap (first time)"
@@ -142,6 +156,7 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="🪟"
               title="Windows"
               description="Chocolatey serves the same NSIS build as the Setup.exe download."
+              checksum={<ChecksumBlock version={checksumV} assets={winAssets} />}
               footer={
                 <a href={`${links.github}/blob/master/packaging/chocolatey/README.md`} target="_blank" rel="noreferrer">
                   Chocolatey packaging notes
@@ -175,6 +190,7 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="🐧"
               title="Debian"
               description="Signed APT repo (amd64). Recommended on Debian 11+; use AppImage on very old glibc if the .deb refuses to start."
+              checksum={<ChecksumBlock version={checksumV} assets={debChecksum} />}
               footer={
                 <a href={links.aptReadme} target="_blank" rel="noreferrer">
                   Full APT repo documentation
@@ -244,6 +260,7 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="📦"
               title="AppImage (any distro)"
               description="Portable binary — no root, no package manager. Best when APT/pacman does not fit or you want a single file."
+              checksum={<ChecksumBlock version={checksumV} assets={appImageChecksum} />}
             >
               <CopyCommand
                 label="Download AppImage"
@@ -261,6 +278,7 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="🐧"
               title="Arch Linux"
               description="Official release ships a .pacman package (not in AUR). Install with pacman -U after download."
+              checksum={<ChecksumBlock version={checksumV} assets={pacmanChecksum} />}
               footer={
                 <a href={`${links.github}/releases/latest`} target="_blank" rel="noreferrer">
                   .pacman on GitHub Releases
@@ -316,6 +334,12 @@ export function InstallCommands({ mirrorV }: Props) {
                 label="Open release in browser"
                 command={`gh release view v${mirrorV} --repo KurtStevenK/cursor-auto-runner --web`}
                 hint="DMG, EXE, AppImage, .deb, and .pacman assets for the mirrored version."
+              />
+              <CopyCommand
+                label="Download all release assets"
+                command={`gh release download v${checksumV} --repo KurtStevenK/cursor-auto-runner`}
+                fullWidth
+                hint="Requires GitHub CLI. Verify each file with the SHA-256 blocks on the platform tabs."
               />
               <CopyCommand
                 label="Install GitHub CLI (optional)"
