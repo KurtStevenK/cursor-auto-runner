@@ -41,15 +41,31 @@ export function Checksums() {
                 {asset.name}
               </a>
             </div>
-            <CopyCommand label="SHA-256" command={asset.sha256} />
+            <CopyCommand
+              label="SHA-256"
+              command={asset.sha256}
+              hint="Expected digest for this file. Your local hash must match exactly (case-insensitive on Windows)."
+            />
             {asset.platform === 'Linux' && (
-              <CopyCommand label="Verify (Linux)" command={linuxVerify(asset)} />
+              <CopyCommand
+                label="Verify (Linux)"
+                command={linuxVerify(asset)}
+                hint={`Save the file as ${asset.name} in your current directory, then run — sha256sum -c confirms integrity.`}
+              />
             )}
             {asset.platform === 'macOS' && (
-              <CopyCommand label="Verify (macOS)" command={macVerify(asset)} />
+              <CopyCommand
+                label="Verify (macOS)"
+                command={macVerify(asset)}
+                hint={`File must be named ${asset.name} in the working directory. shasum -c prints OK when the hash matches.`}
+              />
             )}
             {asset.platform === 'Windows' && (
-              <CopyCommand label="Verify (Windows)" command={winVerify(asset)} />
+              <CopyCommand
+                label="Verify (Windows)"
+                command={winVerify(asset)}
+                hint="Run in cmd or PowerShell where the installer was downloaded; compare the printed hash to SHA-256 above."
+              />
             )}
           </article>
         ))}
