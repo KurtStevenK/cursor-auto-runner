@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.27] - 2026-10-01
+
+### Fixed
+- **CI:** Windows `npm test` compile no longer imports `@nut-tree-fork/node-mac-permissions` statically (lazy macOS-only require), fixing failed v1.2.25/v1.2.26 release builds.
+
 ## [1.2.26] - 2026-10-01
 
 ### Fixed
