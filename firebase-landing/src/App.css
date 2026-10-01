@@ -169,7 +169,12 @@
 .section-sub {
   color: var(--muted);
   margin: 0 0 1.75rem;
-  max-width: 36rem;
+  max-width: 100%;
+  text-wrap: pretty;
+}
+
+.section-sub a {
+  white-space: nowrap;
 }
 
 .dl-grid {
