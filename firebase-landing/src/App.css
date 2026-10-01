@@ -267,6 +267,55 @@
   gap: 1rem;
 }
 
+.install-os-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.install-os-group {
+  padding: 1.25rem 1.35rem 1.1rem;
+  border-radius: 18px;
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+  backdrop-filter: blur(14px);
+}
+
+.install-os-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.install-os-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.install-os-commands .copy-cmd:last-child {
+  margin-bottom: 0;
+}
+
+.install-os-footer {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(94, 255, 200, 0.12);
+  font-size: 0.85rem;
+}
+
+.install-os-footer a {
+  text-decoration: none;
+}
+
+.install-os-footer a:hover {
+  text-decoration: underline;
+}
+
 .code-card {
   padding: 1.25rem 1.35rem;
   border-radius: 14px;
