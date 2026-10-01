@@ -6,7 +6,9 @@ import { links, linuxFiles, releaseMirrorUrl } from '../config';
 
 type Props = { mirrorV: string };
 
-type PlatformTab = 'mac' | 'win' | 'linux' | 'dev';
+type PlatformTab = 'mac' | 'win' | 'linux' | 'dev' | 'checksums';
+
+type ChecksumPlatformTab = 'mac' | 'win' | 'linux';
 
 type LinuxDistroTab = 'debian' | 'ubuntu' | 'appimage' | 'arch';
 
@@ -34,6 +36,13 @@ const TABS: { id: PlatformTab; label: string; icon: string }[] = [
   { id: 'win', label: 'Windows', icon: '🪟' },
   { id: 'linux', label: 'Linux', icon: '🐧' },
   { id: 'dev', label: 'Development', icon: '🛠️' },
+  { id: 'checksums', label: 'Checksums', icon: '🔐' },
+];
+
+const CHECKSUM_TABS: { id: ChecksumPlatformTab; label: string; icon: string }[] = [
+  { id: 'mac', label: 'macOS', icon: '🍎' },
+  { id: 'win', label: 'Windows', icon: '🪟' },
+  { id: 'linux', label: 'Linux', icon: '🐧' },
 ];
 
 function OsGroup({
@@ -41,7 +50,6 @@ function OsGroup({
   title,
   description,
   children,
-  checksum,
   footer,
   className = '',
 }: {
@@ -49,7 +57,6 @@ function OsGroup({
   title: string;
   description?: string;
   children: ReactNode;
-  checksum?: ReactNode;
   footer?: ReactNode;
   className?: string;
 }) {
@@ -61,7 +68,6 @@ function OsGroup({
       </h3>
       {description ? <p className="install-os-desc">{description}</p> : null}
       <div className="install-os-commands">{children}</div>
-      {checksum}
       {footer ? <div className="install-os-footer">{footer}</div> : null}
     </div>
   );
@@ -71,6 +77,7 @@ export function InstallCommands({ mirrorV }: Props) {
   const baseId = useId();
   const [tab, setTab] = useState<PlatformTab>('linux');
   const [linuxDistro, setLinuxDistro] = useState<LinuxDistroTab>('debian');
+  const [checksumPlatform, setChecksumPlatform] = useState<ChecksumPlatformTab>('linux');
   const linux = linuxFiles(mirrorV);
   const appImageUrl = releaseMirrorUrl(mirrorV, linux.appImage);
   const pacmanUrl = releaseMirrorUrl(mirrorV, linux.pacman);
@@ -79,20 +86,23 @@ export function InstallCommands({ mirrorV }: Props) {
   const macAssets = assetsForPlatform('macOS');
   const winAssets = assetsForPlatform('Windows');
   const linuxAssets = assetsForPlatform('Linux');
-  const debChecksum = linuxAssets.filter((a) => a.name.includes('_amd64.deb'));
-  const appImageChecksum = linuxAssets.filter((a) => a.name.endsWith('.AppImage'));
-  const pacmanChecksum = linuxAssets.filter((a) => a.name.endsWith('.pacman'));
+
+  const checksumAssets: Record<ChecksumPlatformTab, typeof macAssets> = {
+    mac: macAssets,
+    win: winAssets,
+    linux: linuxAssets,
+  };
 
   return (
     <section id="install" className="section install">
       <h2>Install &amp; verify</h2>
       <p className="section-sub">
-        Choose your platform — install commands and SHA-256 verify steps live in the same group. Mirrors
-        under <code>releases/{checksumV}/</code> on Firebase Storage.
+        Install steps by platform; SHA-256 verify commands are on the Checksums tab. Mirrors under{' '}
+        <code>releases/{checksumV}/</code> on Firebase Storage.
       </p>
 
       <div className="install-tabs-wrap">
-        <div className="install-tabs" role="tablist" aria-label="Install platform and development">
+        <div className="install-tabs" role="tablist" aria-label="Install, development, and checksums">
           {TABS.map(({ id, label, icon }) => {
             const selected = tab === id;
             return (
@@ -126,7 +136,6 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="🍎"
               title="macOS"
               description="Homebrew cask installs the signed DMG into /Applications; upgrades with brew upgrade --cask."
-              checksum={<ChecksumBlock version={checksumV} assets={macAssets} />}
             >
               <CopyCommand
                 label="Add tap (first time)"
@@ -166,7 +175,6 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="🪟"
               title="Windows"
               description="Chocolatey serves the same NSIS build as the Setup.exe download."
-              checksum={<ChecksumBlock version={checksumV} assets={winAssets} />}
               footer={
                 <a href={`${links.github}/blob/master/packaging/chocolatey/README.md`} target="_blank" rel="noreferrer">
                   Chocolatey packaging notes
@@ -234,7 +242,6 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="🐧"
               title="Debian"
               description="Signed APT repo (amd64). Recommended on Debian 11+; use AppImage on very old glibc if the .deb refuses to start."
-              checksum={<ChecksumBlock version={checksumV} assets={debChecksum} />}
               footer={
                 <a href={links.aptReadme} target="_blank" rel="noreferrer">
                   Full APT repo documentation
@@ -324,7 +331,6 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="📦"
               title="AppImage (any distro)"
               description="Portable binary — no root, no package manager. Best when APT/pacman does not fit or you want a single file."
-              checksum={<ChecksumBlock version={checksumV} assets={appImageChecksum} />}
             >
               <CopyCommand
                 label="Download AppImage"
@@ -352,7 +358,6 @@ export function InstallCommands({ mirrorV }: Props) {
               icon="🐧"
               title="Arch Linux"
               description="Official release ships a .pacman package (not in AUR). Install with pacman -U after download."
-              checksum={<ChecksumBlock version={checksumV} assets={pacmanChecksum} />}
               footer={
                 <a href={`${links.github}/releases/latest`} target="_blank" rel="noreferrer">
                   .pacman on GitHub Releases
@@ -415,7 +420,7 @@ export function InstallCommands({ mirrorV }: Props) {
                 label="Download all release assets"
                 command={`gh release download v${checksumV} --repo KurtStevenK/cursor-auto-runner`}
                 fullWidth
-                hint="Requires GitHub CLI. Verify each file with the SHA-256 blocks on the platform tabs."
+                hint="Requires GitHub CLI. Verify each file on the Checksums tab."
               />
               <CopyCommand
                 label="Install GitHub CLI (optional)"
@@ -424,6 +429,63 @@ export function InstallCommands({ mirrorV }: Props) {
                 hint="Needed for the gh repo clone commands above. macOS via Homebrew; on Linux see github.com/cli/cli#installation."
               />
             </OsGroup>
+          </div>
+        </div>
+
+        <div
+          id={`${baseId}-panel-checksums`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-checksums`}
+          hidden={tab !== 'checksums'}
+          className="install-tabpanel"
+        >
+          <div className="install-tabs-wrap install-tabs-wrap--nested">
+            <div
+              className="install-tabs install-tabs--nested"
+              role="tablist"
+              aria-label="Checksum platform"
+            >
+              {CHECKSUM_TABS.map(({ id, label, icon }) => {
+                const selected = checksumPlatform === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    id={`${baseId}-checksum-tab-${id}`}
+                    aria-selected={selected}
+                    aria-controls={`${baseId}-checksum-panel-${id}`}
+                    tabIndex={selected ? 0 : -1}
+                    className={`install-tab${selected ? ' install-tab--active' : ''}`}
+                    onClick={() => setChecksumPlatform(id)}
+                  >
+                    <span className="install-tab-icon" aria-hidden="true">{icon}</span>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {CHECKSUM_TABS.map(({ id }) => (
+              <div
+                key={id}
+                id={`${baseId}-checksum-panel-${id}`}
+                role="tabpanel"
+                aria-labelledby={`${baseId}-checksum-tab-${id}`}
+                hidden={checksumPlatform !== id}
+                className="install-tabpanel"
+              >
+                <div className="install-layout">
+                  <div className="install-os-group install-os-group--checksums">
+                    <ChecksumBlock
+                      version={checksumV}
+                      assets={checksumAssets[id]}
+                      showHeading={false}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
