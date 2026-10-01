@@ -8,6 +8,10 @@ choco install cursor-auto-runner
 
 The `.nupkg` is built in the **Build releases** workflow on tagged releases. It downloads the NSIS installer from GitHub Releases (see `tools/chocolateyinstall.ps1`).
 
+`iconUrl` in the nuspec must **not** use `raw.githubusercontent.com` (moderation rejects it). CI renders:
+
+`https://cdn.jsdelivr.net/gh/KurtStevenK/cursor-auto-runner@v<version>/assets/icons/icon-256.png`
+
 ## First-time moderation
 
 The first pushed version stays **unlisted** until a moderator approves it. While **no version is approved**, Chocolatey returns **403** on pushes of newer versions.
