@@ -10,13 +10,13 @@ export function InstallCommands({ mirrorV }: Props) {
       <p className="section-sub">One line per action — use the copy icon on each command.</p>
       <div className="code-cards">
         <CopyCommand
-          label="Homebrew (macOS)"
-          command="brew install --cask KurtStevenK/tap/cursor-auto-runner"
-          hint="Tap: KurtStevenK/homebrew-tap"
-        />
-        <CopyCommand
           label="Homebrew tap (first time)"
           command="brew tap KurtStevenK/tap"
+        />
+        <CopyCommand
+          label="Homebrew (macOS)"
+          command="brew install --cask cursor-auto-runner"
+          hint="After tap above (or use brew install --cask KurtStevenK/tap/cursor-auto-runner without tapping)"
         />
         <CopyCommand
           label="Chocolatey (Windows)"
