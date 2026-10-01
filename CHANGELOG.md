@@ -5,6 +5,15 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.29] - 2026-10-01
+
+### Added
+- **Firebase landing site** at [cursor-auto-runner-linux.web.app](https://cursor-auto-runner-linux.web.app): React + Three.js + Framer Motion download page; `firebase-landing/` + `npm run deploy:firebase`.
+- **Linux release mirror** on Firebase Storage (`cursor-auto-runner-linux.firebasestorage.app`) with CI secrets `FIREBASE_STORAGE_BUCKET` and `FIREBASE_SERVICE_ACCOUNT_LINUX`.
+
+### Changed
+- `scripts/upload-linux-firebase.sh` accepts CI AppImage filenames and uploads a stable `cursor-auto-runner-<version>.AppImage` object name.
+
 ## [1.2.28] - 2026-10-01
 
 ### Added

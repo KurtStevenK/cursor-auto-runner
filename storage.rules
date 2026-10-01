@@ -1,0 +1,10 @@
+rules_version = '2';
+// Public read for published Linux release binaries only.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /linux/{version}/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
