@@ -1,6 +1,6 @@
 import { desktopCapturer, systemPreferences } from 'electron';
-import { getAuthStatus } from '@nut-tree-fork/node-mac-permissions';
 import type { MacPermissionSnapshot } from './mac-permission-detail';
+import { macPermAuthStatus } from './mac-perm-tcc';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -37,14 +37,14 @@ export async function macScreenRecordingGranted(): Promise<boolean> {
     /* unsupported on older macOS */
   }
   if (systemPreferences.getMediaAccessStatus('screen') === 'granted') return true;
-  if (getAuthStatus('screen') === 'authorized') return true;
+  if (macPermAuthStatus('screen') === 'authorized') return true;
   return await probeScreenCapture();
 }
 
 /** Accessibility: Electron trust check or native TCC status for this process. */
 export function macAccessibilityGranted(): boolean {
   if (systemPreferences.isTrustedAccessibilityClient(false)) return true;
-  return getAuthStatus('accessibility') === 'authorized';
+  return macPermAuthStatus('accessibility') === 'authorized';
 }
 
 export async function macPermissionsSnapshot(): Promise<MacPermissionSnapshot> {
@@ -54,8 +54,8 @@ export async function macPermissionsSnapshot(): Promise<MacPermissionSnapshot> {
     screenOk,
     accessOk,
     electronScreenStatus: systemPreferences.getMediaAccessStatus('screen'),
-    macPermScreen: getAuthStatus('screen'),
-    macPermAccessibility: getAuthStatus('accessibility'),
+    macPermScreen: macPermAuthStatus('screen'),
+    macPermAccessibility: macPermAuthStatus('accessibility'),
     electronAccessibility: systemPreferences.isTrustedAccessibilityClient(false),
   };
 }
