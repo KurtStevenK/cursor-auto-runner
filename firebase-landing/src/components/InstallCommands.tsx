@@ -35,7 +35,6 @@ export function InstallCommands({ mirrorV }: Props) {
       <h2>Install commands</h2>
       <p className="section-sub">Install by OS; clone and tooling under Development.</p>
       <div className="install-layout">
-        <div className="install-platform-grid">
         <OsGroup icon="🍎" title="macOS">
           <CopyCommand label="Add tap (first time)" command="brew tap KurtStevenK/tap" />
           <CopyCommand
@@ -74,10 +73,8 @@ export function InstallCommands({ mirrorV }: Props) {
             command={`chmod +x cursor-auto-runner-${mirrorV}.AppImage && ./cursor-auto-runner-${mirrorV}.AppImage`}
           />
         </OsGroup>
-        </div>
 
         <OsGroup
-          className="install-dev-panel"
           icon="🛠️"
           title="Development"
           footer={

@@ -5,6 +5,11 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.33] - 2026-10-01
+
+### Changed
+- **Firebase landing:** install section stacks macOS, Windows, Linux, and Development as full-width rows (same layout as Development).
+
 ## [1.2.32] - 2026-10-01
 
 ### Fixed
