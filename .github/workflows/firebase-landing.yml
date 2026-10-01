@@ -1,0 +1,38 @@
+name: Deploy Firebase landing
+
+# https://cursor-auto-runner-linux.web.app — Hosting + storage rules (not Storage binary uploads).
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'firebase-landing/**'
+      - 'firebase.json'
+      - 'storage.rules'
+      - '.firebaserc'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix firebase-landing
+      - name: Deploy Hosting (and storage rules)
+        env:
+          FIREBASE_SERVICE_ACCOUNT_LINUX: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LINUX }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${FIREBASE_SERVICE_ACCOUNT_LINUX:-}" ]]; then
+            echo "::notice::Skipping Firebase deploy (set FIREBASE_SERVICE_ACCOUNT_LINUX)"
+            exit 0
+          fi
+          echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          npm run build:firebase-landing
+          npx firebase-tools@13.29.1 deploy --only hosting,storage --project cursor-auto-runner-linux --non-interactive

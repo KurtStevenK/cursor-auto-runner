@@ -133,12 +133,16 @@ jobs:
       - name: Build signed macOS DMGs
         if: startsWith(github.ref, 'refs/tags/v')
         env:
-          CSC_LINK: ${{ env.CERTIFICATE_PATH }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npm run dist:mac
+        run: |
+          set -euo pipefail
+          # Cert is already in KEYCHAIN_PATH — do not set CSC_LINK or electron-builder imports the
+          # .p12 into a second temp keychain and set-key-partition-list fails on CI.
+          security find-identity -v -p codesigning
+          npm run dist:mac
       - name: Verify macOS code signature (when CSC_LINK is set)
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}

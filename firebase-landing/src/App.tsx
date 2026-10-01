@@ -28,9 +28,9 @@ export default function App() {
   const reduceMotion = useReducedMotion();
   const linuxMirror = linuxFiles(mirrorV);
 
-  const macArmDmg = releaseMirrorUrl(mirrorV, 'Cursor.Auto.Runner-1.2.28-arm64.dmg');
-  const macIntelDmg = releaseMirrorUrl(mirrorV, 'Cursor.Auto.Runner-1.2.28.dmg');
-  const winExe = releaseMirrorUrl(mirrorV, 'Cursor.Auto.Runner.Setup.1.2.28.exe');
+  const macArmDmg = releaseMirrorUrl(mirrorV, `Cursor.Auto.Runner-${mirrorV}-arm64.dmg`);
+  const macIntelDmg = releaseMirrorUrl(mirrorV, `Cursor.Auto.Runner-${mirrorV}.dmg`);
+  const winExe = releaseMirrorUrl(mirrorV, `Cursor.Auto.Runner.Setup.${mirrorV}.exe`);
 
   const downloads = [
     {
