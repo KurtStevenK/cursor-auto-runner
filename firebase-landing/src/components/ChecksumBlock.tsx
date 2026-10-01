@@ -1,12 +1,9 @@
 import { CopyCommand } from './CopyCommand';
 import { releaseMirrorUrl } from '../config';
-import releaseData from '../data/release-1.2.28.json';
+import { assetsForPlatform, type ReleaseAsset } from '../release-data';
 
-export type ReleaseAsset = (typeof releaseData.assets)[number];
-
-export function assetsForPlatform(platform: ReleaseAsset['platform']) {
-  return releaseData.assets.filter((a) => a.sha256 && a.platform === platform);
-}
+export type { ReleaseAsset };
+export { assetsForPlatform };
 
 function linuxVerify(asset: ReleaseAsset) {
   return `echo "${asset.sha256}  ${asset.name}" | sha256sum -c -`;

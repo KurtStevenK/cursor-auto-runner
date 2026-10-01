@@ -1,6 +1,11 @@
 # Linux binaries on Firebase Storage (optional mirror)
 
-Large Linux artifacts (AppImage, `.deb`, `.pacman`) can be mirrored to **Firebase Storage** with **public read** under `linux/<version>/`. GitHub Releases remain the primary source; Firebase is an extra CDN-style mirror for Linux only.
+Release artifacts are mirrored to **Firebase Storage** (public read):
+
+- **`linux/<version>/`** — Linux AppImage, `.deb`, `.pacman` (legacy path; still updated each release).
+- **`releases/<version>/`** — full platform mirror (Windows `.exe`, macOS `.dmg`/`.zip`, Linux packages), same filenames as GitHub Releases.
+
+GitHub Releases remain the primary source; Firebase is a CDN-style mirror for the landing page and direct downloads.
 
 **Public site:** [https://cursor-auto-runner-linux.web.app](https://cursor-auto-runner-linux.web.app) (Firebase Hosting, built from `firebase-landing/`).
 
@@ -39,7 +44,18 @@ Large Linux artifacts (AppImage, `.deb`, `.pacman`) can be mirrored to **Firebas
 
 ## CI
 
-On tagged releases, the **release** job uploads Linux artifacts from `artifacts/linux/` when `FIREBASE_SERVICE_ACCOUNT_LINUX` is set.
+On tagged releases, the **release** job uploads when `FIREBASE_SERVICE_ACCOUNT_LINUX` and `FIREBASE_STORAGE_BUCKET` are set:
+
+1. `scripts/upload-linux-firebase.sh` → `linux/<version>/`
+2. `scripts/mirror-release-firebase.sh` → `releases/<version>/` (all installer assets from CI artifacts)
+
+Manual backfill for an old tag (downloads from GitHub):
+
+```bash
+export FIREBASE_STORAGE_BUCKET=cursor-auto-runner-linux.firebasestorage.app
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+bash scripts/mirror-release-firebase.sh 1.2.39
+```
 
 ## Manual upload (local)
 
