@@ -310,6 +310,13 @@
   gap: 0.75rem;
 }
 
+.install-layout > .install-os-group .install-os-commands .copy-cmd--full {
+  grid-column: 1 / -1;
+  margin-top: 0.15rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed rgba(94, 255, 200, 0.2);
+}
+
 @media (max-width: 720px) {
   .install-layout > .install-os-group .install-os-commands {
     grid-template-columns: 1fr;
