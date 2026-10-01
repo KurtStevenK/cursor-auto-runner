@@ -1,59 +1,86 @@
+import type { ReactNode } from 'react';
 import { CopyCommand } from './CopyCommand';
 import { links } from '../config';
 
 type Props = { mirrorV: string };
 
+function OsGroup({
+  icon,
+  title,
+  children,
+  footer,
+}: {
+  icon: string;
+  title: string;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  return (
+    <div className="install-os-group">
+      <h3 className="install-os-title">
+        <span className="install-os-icon" aria-hidden="true">{icon}</span>
+        {title}
+      </h3>
+      <div className="install-os-commands">{children}</div>
+      {footer ? <div className="install-os-footer">{footer}</div> : null}
+    </div>
+  );
+}
+
 export function InstallCommands({ mirrorV }: Props) {
   return (
     <section id="install" className="section install">
       <h2>Install commands</h2>
-      <p className="section-sub">One line per action — use the copy icon on each command.</p>
-      <div className="code-cards">
-        <CopyCommand
-          label="Homebrew tap (first time)"
-          command="brew tap KurtStevenK/tap"
-        />
-        <CopyCommand
-          label="Homebrew (macOS)"
-          command="brew install --cask cursor-auto-runner"
-          hint="After tap above (or use brew install --cask KurtStevenK/tap/cursor-auto-runner without tapping)"
-        />
-        <CopyCommand
-          label="Chocolatey (Windows)"
-          command="choco install cursor-auto-runner"
-        />
-        <CopyCommand
-          label="APT (Debian/Ubuntu)"
-          command="sudo apt-get install cursor-auto-runner"
-          hint="One-time repo setup: see KurtStevenK/apt on GitHub"
-        />
-        <CopyCommand
-          label="AppImage (Linux)"
-          command={`chmod +x cursor-auto-runner-${mirrorV}.AppImage && ./cursor-auto-runner-${mirrorV}.AppImage`}
-        />
-        <CopyCommand
-          label="Clone app repository"
-          command="gh repo clone KurtStevenK/cursor-auto-runner"
-        />
-        <CopyCommand
-          label="Clone Homebrew tap"
-          command="gh repo clone KurtStevenK/homebrew-tap"
-        />
-        <CopyCommand
-          label="Clone APT repository"
-          command="gh repo clone KurtStevenK/apt"
-        />
-        <CopyCommand
-          label="Open releases in browser"
-          command={`gh release view v${mirrorV} --repo KurtStevenK/cursor-auto-runner --web`}
-        />
-        <p className="install-link">
-          <a href={links.apt} target="_blank" rel="noreferrer">APT setup guide</a>
-          {' · '}
-          <a href={`${links.github}/blob/master/packaging/chocolatey/README.md`} target="_blank" rel="noreferrer">
-            Chocolatey notes
-          </a>
-        </p>
+      <p className="section-sub">Grouped by OS — one copy icon per command.</p>
+      <div className="install-os-grid">
+        <OsGroup icon="🍎" title="macOS">
+          <CopyCommand label="Add tap (first time)" command="brew tap KurtStevenK/tap" />
+          <CopyCommand
+            label="Install cask"
+            command="brew install --cask cursor-auto-runner"
+            hint="Or without tapping: brew install --cask KurtStevenK/tap/cursor-auto-runner"
+          />
+          <CopyCommand label="Clone Homebrew tap" command="gh repo clone KurtStevenK/homebrew-tap" />
+        </OsGroup>
+
+        <OsGroup
+          icon="🪟"
+          title="Windows"
+          footer={
+            <a href={`${links.github}/blob/master/packaging/chocolatey/README.md`} target="_blank" rel="noreferrer">
+              Chocolatey notes
+            </a>
+          }
+        >
+          <CopyCommand label="Chocolatey" command="choco install cursor-auto-runner" />
+        </OsGroup>
+
+        <OsGroup
+          icon="🐧"
+          title="Linux"
+          footer={
+            <a href={links.apt} target="_blank" rel="noreferrer">APT repo setup guide</a>
+          }
+        >
+          <CopyCommand
+            label="APT (Debian/Ubuntu)"
+            command="sudo apt-get install cursor-auto-runner"
+            hint="Configure KurtStevenK/apt once before install"
+          />
+          <CopyCommand
+            label="AppImage"
+            command={`chmod +x cursor-auto-runner-${mirrorV}.AppImage && ./cursor-auto-runner-${mirrorV}.AppImage`}
+          />
+          <CopyCommand label="Clone APT repository" command="gh repo clone KurtStevenK/apt" />
+        </OsGroup>
+
+        <OsGroup icon="📦" title="Source & releases">
+          <CopyCommand label="Clone app repository" command="gh repo clone KurtStevenK/cursor-auto-runner" />
+          <CopyCommand
+            label="Open release in browser"
+            command={`gh release view v${mirrorV} --repo KurtStevenK/cursor-auto-runner --web`}
+          />
+        </OsGroup>
       </div>
     </section>
   );
