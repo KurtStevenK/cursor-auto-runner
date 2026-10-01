@@ -56,7 +56,7 @@ jobs:
           sed -e "s/__VERSION__/$VERSION/g" -e "s/__EXESHA__/$SHA/g" packaging/chocolatey/cursor-auto-runner.nuspec > "$PKG/cursor-auto-runner.nuspec"
           sed -e "s/__VERSION__/$VERSION/g" -e "s/__EXESHA__/$SHA/g" packaging/chocolatey/tools/chocolateyinstall.ps1 > "$PKG/tools/chocolateyinstall.ps1"
           (cd "$PKG" && choco pack)
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: |
@@ -75,7 +75,7 @@ jobs:
       - run: npm ci
       - run: sudo apt-get update && sudo apt-get install -y libarchive-tools
       - run: npm run dist:linux
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           path: |
@@ -165,7 +165,7 @@ jobs:
               echo "::notice::Skipping spctl (notarization secrets not set)"
             fi
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: macos
           path: |
