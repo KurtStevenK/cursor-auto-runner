@@ -8,12 +8,16 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { getWindows } from '@nut-tree-fork/nut-js';
 import type { ClickMode } from '../shared/types';
-import type { CropPayload, TemplatePayload } from '../shared/match-protocol';
+import type { CropPayload, MatchDebugInfo, TemplatePayload } from '../shared/match-protocol';
 import {
   capturePointToPhysical,
   captureRequestSize,
   captureToNativeScales,
+  normalizeWindowRegionForDisplay,
+  windowCapturePointToPhysical,
+  type WindowRegion,
 } from './capture-geometry';
+import { ensureMacScreenCapture } from './permissions';
 import {
   fingerprintDistance,
   loadTemplate,
@@ -32,6 +36,7 @@ interface WindowInfo {
   top: number;
   width: number;
   height: number;
+  title: string;
   focus: () => Promise<boolean>;
 }
 
@@ -43,6 +48,8 @@ interface CropContext {
   captureScaleY: number;
   cropX: number;
   cropY: number;
+  /** When set, match coordinates are relative to a per-window thumbnail. */
+  windowLogical?: WindowRegion;
   focus: () => Promise<boolean>;
 }
 
@@ -81,6 +88,25 @@ const EMPTY_METRICS: DetectionMetrics = {
 const MAX_TEMPLATES_PER_MODE_AND_THEME = 3;
 const MAX_CAPTURE_WIDTH = 1920;
 const MAX_CAPTURE_HEIGHT = 1080;
+const DEBUG_DETECT =
+  process.env.CURSOR_AUTO_RUNNER_DEBUG_DETECT === '1' ||
+  process.env.CURSOR_AUTO_RUNNER_DEBUG_MATCH === '1';
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function windowRank(window: WindowInfo): number {
+  const title = window.title.toLowerCase();
+  if (title.includes('auto runner')) return -1_000_000;
+  if (title.includes('cursor-auto-runner')) return -100_000;
+  return window.width * window.height;
+}
+
+function safeConsoleWarn(...args: unknown[]): void {
+  try {
+    console.warn(...args);
+  } catch {
+    // GUI launches have no stdout; logging during quit can throw EPIPE.
+  }
+}
 
 export class Detector {
   private readonly matcher = new MatchWorkerClient();
@@ -91,6 +117,9 @@ export class Detector {
   private totalVariantCount = 0;
   private windowCache: { at: number; windows: WindowInfo[] } | null = null;
   private cancelGeneration = 0;
+  private missLogStreak = 0;
+  private lastMissLogAt = 0;
+  private disposing = false;
 
   windowFound = false;
   lastMetrics: DetectionMetrics = { ...EMPTY_METRICS };
@@ -103,9 +132,27 @@ export class Detector {
     const bundled = this.options.bundledRoot ?? app.getAppPath();
     // Keep bundled fallbacks ahead of user captures so a stale local catalog
     // cannot consume every bounded slot.
-    return app.isPackaged
-      ? [path.join(bundled, 'assets', 'templates'), path.join(app.getPath('userData'), 'assets', 'templates')]
-      : [path.join(bundled, 'assets', 'templates')];
+    const bundledTemplates = path.join(bundled, 'assets', 'templates');
+    const dirs = [bundledTemplates];
+    const userCandidates = [
+      path.join(app.getPath('userData'), 'assets', 'templates'),
+      ...(process.platform === 'darwin'
+        ? [
+            path.join(
+              app.getPath('home'),
+              'Library',
+              'Application Support',
+              'Cursor Auto Runner',
+              'assets',
+              'templates'
+            ),
+          ]
+        : []),
+    ];
+    for (const userTemplates of userCandidates) {
+      if (fs.existsSync(userTemplates) && !dirs.includes(userTemplates)) dirs.push(userTemplates);
+    }
+    return dirs;
   }
 
   private async loadTemplates(): Promise<TemplatePayload[]> {
@@ -221,6 +268,8 @@ export class Detector {
   }
 
   async dispose(): Promise<void> {
+    this.disposing = true;
+    this.cancelPending();
     await this.matcher.dispose();
   }
 
@@ -234,20 +283,28 @@ export class Detector {
       const windows = await getWindows();
       const candidates = await Promise.all(
         windows.map(async (win) => {
-          const title = ((await win.title) || '').toLowerCase();
+          const rawTitle = (await win.title) || '';
+          const title = rawTitle.toLowerCase();
           if (!title.includes('cursor') || title.includes('auto runner')) return null;
           const region = await win.region;
           if (!region || region.width <= 50 || region.height <= 50) return null;
+          const display = electronScreen.getDisplayNearestPoint({
+            x: region.left + region.width / 2,
+            y: region.top + region.height / 2,
+          });
+          const normalized = normalizeWindowRegionForDisplay(region, display);
           return {
-            left: region.left,
-            top: region.top,
-            width: region.width,
-            height: region.height,
+            left: normalized.left,
+            top: normalized.top,
+            width: normalized.width,
+            height: normalized.height,
+            title: rawTitle,
             focus: () => win.focus(),
           } satisfies WindowInfo;
         })
       );
       found.push(...candidates.filter((candidate): candidate is WindowInfo => candidate !== null));
+      found.sort((left, right) => windowRank(right) - windowRank(left));
     } catch (error) {
       console.error('[detector] window enumeration failed:', error);
     }
@@ -285,6 +342,126 @@ export class Detector {
       return aspectMatches[0];
     }
     return undefined;
+  }
+
+  private async screenSourcesForDisplay(
+    display: Electron.Display,
+    requestSize: ReturnType<typeof captureRequestSize>
+  ): Promise<Electron.DesktopCapturerSource[]> {
+    await ensureMacScreenCapture();
+    const thumbnailSize = { width: requestSize.width, height: requestSize.height };
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const sources = await desktopCapturer.getSources({
+        types: ['screen'],
+        thumbnailSize,
+      });
+      const source = this.sourceForDisplay(sources, display);
+      const size = source?.thumbnail.getSize();
+      if (source && size && size.width >= 10 && size.height >= 10) return sources;
+      if (attempt < 2) await sleep(150 * (attempt + 1));
+    }
+    console.warn(
+      `[detector] screen thumbnail unavailable for display ${display.id}; check Screen Recording permission`
+    );
+    return await desktopCapturer.getSources({ types: ['screen'], thumbnailSize });
+  }
+
+  private windowSourceForTitle(
+    sources: Electron.DesktopCapturerSource[],
+    title: string
+  ): Electron.DesktopCapturerSource | undefined {
+    const lower = title.toLowerCase();
+    const exact = sources.find((source) => source.name === title);
+    if (exact) return exact;
+    const partial = sources.filter((source) => {
+      const name = source.name.toLowerCase();
+      return name.includes('cursor') && !name.includes('auto runner');
+    });
+    if (partial.length === 1) return partial[0];
+    return partial.find((source) => lower.includes(source.name.toLowerCase()) || source.name.toLowerCase().includes(lower.slice(0, 24)));
+  }
+
+  private async captureDarwinWindowCrops(
+    windows: WindowInfo[],
+    startId: number,
+    cancelled: () => boolean
+  ): Promise<CropContext[]> {
+    if (process.platform !== 'darwin' || windows.length === 0) return [];
+    await ensureMacScreenCapture();
+    const sources = await desktopCapturer.getSources({
+      types: ['window'],
+      thumbnailSize: { width: MAX_CAPTURE_WIDTH, height: MAX_CAPTURE_HEIGHT },
+    });
+    const crops: CropContext[] = [];
+    for (const window of windows) {
+      if (cancelled()) break;
+      const source = this.windowSourceForTitle(sources, window.title);
+      if (!source) continue;
+      const thumbnail = source.thumbnail;
+      const size = thumbnail.getSize();
+      if (size.width < 10 || size.height < 10) continue;
+      const display = electronScreen.getDisplayNearestPoint({
+        x: window.left + window.width / 2,
+        y: window.top + window.height / 2,
+      });
+      const captureScaleX = size.width / window.width;
+      const captureScaleY = size.height / window.height;
+      const nativeW = Math.max(1, Math.round(window.width * display.scaleFactor));
+      const nativeH = Math.max(1, Math.round(window.height * display.scaleFactor));
+      const templateScale = captureToNativeScales(size, { width: nativeW, height: nativeH });
+      const id = startId + crops.length;
+      crops.push({
+        id,
+        payload: {
+          id,
+          width: size.width,
+          height: size.height,
+          captureToNativeScaleX: templateScale.x,
+          captureToNativeScaleY: templateScale.y,
+          bgra: await this.bitmapBuffer(thumbnail),
+        },
+        display,
+        captureScaleX,
+        captureScaleY,
+        cropX: 0,
+        cropY: 0,
+        windowLogical: {
+          left: window.left,
+          top: window.top,
+          width: window.width,
+          height: window.height,
+        },
+        focus: window.focus,
+      });
+    }
+    return crops;
+  }
+
+  private logDetectionMiss(
+    confidence: number,
+    crops: CropContext[],
+    bestMiss?: MatchDebugInfo
+  ): void {
+    if (!bestMiss || this.disposing) return;
+    this.missLogStreak++;
+    const now = Date.now();
+    const shouldLog =
+      DEBUG_DETECT || this.missLogStreak >= 3 || now - this.lastMissLogAt > 15_000;
+    if (!shouldLog) return;
+    this.lastMissLogAt = now;
+    const sample = crops[0];
+    safeConsoleWarn(
+      '[detector] no button match',
+      JSON.stringify({
+        threshold: confidence,
+        missStreak: this.missLogStreak,
+        cropCount: crops.length,
+        displayScale: sample?.display.scaleFactor,
+        cropSize: sample ? { width: sample.payload.width, height: sample.payload.height } : null,
+        windowCrop: Boolean(sample?.windowLogical),
+        bestMiss,
+      })
+    );
   }
 
   private async bitmapBuffer(image: Electron.NativeImage): Promise<ArrayBuffer> {
@@ -334,13 +511,7 @@ export class Detector {
       const requestKey = `${requestSize.width}x${requestSize.height}`;
       let sources = sourcesBySize.get(requestKey);
       if (!sources) {
-        sources = await desktopCapturer.getSources({
-          types: ['screen'],
-          thumbnailSize: {
-            width: requestSize.width,
-            height: requestSize.height,
-          },
-        });
+        sources = await this.screenSourcesForDisplay(entry.display, requestSize);
         sourcesBySize.set(requestKey, sources);
       }
       if (cancelled()) break;
@@ -356,7 +527,12 @@ export class Detector {
       }
       const thumbnail = source.thumbnail;
       const size = thumbnail.getSize();
-      if (size.width < 10 || size.height < 10) continue;
+      if (size.width < 10 || size.height < 10) {
+        console.warn(
+          `[detector] empty screen thumbnail on display ${entry.display.id} (${size.width}x${size.height})`
+        );
+        continue;
+      }
       const scaleX = size.width / entry.display.bounds.width;
       const scaleY = size.height / entry.display.bounds.height;
       const templateScale = captureToNativeScales(size, {
@@ -450,8 +626,12 @@ export class Detector {
       metrics.displayCount = displays.length;
       const captureStartedAt = perfNow();
       const capture = await this.captureCrops(cursorWindows, displays, cancelled);
+      let crops = capture.crops;
+      if (process.platform === 'darwin') {
+        const windowCrops = await this.captureDarwinWindowCrops(cursorWindows, 0, cancelled);
+        if (windowCrops.length > 0) crops = windowCrops;
+      }
       metrics.captureMs = perfNow() - captureStartedAt;
-      const { crops } = capture;
       metrics.cropCount = crops.length;
       metrics.sourceMissCount = capture.sourceMissCount;
       if (cancelled()) {
@@ -470,25 +650,33 @@ export class Detector {
       metrics.workerHeapBytes = response.workerHeapBytes;
       metrics.cancelled = response.cancelled;
       if (!response.match && response.bestMiss) {
-        console.debug(
-          '[detector] best match below threshold',
-          JSON.stringify({ threshold: confidence, ...response.bestMiss })
-        );
+        this.logDetectionMiss(confidence, crops, response.bestMiss);
       }
       if (!response.match || response.cancelled || cancelled()) {
         metrics.cancelled = response.cancelled || cancelled();
         return null;
       }
+      this.missLogStreak = 0;
 
       const crop = crops.find((candidate) => candidate.id === response.match!.cropId);
       if (!crop) return null;
-      const captureX = crop.cropX + response.match.x + response.match.templateWidth / 2;
-      const captureY = crop.cropY + response.match.y + response.match.templateHeight / 2;
-      const physical = capturePointToPhysical(
-        crop.display,
-        { x: crop.captureScaleX, y: crop.captureScaleY },
-        { x: captureX, y: captureY }
-      );
+      const localX = response.match.x + response.match.templateWidth / 2;
+      const localY = response.match.y + response.match.templateHeight / 2;
+      const physical = crop.windowLogical
+        ? windowCapturePointToPhysical(
+            crop.windowLogical,
+            crop.display,
+            { x: crop.captureScaleX, y: crop.captureScaleY },
+            { x: localX, y: localY }
+          )
+        : capturePointToPhysical(
+            crop.display,
+            { x: crop.captureScaleX, y: crop.captureScaleY },
+            {
+              x: crop.cropX + localX,
+              y: crop.cropY + localY,
+            }
+          );
       return {
         x: physical.x,
         y: physical.y,

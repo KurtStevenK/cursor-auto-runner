@@ -9,3 +9,9 @@ Thumbs.db
 
 # Local APT signing keyring (see packaging/apt/README.md); never commit private keys
 .gnupg-apt-cursor-auto-runner/
+
+debug-detector-crop.png
+capture-debug-display*.png
+scripts/debug-window-region.js
+scripts/debug-detector-crop.js
+scripts/debug-window-sources.js

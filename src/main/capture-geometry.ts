@@ -4,6 +4,13 @@ export interface DisplayCaptureGeometry {
   scaleFactor: number;
 }
 
+export interface WindowRegion {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
 export interface CaptureRequestSize {
   width: number;
   height: number;
@@ -37,6 +44,46 @@ export function captureToNativeScales(
   return {
     x: capture.width / native.width,
     y: capture.height / native.height,
+  };
+}
+
+/**
+ * On macOS Retina, nut.js may report window bounds in physical pixels while
+ * Electron display bounds stay logical. Detect physical-sized regions and scale
+ * them down to logical space for screen-crop math.
+ */
+export function normalizeWindowRegionForDisplay(
+  region: WindowRegion,
+  display: Pick<DisplayCaptureGeometry, 'bounds' | 'size' | 'scaleFactor'>
+): WindowRegion {
+  const scale = display.scaleFactor;
+  if (scale <= 1) return region;
+  const logicalW = display.bounds.width;
+  const logicalH = display.bounds.height;
+  if (region.width <= logicalW + 8 && region.height <= logicalH + 8) return region;
+  if (region.width > logicalW * 1.2 || region.height > logicalH * 1.2) {
+    return {
+      left: Math.round(region.left / scale),
+      top: Math.round(region.top / scale),
+      width: Math.round(region.width / scale),
+      height: Math.round(region.height / scale),
+    };
+  }
+  return region;
+}
+
+/** Map a match inside a per-window capture back to nut.js physical coordinates. */
+export function windowCapturePointToPhysical(
+  windowLogical: WindowRegion,
+  display: Pick<DisplayCaptureGeometry, 'scaleFactor'>,
+  captureScale: { x: number; y: number },
+  point: { x: number; y: number }
+): { x: number; y: number } {
+  const logicalX = windowLogical.left + point.x / captureScale.x;
+  const logicalY = windowLogical.top + point.y / captureScale.y;
+  return {
+    x: Math.round(logicalX * display.scaleFactor),
+    y: Math.round(logicalY * display.scaleFactor),
   };
 }
 

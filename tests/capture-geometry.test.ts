@@ -4,6 +4,8 @@ import {
   capturePointToPhysical,
   captureRequestSize,
   captureToNativeScales,
+  normalizeWindowRegionForDisplay,
+  windowCapturePointToPhysical,
 } from '../src/main/capture-geometry';
 
 test('capture sizing applies one uniform scale to a high-DPI display', () => {
@@ -50,4 +52,37 @@ test('capture ratios and click coordinates map back to physical pixels', () => {
     { x: 960, y: 540 }
   );
   assert.deepEqual(point, { x: 1024, y: 576 });
+});
+
+test('normalizeWindowRegionForDisplay scales physical nut regions on Retina', () => {
+  const display = {
+    bounds: { x: 0, y: 0, width: 1440, height: 900 },
+    size: { width: 1440, height: 900 },
+    scaleFactor: 2,
+  };
+  const normalized = normalizeWindowRegionForDisplay(
+    { left: 200, top: 100, width: 2800, height: 1700 },
+    display
+  );
+  assert.deepEqual(normalized, { left: 100, top: 50, width: 1400, height: 850 });
+});
+
+test('normalizeWindowRegionForDisplay leaves logical regions unchanged', () => {
+  const display = {
+    bounds: { x: 0, y: 0, width: 1440, height: 900 },
+    size: { width: 1440, height: 900 },
+    scaleFactor: 2,
+  };
+  const region = { left: 12, top: 34, width: 1200, height: 800 };
+  assert.deepEqual(normalizeWindowRegionForDisplay(region, display), region);
+});
+
+test('windowCapturePointToPhysical maps window-local matches to physical pixels', () => {
+  const point = windowCapturePointToPhysical(
+    { left: 100, top: 50, width: 1200, height: 800 },
+    { scaleFactor: 2 },
+    { x: 2, y: 2 },
+    { x: 200, y: 100 }
+  );
+  assert.deepEqual(point, { x: 400, y: 200 });
 });

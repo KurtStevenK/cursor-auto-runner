@@ -5,6 +5,31 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.24] - 2026-10-01
+
+### Fixed
+- **Quit crash on macOS:** detection miss logging no longer throws `EPIPE` when the app exits from the Dock (no terminal stdout). The poll loop stops before shutdown.
+
+## [1.2.23] - 2026-10-01
+
+### Fixed
+- **macOS permissions:** Auto Run waits for Screen Recording and Accessibility before starting; the permission dialog links to both System Settings panes.
+
+## [1.2.22] - 2026-10-01
+
+### Fixed
+- **macOS capture:** Prefer per-window `desktopCapturer` crops when available; retry empty screen thumbnails; load templates from the packaged app’s Application Support folder during dev.
+
+## [1.2.21] - 2026-10-01
+
+### Fixed
+- **macOS window bounds:** Normalize Retina physical nut.js regions to Electron logical coordinates before cropping.
+
+## [1.2.20] - 2026-10-01
+
+### Added
+- **macOS detection diagnostics:** throttled `[detector] no button match` warnings (`CURSOR_AUTO_RUNNER_DEBUG_DETECT=1`) and expanded `scripts/test-detector.js` coverage for `run`, `always-run`, and `allow`.
+
 ## [1.2.19] - 2026-09-30
 
 ### Fixed

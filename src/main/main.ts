@@ -18,6 +18,10 @@ import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
 // Ensure a clean tray/app identity on Windows
 app.setAppUserModelId('com.gf-elektro.cursor-auto-runner');
 
+// Packaged GUI apps have no terminal; ignore broken stdout during shutdown.
+process.stdout?.on?.('error', () => {});
+process.stderr?.on?.('error', () => {});
+
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -111,14 +115,13 @@ function openOverlay(): void {
   });
 }
 
-function applyMode(mode: Mode): void {
+async function applyMode(mode: Mode): Promise<void> {
   if (mode !== 'idle') {
-    // macOS: verify permissions before starting the automation.
-    void ensureMacPermissions().then((ok) => {
-      if (!ok) {
-        controller.set('idle');
-      }
-    });
+    const ok = await ensureMacPermissions();
+    if (!ok) {
+      controller.set('idle');
+      return;
+    }
   }
   controller.set(mode);
 }
@@ -146,7 +149,9 @@ app.whenReady().then(() => {
   );
   tray = new TrayUI({
     getMode: () => controller.current,
-    setMode: (mode) => applyMode(mode),
+    setMode: (mode) => {
+      void applyMode(mode);
+    },
     openOverlay,
     getPollInterval: () => settings.get().pollIntervalMs,
     setPollInterval: (ms) => {
@@ -180,7 +185,9 @@ app.whenReady().then(() => {
   tray.show();
 
   ipcMain.handle(IPC.GET_STATS, () => currentSnapshot());
-  ipcMain.on(IPC.SET_MODE, (_e, mode: Mode) => applyMode(mode));
+  ipcMain.on(IPC.SET_MODE, (_e, mode: Mode) => {
+    void applyMode(mode);
+  });
   ipcMain.on(IPC.CLOSE_OVERLAY, () => overlay?.close());
   ipcMain.on(IPC.SET_POLL_INTERVAL, (_e, ms: number) => {
     const clamped = Math.max(150, Math.min(60000, Number(ms) || DEFAULT_SETTINGS.pollIntervalMs));
@@ -193,7 +200,7 @@ app.whenReady().then(() => {
   // Optionally restore the last used mode on launch.
   const s = settings.get();
   if (s.restoreLastMode && s.lastMode !== 'idle') {
-    applyMode(s.lastMode);
+    void applyMode(s.lastMode);
   }
 });
 
@@ -209,6 +216,7 @@ app.on('before-quit', (event) => {
   statsTimer = null;
   stopPerformanceMonitor();
   stopCapture();
+  controller?.set('idle');
   stats?.dispose();
   tray?.destroy();
   void Promise.resolve(detector?.dispose()).finally(() => app.quit());

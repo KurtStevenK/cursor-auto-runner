@@ -24,7 +24,9 @@ import {
 
 if (!parentPort) throw new Error('match-worker must run inside a worker thread');
 
-const DEBUG_MATCH = process.env.CURSOR_AUTO_RUNNER_DEBUG_MATCH === '1';
+const DEBUG_MATCH =
+  process.env.CURSOR_AUTO_RUNNER_DEBUG_MATCH === '1' ||
+  process.env.CURSOR_AUTO_RUNNER_DEBUG_DETECT === '1';
 const MAX_VARIANT_CACHE_ENTRIES = 8;
 
 let templateInputs: TemplateInput[] = [];
