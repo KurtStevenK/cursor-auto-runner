@@ -1,6 +1,9 @@
+import type { ReleaseManifest } from './release-types';
+
 export const VERSION = __APP_VERSION__;
-/** Linux Firebase mirror (may match latest GitHub release before next CI upload). */
-export const LINUX_MIRROR_VERSION = __LINUX_MIRROR_VERSION__;
+/** Firebase Storage mirror paths and checksums (from release-<version>.json). */
+export const RELEASE_DATA: ReleaseManifest = __RELEASE_DATA__;
+export const MIRROR_VERSION = RELEASE_DATA.version;
 export const STORAGE_BUCKET = __STORAGE_BUCKET__;
 
 const GITHUB = 'https://github.com/KurtStevenK/cursor-auto-runner';

@@ -7,6 +7,7 @@ on:
     branches: [master]
     paths:
       - 'firebase-landing/**'
+      - 'package.json'
       - 'firebase.json'
       - 'storage.rules'
       - '.firebaserc'
@@ -37,5 +38,6 @@ jobs:
             echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
             export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
           fi
-          npm run build:firebase-landing
+          node scripts/sync-firebase-release-data.js
+          npm run build --prefix firebase-landing
           npx firebase-tools@13.29.1 deploy --only hosting,storage --project cursor-auto-runner-linux --non-interactive

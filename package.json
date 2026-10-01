@@ -31,7 +31,8 @@
     "test:packaged-worker": "node scripts/check-packaged-worker.js",
     "bench:matcher": "npm run compile && node scripts/bench-matcher.js",
     "soak:matcher": "npm run compile && node scripts/soak-matcher.js",
-    "build:firebase-landing": "npm run build --prefix firebase-landing",
+    "sync:firebase-release-data": "node scripts/sync-firebase-release-data.js",
+    "build:firebase-landing": "node scripts/sync-firebase-release-data.js && npm run build --prefix firebase-landing",
     "deploy:firebase": "npm run build:firebase-landing && firebase deploy --only hosting,storage --project cursor-auto-runner-linux",
     "scan:virustotal": "node scripts/virustotal-scan.js --artifacts-dir release"
   },
