@@ -5,6 +5,12 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.40] - 2026-10-01
+
+### Fixed
+- **CI macOS:** override `node-gyp` to 10.3.1 so `better-sqlite3` rebuilds on the macOS 26 runner (Python 3.14 has no `distutils`). The setuptools `pip install` step failed there as an externally managed environment.
+- **CI APT:** if the `gh-pages` push loses a ref race, rebase onto `origin/gh-pages` and push once more.
+
 ## [1.2.39] - 2026-10-01
 
 ### Added
@@ -17,7 +23,7 @@ and each shipped task gets its own version number.
 - **`scripts/refresh-csc-github-secrets.sh`:** no longer prints generated `CSC_KEY_PASSWORD` to the terminal.
 
 ### Fixed
-- **CI macOS:** `electron-builder install-app-deps` + Python `setuptools` before `dist:mac` (node-gyp / distutils on macOS runners).
+- **CI macOS:** tried installing Python `setuptools` before `dist:mac`. The macOS 26 runner rejected that `pip install` (externally managed environment), so the DMG job still failed.
 - **CI Firebase landing:** prefer `FIREBASE_TOKEN` for Hosting deploy; document Hosting Admin on the Linux SA.
 
 ## [1.2.38] - 2026-10-01
