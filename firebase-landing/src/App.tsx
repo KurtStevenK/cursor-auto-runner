@@ -1,5 +1,4 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { Checksums } from './components/Checksums';
 import { InstallCommands } from './components/InstallCommands';
 import { Scene } from './components/Scene';
 import releaseData from './data/release-1.2.28.json';
@@ -232,8 +231,6 @@ export default function App() {
             ))}
           </div>
         </motion.section>
-
-        <Checksums />
       </main>
 
       <footer className="footer">
