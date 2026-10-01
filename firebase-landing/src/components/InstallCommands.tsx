@@ -8,6 +8,15 @@ type Props = { mirrorV: string };
 
 type PlatformTab = 'mac' | 'win' | 'linux' | 'dev';
 
+type LinuxDistroTab = 'debian' | 'ubuntu' | 'appimage' | 'arch';
+
+const LINUX_DISTRO_TABS: { id: LinuxDistroTab; label: string; icon: string }[] = [
+  { id: 'debian', label: 'Debian', icon: '🐧' },
+  { id: 'ubuntu', label: 'Ubuntu', icon: '🐧' },
+  { id: 'appimage', label: 'AppImage', icon: '📦' },
+  { id: 'arch', label: 'Arch', icon: '🐧' },
+];
+
 const APT_IMPORT_GPG =
   'curl -fsSL https://kurtstevenk.github.io/apt/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/cursor-auto-runner-archive-keyring.gpg';
 
@@ -61,6 +70,7 @@ function OsGroup({
 export function InstallCommands({ mirrorV }: Props) {
   const baseId = useId();
   const [tab, setTab] = useState<PlatformTab>('linux');
+  const [linuxDistro, setLinuxDistro] = useState<LinuxDistroTab>('debian');
   const linux = linuxFiles(mirrorV);
   const appImageUrl = releaseMirrorUrl(mirrorV, linux.appImage);
   const pacmanUrl = releaseMirrorUrl(mirrorV, linux.pacman);
@@ -185,7 +195,41 @@ export function InstallCommands({ mirrorV }: Props) {
           hidden={tab !== 'linux'}
           className="install-tabpanel"
         >
-          <div className="install-layout">
+          <div className="install-tabs-wrap install-tabs-wrap--nested">
+            <div
+              className="install-tabs install-tabs--nested"
+              role="tablist"
+              aria-label="Linux install method"
+            >
+              {LINUX_DISTRO_TABS.map(({ id, label, icon }) => {
+                const selected = linuxDistro === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    id={`${baseId}-linux-tab-${id}`}
+                    aria-selected={selected}
+                    aria-controls={`${baseId}-linux-panel-${id}`}
+                    tabIndex={selected ? 0 : -1}
+                    className={`install-tab${selected ? ' install-tab--active' : ''}`}
+                    onClick={() => setLinuxDistro(id)}
+                  >
+                    <span className="install-tab-icon" aria-hidden="true">{icon}</span>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div
+              id={`${baseId}-linux-panel-debian`}
+              role="tabpanel"
+              aria-labelledby={`${baseId}-linux-tab-debian`}
+              hidden={linuxDistro !== 'debian'}
+              className="install-tabpanel"
+            >
+              <div className="install-layout">
             <OsGroup
               icon="🐧"
               title="Debian"
@@ -224,7 +268,17 @@ export function InstallCommands({ mirrorV }: Props) {
                 hint="Alternative to the APT repo above — one version only. Same .deb on GitHub Releases or under Downloads."
               />
             </OsGroup>
+              </div>
+            </div>
 
+            <div
+              id={`${baseId}-linux-panel-ubuntu`}
+              role="tabpanel"
+              aria-labelledby={`${baseId}-linux-tab-ubuntu`}
+              hidden={linuxDistro !== 'ubuntu'}
+              className="install-tabpanel"
+            >
+              <div className="install-layout">
             <OsGroup
               icon="🐧"
               title="Ubuntu"
@@ -255,7 +309,17 @@ export function InstallCommands({ mirrorV }: Props) {
                 hint="Tray app needs a desktop session (Wayland/X11). Grant accessibility if your distro prompts for it."
               />
             </OsGroup>
+              </div>
+            </div>
 
+            <div
+              id={`${baseId}-linux-panel-appimage`}
+              role="tabpanel"
+              aria-labelledby={`${baseId}-linux-tab-appimage`}
+              hidden={linuxDistro !== 'appimage'}
+              className="install-tabpanel"
+            >
+              <div className="install-layout">
             <OsGroup
               icon="📦"
               title="AppImage (any distro)"
@@ -273,7 +337,17 @@ export function InstallCommands({ mirrorV }: Props) {
                 hint="Run from the folder where you saved the file. If it fails to start, install FUSE (e.g. sudo apt install libfuse2 on Debian/Ubuntu)."
               />
             </OsGroup>
+              </div>
+            </div>
 
+            <div
+              id={`${baseId}-linux-panel-arch`}
+              role="tabpanel"
+              aria-labelledby={`${baseId}-linux-tab-arch`}
+              hidden={linuxDistro !== 'arch'}
+              className="install-tabpanel"
+            >
+              <div className="install-layout">
             <OsGroup
               icon="🐧"
               title="Arch Linux"
@@ -296,6 +370,8 @@ export function InstallCommands({ mirrorV }: Props) {
                 hint="Installs system-wide. Upgrade: download the new .pacman and run pacman -U again (pacman may ask to replace the existing package)."
               />
             </OsGroup>
+              </div>
+            </div>
           </div>
         </div>
 
