@@ -12,14 +12,14 @@ on:
 jobs:
   quality:
     runs-on: windows-latest
+    env:
+      npm_config_msvs_version: '2022'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - name: Pin MSVC for node-gyp on windows-latest
-        run: npm config set msvs_version 2022
       - run: npm ci
       - run: npm test
       - run: npx electron-builder install-app-deps
