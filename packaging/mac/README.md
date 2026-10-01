@@ -24,7 +24,16 @@ bash scripts/mac-create-developer-id-csr.sh
 bash scripts/push-apple-signing-to-github.sh
 ```
 
-Secrets: `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` (`XPPUZJDN56`).
+If CI fails with `SecKeychainUnlock: passphrase you entered is not correct` on `set-key-partition-list`, the **CSC_KEY_PASSWORD** does not match **CSC_LINK** (base64 `.p12`). Regenerate from your key + `.cer` and re-upload:
+
+```bash
+bash scripts/refresh-csc-github-secrets.sh
+# Saves ~/DeveloperIDApplication-for-ci.p12 and updates CSC_LINK + CSC_KEY_PASSWORD on GitHub
+```
+
+Optional notarization secrets (interactive): `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` via `push-apple-signing-to-github.sh`.
+
+Required for signed macOS CI: `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_TEAM_ID` (`XPPUZJDN56`).
 
 Register App ID **`com.kurtstevenk.cursor-auto-runner`** in [Identifiers](https://developer.apple.com/account/resources/identifiers/list) if it does not exist yet.
 
