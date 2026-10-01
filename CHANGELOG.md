@@ -5,6 +5,14 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.28] - 2026-10-01
+
+### Added
+- **macOS release signing:** Developer ID + notarization in CI (required secrets on tagged releases); signed **DMG** and **ZIP** artifacts on GitHub Releases; helper scripts `scripts/mac-create-developer-id-csr.sh`, `scripts/push-apple-signing-to-github.sh`, `npm run dist:mac:signed` ([packaging/mac/README.md](packaging/mac/README.md)).
+
+### Changed
+- Bundle ID **`com.kurtstevenk.cursor-auto-runner`** for new signed builds (re-grant Screen Recording / Accessibility after upgrading from older IDs).
+
 ## [1.2.27] - 2026-10-01
 
 ### Fixed

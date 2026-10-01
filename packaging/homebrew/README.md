@@ -86,3 +86,5 @@ The canonical tap repo is **[KurtStevenK/homebrew-tap](https://github.com/KurtSt
 | Stale cask version | Tag built before tap step succeeded | Re-run **Build releases** on the tag or push a patch tag |
 
 Functional check after install: open **Cursor Auto Runner** from Applications; grant **Screen Recording** and **Accessibility** when prompted.
+
+If macOS says the app is **damaged**, the release DMG was not notarized — see [packaging/mac/README.md](../mac/README.md) (CI signing secrets).
