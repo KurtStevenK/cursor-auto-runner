@@ -1,10 +1,14 @@
 import { motion, useReducedMotion } from 'framer-motion';
+import { Checksums } from './components/Checksums';
+import { InstallCommands } from './components/InstallCommands';
 import { Scene } from './components/Scene';
+import releaseData from './data/release-1.2.28.json';
 import {
   LINUX_MIRROR_VERSION,
   VERSION,
   links,
   linuxFiles,
+  releaseMirrorUrl,
   storageObjectUrl,
 } from './config';
 import './App.css';
@@ -18,46 +22,51 @@ const fadeUp = {
   }),
 };
 
+const mirrorV = LINUX_MIRROR_VERSION;
+
 export default function App() {
   const reduceMotion = useReducedMotion();
-  const mirrorV = LINUX_MIRROR_VERSION;
   const linuxMirror = linuxFiles(mirrorV);
+
+  const macArmDmg = releaseMirrorUrl(mirrorV, 'Cursor.Auto.Runner-1.2.28-arm64.dmg');
+  const macIntelDmg = releaseMirrorUrl(mirrorV, 'Cursor.Auto.Runner-1.2.28.dmg');
+  const winExe = releaseMirrorUrl(mirrorV, 'Cursor.Auto.Runner.Setup.1.2.28.exe');
 
   const downloads = [
     {
       os: 'Linux',
       icon: '🐧',
-      blurb: 'Fast mirror on Firebase Storage (same builds as GitHub Releases).',
+      blurb: 'Firebase mirror (same bytes as GitHub Releases).',
       primary: {
         label: 'AppImage',
-        href: storageObjectUrl(mirrorV, linuxMirror.appImage),
+        href: releaseMirrorUrl(mirrorV, linuxMirror.appImage),
       },
       secondary: [
-        { label: '.deb', href: storageObjectUrl(mirrorV, linuxMirror.deb) },
-        { label: '.pacman', href: storageObjectUrl(mirrorV, linuxMirror.pacman) },
+        { label: '.deb', href: releaseMirrorUrl(mirrorV, linuxMirror.deb) },
+        { label: '.pacman', href: releaseMirrorUrl(mirrorV, linuxMirror.pacman) },
       ],
-      note: `Mirror v${mirrorV} · site v${VERSION}`,
+      note: `Mirror v${mirrorV} · also linux/ path on Storage`,
     },
     {
       os: 'macOS',
       icon: '🍎',
-      blurb: 'Developer ID–signed DMG (Intel + Apple silicon).',
-      primary: {
-        label: 'Download from GitHub',
-        href: links.releases,
-      },
-      secondary: [{ label: 'Homebrew tap', href: links.homebrew }],
+      blurb: 'Developer ID–signed DMG (Apple silicon + Intel).',
+      primary: { label: 'Apple silicon DMG', href: macArmDmg },
+      secondary: [
+        { label: 'Intel DMG', href: macIntelDmg },
+        { label: 'GitHub Releases', href: links.releases },
+      ],
       note: 'Grant Screen Recording & Accessibility on first run.',
     },
     {
       os: 'Windows',
       icon: '🪟',
-      blurb: 'NSIS installer for x64 and ARM64.',
-      primary: {
-        label: 'Download from GitHub',
-        href: links.releases,
-      },
-      secondary: [{ label: 'Chocolatey', href: `${links.github}/blob/master/packaging/chocolatey/README.md` }],
+      blurb: 'NSIS installer mirrored on Firebase Storage.',
+      primary: { label: 'Download Setup.exe', href: winExe },
+      secondary: [
+        { label: 'GitHub Releases', href: links.releases },
+        { label: 'Chocolatey docs', href: `${links.github}/blob/master/packaging/chocolatey/README.md` },
+      ],
       note: 'Or: choco install cursor-auto-runner',
     },
   ];
@@ -113,36 +122,17 @@ export default function App() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <motion.h1
-            custom={1}
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-          >
+          <motion.h1 custom={1} variants={fadeUp} initial="hidden" animate="show">
             Cursor Auto
             <span className="hero-accent"> Runner</span>
           </motion.h1>
-          <motion.p
-            className="hero-lead"
-            custom={2}
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-          >
-            A system-tray companion that clicks{' '}
-            <em>Run</em>, <em>Always Run</em>, and permission buttons in Cursor —
-            so you stay in flow while agents work.
+          <motion.p className="hero-lead" custom={2} variants={fadeUp} initial="hidden" animate="show">
+            A system-tray companion that clicks <em>Run</em>, <em>Always Run</em>, and permission
+            buttons in Cursor — so you stay in flow while agents work.
           </motion.p>
-          <motion.div
-            className="hero-cta"
-            custom={3}
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-          >
-            <a className="btn btn-primary" href="#downloads">
-              Get builds
-            </a>
+          <motion.div className="hero-cta" custom={3} variants={fadeUp} initial="hidden" animate="show">
+            <a className="btn btn-primary" href="#downloads">Get builds</a>
+            <a className="btn btn-ghost" href="#install">Install commands</a>
             <a className="btn btn-ghost" href={links.github} target="_blank" rel="noreferrer">
               Source on GitHub
             </a>
@@ -159,12 +149,8 @@ export default function App() {
         >
           <h2>Downloads</h2>
           <p className="section-sub">
-            Linux packages are mirrored here for speed. macOS and Windows installers
-            live on{' '}
-            <a href={links.releases} target="_blank" rel="noreferrer">
-              GitHub Releases
-            </a>
-            .
+            Public mirrors on Firebase Storage (<code>releases/{mirrorV}/</code>). Fallback:{' '}
+            <a href={links.releases} target="_blank" rel="noreferrer">GitHub Releases</a>.
           </p>
           <div className="dl-grid">
             {downloads.map((card, i) => (
@@ -182,7 +168,12 @@ export default function App() {
                   <h3>{card.os}</h3>
                 </div>
                 <p>{card.blurb}</p>
-                <a className="btn btn-primary btn-block" href={card.primary.href} target="_blank" rel="noreferrer">
+                <a
+                  className="btn btn-primary btn-block"
+                  href={card.primary.href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   {card.primary.label}
                 </a>
                 <div className="dl-secondary">
@@ -196,7 +187,15 @@ export default function App() {
               </motion.article>
             ))}
           </div>
+          <p className="legacy-linux">
+            Legacy Linux URLs:{' '}
+            <a href={storageObjectUrl(mirrorV, linuxMirror.appImage)} target="_blank" rel="noreferrer">
+              linux/{mirrorV}/…
+            </a>
+          </p>
         </motion.section>
+
+        <InstallCommands mirrorV={mirrorV} />
 
         <motion.section
           className="section"
@@ -223,26 +222,7 @@ export default function App() {
           </div>
         </motion.section>
 
-        <motion.section
-          className="section install"
-          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2>Linux package managers</h2>
-          <div className="code-cards">
-            <div className="code-card">
-              <span className="label">APT</span>
-              <code>sudo apt-get install cursor-auto-runner</code>
-              <a href={links.apt} target="_blank" rel="noreferrer">Repo setup</a>
-            </div>
-            <div className="code-card">
-              <span className="label">AppImage</span>
-              <code>chmod +x cursor-auto-runner-{mirrorV}.AppImage && ./cursor-auto-runner-{mirrorV}.AppImage</code>
-            </div>
-          </div>
-        </motion.section>
+        <Checksums />
       </main>
 
       <footer className="footer">
@@ -250,7 +230,9 @@ export default function App() {
           MIT ·{' '}
           <a href={links.github} target="_blank" rel="noreferrer">KurtStevenK/cursor-auto-runner</a>
           {' · '}
-          <a href={links.ghPages}>GitHub Pages mirror</a>
+          <a href={links.ghPages}>GitHub Pages</a>
+          {' · '}
+          Release data v{releaseData.version}
         </p>
       </footer>
     </div>

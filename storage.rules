@@ -6,5 +6,9 @@ service firebase.storage {
       allow read: if true;
       allow write: if false;
     }
+    match /releases/{version}/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }

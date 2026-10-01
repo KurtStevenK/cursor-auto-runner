@@ -5,6 +5,14 @@ All notable changes to **Cursor Auto Runner** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and each shipped task gets its own version number.
 
+## [1.2.30] - 2026-10-01
+
+### Added
+- **Firebase landing:** per-command copy buttons (Homebrew, Chocolatey, APT, `gh repo clone`, checksum verify); full **releases/** mirror on Storage for v1.2.28 installers; smoother background parallax (window-level pointer smoothing).
+
+### Changed
+- `storage.rules` public read for `releases/{version}/*`; `scripts/mirror-release-firebase.sh` for CI/manual mirroring.
+
 ## [1.2.29] - 2026-10-01
 
 ### Added

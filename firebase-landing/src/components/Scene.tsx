@@ -2,6 +2,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Stars } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { useSmoothPointer } from '../hooks/useSmoothPointer';
 
 function PulseRing() {
   const ref = useRef<THREE.Mesh>(null);
@@ -23,6 +24,7 @@ function PulseRing() {
 function ParticleField() {
   const count = 1200;
   const ref = useRef<THREE.Points>(null);
+  const stepPointer = useSmoothPointer(0.028);
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -33,10 +35,11 @@ function ParticleField() {
     return arr;
   }, []);
 
-  useFrame(({ clock, pointer }) => {
+  useFrame(({ clock }) => {
     if (!ref.current) return;
-    ref.current.rotation.y = clock.getElapsedTime() * 0.03 + pointer.x * 0.15;
-    ref.current.rotation.x = pointer.y * 0.08;
+    const { x, y } = stepPointer();
+    ref.current.rotation.y = clock.getElapsedTime() * 0.03 + x * 0.15;
+    ref.current.rotation.x = y * 0.08;
   });
 
   return (
