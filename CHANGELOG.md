@@ -13,6 +13,7 @@ and each shipped task gets its own version number.
 - **README:** security & trust section with VirusTotal, Electron hardening, and verify-download steps.
 
 ### Changed
+- **CI:** bump pinned GitHub Actions (checkout, setup-node, artifacts, CodeQL, Pages, dependency-review, action-gh-release).
 - **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
 
 ## [1.2.41] - 2026-10-01
