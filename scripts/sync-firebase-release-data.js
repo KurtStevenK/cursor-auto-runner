@@ -39,6 +39,10 @@ async function main() {
   const headers = { Accept: 'application/vnd.github+json' };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const res = await fetch(apiUrl, { headers });
+  if (res.status === 404) {
+    console.log(`[sync-release-data] SKIP GitHub Release v${version} is not published yet`);
+    process.exit(0);
+  }
   if (!res.ok) {
     console.error(`[sync-release-data] GitHub API ${res.status} for v${version}`);
     process.exit(1);

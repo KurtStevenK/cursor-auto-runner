@@ -217,7 +217,7 @@ Static landing pages: `landing/` on GitHub Pages (`.github/workflows/pages.yml`)
 | Symptom | Fix |
 |---|---|
 | Nothing is clicked | Capture templates for your theme (`npm run capture-templates`) |
-| **„Damaged“ / can’t be opened** after Homebrew (macOS) | CI builds were **not** Developer ID–signed. Add Apple signing secrets and ship a new tag — [packaging/mac/README.md](packaging/mac/README.md). Temporary: `xattr -cr "/Applications/Cursor Auto Runner.app"` (unsigned builds may still fail). |
+| **„Damaged“ / can’t be opened** after Homebrew (macOS) | The DMG was signed but not notarized, or CI stopped on `notarytool` HTTP 401. Regenerate the app-specific password and ship a new tag — [packaging/mac/README.md](packaging/mac/README.md). |
 | **Permissions dialog every time** you start Auto Run (toggles already ON) | Upgrade to **v1.2.25+**. If it persists: quit the app, **remove** Cursor Auto Runner from Screen Recording and Accessibility, reopen from `/Applications`, enable both again, then use **Try again** in the dialog. Common after Homebrew upgrades while the DMG is ad-hoc signed. |
 | Watching the Cursor window but **0 clicks** on macOS | Grant Screen Recording and Accessibility to **Cursor Auto Runner** (not Cursor IDE). Upgrade to the latest build, then re-capture dark-theme Run / Always Run if the UI changed. Run `CURSOR_AUTO_RUNNER_DEBUG_DETECT=1` from Terminal to see match diagnostics. |
 | Clicks stopped after a Cursor update | Cursor's UI changed — re-capture the templates |

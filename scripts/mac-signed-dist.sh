@@ -24,6 +24,10 @@ npm run dist:mac
 APP="release/mac-arm64/Cursor Auto Runner.app"
 [[ -d "$APP" ]] || APP="release/mac/Cursor Auto Runner.app"
 codesign --verify --deep --strict --verbose=2 "$APP"
+if [[ -n "${APPLE_ID:-}" && -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]]; then
+  xcrun stapler validate "$APP"
+  spctl -a -t exec -vv "$APP"
+fi
 echo ""
 echo "DMGs in release/:"
 ls -la release/Cursor.Auto.Runner-*.dmg 2>/dev/null || ls -la release/*.dmg
