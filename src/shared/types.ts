@@ -8,6 +8,8 @@ export interface DayCount {
   count: number;
 }
 
+export type WatchKind = 'cursor' | 'rustdesk';
+
 export interface StatsSnapshot {
   session: number;
   day: number;
@@ -17,12 +19,14 @@ export interface StatsSnapshot {
   byDay: DayCount[]; // last 7 days, oldest first
   mode: Mode;
   since: string; // session start ISO timestamp
-  windowFound: boolean; // was a Cursor window detected on the last poll?
+  windowFound: boolean; // was a Cursor or RustDesk window detected on the last poll?
+  watchedKind: WatchKind | null;
   pollIntervalMs: number; // current detection refresh interval
 }
 
 export interface DetectionState {
   windowFound: boolean;
+  watchedKind: WatchKind | null;
 }
 
 export interface Settings {

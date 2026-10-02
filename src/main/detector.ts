@@ -25,6 +25,7 @@ import {
   validateTemplateDimensions,
 } from './matcher';
 import { MatchWorkerClient } from './match-worker-client';
+import { selectWatchWindows, watchKindForTitle, type WatchKind } from './watch-windows';
 import {
   DetectionMetrics,
   perfNow,
@@ -122,6 +123,7 @@ export class Detector {
   private disposing = false;
 
   windowFound = false;
+  watchedKind: WatchKind | null = null;
   lastMetrics: DetectionMetrics = { ...EMPTY_METRICS };
 
   constructor(private readonly options: DetectorOptions = {}) {}
@@ -284,8 +286,7 @@ export class Detector {
       const candidates = await Promise.all(
         windows.map(async (win) => {
           const rawTitle = (await win.title) || '';
-          const title = rawTitle.toLowerCase();
-          if (!title.includes('cursor') || title.includes('auto runner')) return null;
+          if (!watchKindForTitle(rawTitle)) return null;
           const region = await win.region;
           if (!region || region.width <= 50 || region.height <= 50) return null;
           const display = electronScreen.getDisplayNearestPoint({
@@ -303,11 +304,14 @@ export class Detector {
           } satisfies WindowInfo;
         })
       );
-      found.push(...candidates.filter((candidate): candidate is WindowInfo => candidate !== null));
+      const visible = candidates.filter((candidate): candidate is WindowInfo => candidate !== null);
+      const displays = electronScreen.getAllDisplays().map((display) => display.bounds);
+      found.push(...selectWatchWindows(visible, displays));
       found.sort((left, right) => windowRank(right) - windowRank(left));
     } catch (error) {
       console.error('[detector] window enumeration failed:', error);
     }
+    this.watchedKind = found.length > 0 ? watchKindForTitle(found[0].title) : null;
     this.windowCache = { at: now, windows: found };
     return found;
   }
@@ -373,10 +377,8 @@ export class Detector {
     const lower = title.toLowerCase();
     const exact = sources.find((source) => source.name === title);
     if (exact) return exact;
-    const partial = sources.filter((source) => {
-      const name = source.name.toLowerCase();
-      return name.includes('cursor') && !name.includes('auto runner');
-    });
+    const wanted = watchKindForTitle(title);
+    const partial = sources.filter((source) => wanted !== null && watchKindForTitle(source.name) === wanted);
     if (partial.length === 1) return partial[0];
     return partial.find((source) => lower.includes(source.name.toLowerCase()) || source.name.toLowerCase().includes(lower.slice(0, 24)));
   }
@@ -620,6 +622,7 @@ export class Detector {
       }
       metrics.windowsMs = perfNow() - windowsStartedAt;
       this.windowFound = cursorWindows.length > 0;
+      this.watchedKind = cursorWindows.length > 0 ? watchKindForTitle(cursorWindows[0].title) : null;
       if (!this.windowFound) return null;
 
       const displays = electronScreen.getAllDisplays();

@@ -204,6 +204,7 @@ export class StatsStore {
       mode,
       since: new Date(this.sessionStart).toISOString(),
       windowFound: false, // filled in by main from detector state
+      watchedKind: null,
       pollIntervalMs: 4000, // filled in by main from the controller
     };
     this.snapshotCache = { at: now, snapshot };

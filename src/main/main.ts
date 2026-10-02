@@ -36,11 +36,13 @@ let overlay: BrowserWindow | null = null;
 let statsTimer: NodeJS.Timeout | null = null;
 let lastStatsSentAt = 0;
 let lastWindowFound: boolean | null = null;
+let lastWatchedKind: string | null = null;
 let quitCleanupStarted = false;
 
 function currentSnapshot(): StatsSnapshot {
   const snap = stats.snapshot(controller.current);
   snap.windowFound = detector.windowFound;
+  snap.watchedKind = detector.watchedKind;
   snap.pollIntervalMs = controller.pollIntervalMs;
   return snap;
 }
@@ -66,11 +68,12 @@ function sendStats(immediate = false): void {
   }, Math.max(0, 1000 - (Date.now() - lastStatsSentAt)));
 }
 
-function sendDetectionState(windowFound: boolean): void {
-  if (windowFound === lastWindowFound) return;
+function sendDetectionState(windowFound: boolean, watchedKind: StatsSnapshot['watchedKind']): void {
+  if (windowFound === lastWindowFound && watchedKind === lastWatchedKind) return;
   lastWindowFound = windowFound;
+  lastWatchedKind = watchedKind;
   if (!overlay || overlay.isDestroyed()) return;
-  overlay.webContents.send(IPC.DETECTION_STATE, { windowFound });
+  overlay.webContents.send(IPC.DETECTION_STATE, { windowFound, watchedKind });
 }
 
 function openOverlay(): void {
@@ -144,7 +147,7 @@ app.whenReady().then(() => {
       tray?.rebuild();
       sendStats(true);
     },
-    (windowFound) => sendDetectionState(windowFound),
+    (windowFound, watchedKind) => sendDetectionState(windowFound, watchedKind),
     () => sendStats()
   );
   tray = new TrayUI({

@@ -15,6 +15,7 @@ export interface StatsSnapshot {
   mode: Mode;
   since: string;
   windowFound: boolean;
+  watchedKind: 'cursor' | 'rustdesk' | null;
   pollIntervalMs: number;
 }
 
@@ -37,7 +38,7 @@ declare global {
       setPollInterval: (ms: number) => void;
       onStats: (cb: (snap: StatsSnapshot) => void) => void;
       onModeChanged: (cb: (mode: Mode) => void) => void;
-      onDetectionState: (cb: (state: { windowFound: boolean }) => void) => void;
+      onDetectionState: (cb: (state: { windowFound: boolean; watchedKind: 'cursor' | 'rustdesk' | null }) => void) => void;
     };
   }
 }
@@ -107,8 +108,12 @@ function renderInterval(ms: number): void {
 function renderStatus(snap: StatsSnapshot): void {
   const status = $('status');
   if (!snap.windowFound && snap.mode !== 'idle') {
-    status.textContent = 'Cursor window not found — make sure Cursor is visible on screen (not minimized).';
+    status.textContent =
+      'Cursor or RustDesk window not found — make sure Cursor, or a fullscreen RustDesk session, is visible on screen.';
     status.className = 'status warn';
+  } else if (snap.mode !== 'idle' && snap.watchedKind === 'rustdesk') {
+    status.textContent = `Watching the RustDesk session… (since ${new Date(snap.since).toLocaleTimeString()})`;
+    status.className = 'status';
   } else if (snap.mode !== 'idle') {
     status.textContent = `Watching the Cursor window… (since ${new Date(snap.since).toLocaleTimeString()})`;
     status.className = 'status';
@@ -154,8 +159,14 @@ window.autoRunner.onModeChanged((mode) => {
   }
 });
 window.autoRunner.onDetectionState((state) => {
-  if (!latestSnapshot || latestSnapshot.windowFound === state.windowFound) return;
+  if (
+    !latestSnapshot ||
+    (latestSnapshot.windowFound === state.windowFound && latestSnapshot.watchedKind === state.watchedKind)
+  ) {
+    return;
+  }
   latestSnapshot.windowFound = state.windowFound;
+  latestSnapshot.watchedKind = state.watchedKind;
   renderStatus(latestSnapshot);
 });
 window.autoRunner.getStats().then(render).catch(() => {});

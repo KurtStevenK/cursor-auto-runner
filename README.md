@@ -44,7 +44,8 @@
 
 ## Features
 
-- **Auto Run mode** — clicks the *Run* button whenever it appears in a Cursor window.
+- **Auto Run mode** — clicks the *Run* button whenever it appears in a Cursor window, including Cursor shown inside a fullscreen RustDesk session on this computer.
+- **RustDesk** — the app stays installed only on this machine. A fullscreen RustDesk window is watched like a local Cursor window, and the click is forwarded by RustDesk. The remote session has to accept mouse input.
 - **Auto Always Run mode** — clicks *Always Run* when available, falls back to *Run* and also approves *Allow* / *Approve* prompts so your agent never stalls.
 - **Allow / Approve buttons** — permission and tool-call approvals are clicked too, at any position, in both modes. Cursor has used different labels for this button over time (*Allow*, *Approve*); matching is image-based, so captured variants cover them.
 - **Repeat clicks** — if a button stays visible after clicking (first click only focused the window, or Cursor asks again), the app clicks it again automatically.
@@ -59,7 +60,7 @@
 
 ## How it works
 
-The app looks up every window titled "Cursor" via the OS window list and captures only the display regions containing those windows. A worker thread runs grayscale normalized-cross-correlation (NCC) against a small, deduplicated template set, so CPU matching cannot block tray clicks. On a match the main process moves the mouse, clicks, restores the pointer, and records the click in SQLite (with an automatic JSON fallback).
+The app looks up every window titled "Cursor" or "RustDesk" via the OS window list and captures only the display regions containing those windows. A worker thread runs grayscale normalized-cross-correlation (NCC) against a small, deduplicated template set, so CPU matching cannot block tray clicks. On a match the main process moves the mouse, clicks, restores the pointer, and records the click in SQLite (with an automatic JSON fallback).
 
 ```
 Tray menu ──► Mode controller ──► Detector (window crops)
@@ -221,7 +222,7 @@ Static landing pages: `landing/` on GitHub Pages (`.github/workflows/pages.yml`)
 | **Permissions dialog every time** you start Auto Run (toggles already ON) | Upgrade to **v1.2.25+**. If it persists: quit the app, **remove** Cursor Auto Runner from Screen Recording and Accessibility, reopen from `/Applications`, enable both again, then use **Try again** in the dialog. Common after Homebrew upgrades while the DMG is ad-hoc signed. |
 | Watching the Cursor window but **0 clicks** on macOS | Grant Screen Recording and Accessibility to **Cursor Auto Runner** (not Cursor IDE). Upgrade to the latest build, then re-capture dark-theme Run / Always Run if the UI changed. Run `CURSOR_AUTO_RUNNER_DEBUG_DETECT=1` from Terminal to see match diagnostics. |
 | Clicks stopped after a Cursor update | Cursor's UI changed — re-capture the templates |
-| "Cursor window not found" in the overlay | The Cursor window is minimized or all its windows are hidden — unminimize it |
+| "Cursor window not found" in the overlay | Cursor is minimized, or the RustDesk session is not visible — unminimize Cursor or open the remote desktop fullscreen |
 | Wrong clicks on a scaled monitor | Re-capture templates on that display (multi-scale matching covers common cases) |
 | Tray or stats feels slow | Update to the worker-based build, remove captures containing command text, and run `npm run bench:matcher` |
 | `[stats] better-sqlite3 unavailable` in dev after building an installer | electron-builder rebuilt the native module for another arch. Run `npm run rebuild:dev` (rebuilds for Electron x64) |
