@@ -30,7 +30,7 @@ Debian and Ubuntu users install with `apt-get install cursor-auto-runner` after 
    - **`APT_GPG_PASSPHRASE`**: only if the key has a passphrase
    - **`TAP_TOKEN`**: existing PAT with `repo` scope (push access to `KurtStevenK/apt`)
 
-5. Push a tagged release (`v*`). The `release` job in `.github/workflows/build.yml` clones `KurtStevenK/apt`, checks out the existing **`gh-pages`** branch when present, runs `publish.sh`, and pushes updates.
+5. Push a tagged release (`v*`). The `release` job in `.github/workflows/build.yml` clones `KurtStevenK/apt`, checks out the existing **`gh-pages`** branch when present, runs `publish.sh`, and pushes updates. Packages larger than GitHub's 100 MB file limit are stored with Git LFS. Pages is deployed by the workflow in `KurtStevenK/apt` so those files are the real `.deb`, not an LFS pointer.
 
 ## User install (Debian / Ubuntu, amd64)
 

@@ -19,7 +19,7 @@ export class ModeController {
     private stats: StatsStore,
     private opts: { pollIntervalMs: number; confidence: number; cooldownMs: number },
     private onModeChange?: (mode: Mode) => void,
-    private onDetectionState?: (windowFound: boolean) => void,
+    private onDetectionState?: (windowFound: boolean, watchedKind: 'cursor' | 'rustdesk' | null) => void,
     private onClick?: () => void
   ) {}
 
@@ -68,7 +68,7 @@ export class ModeController {
         const clickMode: ClickMode = this.mode === 'always-run' ? 'always-run' : 'run';
         const result = await this.detector.detect(clickMode, this.opts.confidence);
         if (!this.running || token !== this.loopToken) break;
-        this.onDetectionState?.(this.detector.windowFound);
+        this.onDetectionState?.(this.detector.windowFound, this.detector.watchedKind);
 
         if (result) {
           const sinceClick = Date.now() - this.lastClickAt;

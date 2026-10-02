@@ -20,6 +20,14 @@ and each shipped task gets its own version number.
 - **CI:** override `node-gyp` to 13.0.2 (VS 2026 / Python 3.14); run Windows jobs on `windows-2022` for reliable native module builds.
 - **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
 
+## [1.2.44] - 2026-10-02
+
+### Added
+- **RustDesk:** a local install clicks Run, Always Run, and Allow inside a fullscreen RustDesk session. The app is not installed on the remote computer.
+
+### Fixed
+- **APT:** `.deb` files are stored with Git LFS so a package over GitHub's 100 MB limit can still be published. The 1.2.43 package is added from its GitHub Release.
+
 ## [1.2.43] - 2026-10-02
 
 ### Fixed

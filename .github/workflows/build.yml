@@ -324,7 +324,7 @@ jobs:
             exit 1
           fi
           sudo apt-get update
-          sudo apt-get install -y apt-utils gnupg gzip
+          sudo apt-get install -y apt-utils gnupg gzip git-lfs
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/KurtStevenK/apt.git" apt-repo
           cd apt-repo
           if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
@@ -335,10 +335,20 @@ jobs:
             git checkout --orphan gh-pages
             git rm -rf . 2>/dev/null || true
           fi
+          git lfs install --local
+          git config lfs.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TAP_TOKEN" | base64 -w 0)"
+          git lfs track "*.deb"
+          POOL="pool/main/c/cursor-auto-runner"
+          mkdir -p "$POOL"
+          BACKFILL="$POOL/cursor-auto-runner_1.2.43_amd64.deb"
+          if [[ ! -f "$BACKFILL" ]]; then
+            curl -fL --retry 3 -o "$BACKFILL" \
+              "https://github.com/KurtStevenK/cursor-auto-runner/releases/download/v1.2.43/cursor-auto-runner_1.2.43_amd64.deb"
+          fi
           bash "$GITHUB_WORKSPACE/packaging/apt/publish.sh" "$(pwd)" "$GITHUB_WORKSPACE/$DEB"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pool dists gpg.key .nojekyll
+          git add .gitattributes pool dists gpg.key .nojekyll
           git diff --cached --quiet || git commit -m "cursor-auto-runner $VERSION"
           if ! git push -u origin gh-pages; then
             echo "::warning::APT gh-pages push rejected; rebasing onto origin/gh-pages and retrying once"
