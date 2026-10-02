@@ -20,6 +20,12 @@ and each shipped task gets its own version number.
 - **CI:** override `node-gyp` to 13.0.2 (VS 2026 / Python 3.14); run Windows jobs on `windows-2022` for reliable native module builds.
 - **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
 
+## [1.2.43] - 2026-10-02
+
+### Fixed
+- **macOS CI:** trim the Apple ID password, check it with `notarytool history` before signing, and notarize once per architecture so Gatekeeper can accept the DMG.
+- **Firebase Hosting:** a version bump no longer fails the deploy when that GitHub Release is not published yet.
+
 ## [1.2.42] - 2026-10-02
 
 ### Fixed

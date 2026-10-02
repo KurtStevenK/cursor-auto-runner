@@ -33,9 +33,11 @@ bash scripts/refresh-csc-github-secrets.sh
 # Saves ~/DeveloperIDApplication-for-ci.p12 and updates CSC_LINK + CSC_KEY_PASSWORD on GitHub
 ```
 
-Optional notarization secrets (interactive): `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` via `push-apple-signing-to-github.sh`.
+Notarization secrets: `APPLE_ID` (Apple ID email) and `APPLE_APP_SPECIFIC_PASSWORD` from [appleid.apple.com](https://appleid.apple.com) → Sign-In and Security → App-Specific Passwords. Set them with `gh secret set --body` so the value has no trailing newline.
 
-Required for signed macOS CI: `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_TEAM_ID` (`XPPUZJDN56`).
+If CI fails with `notarytool` **HTTP 401** (“Username or password is incorrect”), the stored app-specific password is rejected. Create a new one for the Apple ID that owns team `XPPUZJDN56` and update `APPLE_ID` and `APPLE_APP_SPECIFIC_PASSWORD`. Leave `CSC_LINK` and `CSC_KEY_PASSWORD` unchanged.
+
+Required for signed macOS CI: `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_TEAM_ID` (`XPPUZJDN56`), `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`.
 
 Register App ID **`com.kurtstevenk.cursor-auto-runner`** in [Identifiers](https://developer.apple.com/account/resources/identifiers/list) if it does not exist yet.
 

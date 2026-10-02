@@ -34,10 +34,21 @@ jobs:
             echo "::notice::Skipping Firebase deploy (set FIREBASE_TOKEN or FIREBASE_SERVICE_ACCOUNT_LINUX with Hosting Admin)"
             exit 0
           fi
+          set +e
+          sync_log=$(node scripts/sync-firebase-release-data.js)
+          sync_rc=$?
+          set -e
+          printf '%s\n' "$sync_log"
+          if [[ $sync_rc -ne 0 ]]; then
+            exit "$sync_rc"
+          fi
+          if printf '%s\n' "$sync_log" | grep -q 'SKIP GitHub Release'; then
+            echo "::notice::GitHub Release is not published yet — skipping Hosting deploy"
+            exit 0
+          fi
           if [[ -z "${FIREBASE_TOKEN:-}" ]]; then
             echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
             export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
           fi
-          node scripts/sync-firebase-release-data.js
           npm run build --prefix firebase-landing
           npx firebase-tools@13.29.1 deploy --only hosting,storage --project cursor-auto-runner-linux --non-interactive

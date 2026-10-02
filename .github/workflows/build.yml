@@ -141,6 +141,30 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -euo pipefail
+          trim() {
+            local v="$1"
+            v="${v//$'\r'/}"
+            v="${v//$'\n'/}"
+            v="${v#"${v%%[![:space:]]*}"}"
+            v="${v%"${v##*[![:space:]]}"}"
+            printf '%s' "$v"
+          }
+          APPLE_ID="$(trim "${APPLE_ID:-}")"
+          APPLE_APP_SPECIFIC_PASSWORD="$(trim "${APPLE_APP_SPECIFIC_PASSWORD:-}")"
+          APPLE_TEAM_ID="$(trim "${APPLE_TEAM_ID:-}")"
+          export APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
+          email=no
+          [[ "$APPLE_ID" == *@* ]] && email=yes
+          echo "APPLE_ID length ${#APPLE_ID} email=${email}"
+          echo "APPLE_APP_SPECIFIC_PASSWORD length ${#APPLE_APP_SPECIFIC_PASSWORD} (expect 16 or 19)"
+          echo "APPLE_TEAM_ID=${APPLE_TEAM_ID}"
+          if [[ ${#APPLE_APP_SPECIFIC_PASSWORD} -ne 16 && ${#APPLE_APP_SPECIFIC_PASSWORD} -ne 19 ]]; then
+            echo "::warning::App-specific password length is ${#APPLE_APP_SPECIFIC_PASSWORD}; expected 16 or 19"
+          fi
+          xcrun notarytool history \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" >/dev/null
           # Cert is already in KEYCHAIN_PATH — do not set CSC_LINK or electron-builder imports the
           # .p12 into a second temp keychain and set-key-partition-list fails on CI.
           security find-identity -v -p codesigning
@@ -159,6 +183,7 @@ jobs:
           for APP in "release/mac-arm64/Cursor Auto Runner.app" "release/mac/Cursor Auto Runner.app"; do
             [[ -d "$APP" ]] || continue
             codesign --verify --deep --strict --verbose=2 "$APP"
+            xcrun stapler validate "$APP"
             if [[ -n "${APPLE_ID:-}" && -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]]; then
               spctl -a -t exec -vv "$APP"
             else
