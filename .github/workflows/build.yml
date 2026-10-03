@@ -10,7 +10,8 @@ name: Build releases
 #  - updates the cursor-auto-runner cask in KurtStevenK/homebrew-tap (secret: TAP_TOKEN)
 #  - publishes the .deb to KurtStevenK/apt on gh-pages (secrets: TAP_TOKEN, APT_GPG_PRIVATE_KEY)
 #  - optionally scans release installers on VirusTotal (secret: VIRUSTOTAL_API_KEY)
-#  - mirrors all release assets to Firebase Storage releases/<version>/ (Linux also under linux/<version>/)
+#  - publishes Linux AppImage, .deb, and .pacman to Firebase Storage linux/<version>/ (no GitHub 100 MB limit)
+#  - mirrors Windows and macOS installers to Firebase Storage releases/<version>/
 # Trigger: push a tag like v1.2.11, or run manually from the Actions tab.
 
 on:
@@ -238,33 +239,24 @@ jobs:
             echo "|---|---|---|"
             echo "| Windows | \`Cursor.Auto.Runner.Setup.$VERSION.exe\` | Run the installer, or \`choco install cursor-auto-runner\` |"
             echo "| macOS | \`Cursor.Auto.Runner-$VERSION.dmg\` (or \`-arm64.dmg\`, \`.zip\`) | Open the DMG / unzip the app, or \`brew install --cask KurtStevenK/tap/cursor-auto-runner\` |"
-            echo "| Linux (Debian/Ubuntu) | \`cursor-auto-runner_${VERSION}_amd64.deb\` | \`apt-get install cursor-auto-runner\` after [adding the APT repo](https://github.com/KurtStevenK/cursor-auto-runner/blob/master/packaging/apt/README.md), or \`sudo apt install ./cursor-auto-runner_${VERSION}_amd64.deb\` |"
-            echo "| Linux (any distro) | \`cursor-auto-runner-$VERSION.AppImage\` | \`chmod +x\` and run |"
-            echo "| Linux (Arch) | \`cursor-auto-runner-$VERSION.pacman\` | \`sudo pacman -U cursor-auto-runner-$VERSION.pacman\` |"
+            echo "| Linux (Debian/Ubuntu) | [\`.deb\` on Firebase Storage](https://firebasestorage.googleapis.com/v0/b/cursor-auto-runner-linux.firebasestorage.app/o/linux%2F${VERSION}%2Fcursor-auto-runner_${VERSION}_amd64.deb?alt=media) | \`apt-get install cursor-auto-runner\` after [adding the APT repo](https://github.com/KurtStevenK/cursor-auto-runner/blob/master/packaging/apt/README.md) |"
+            echo "| Linux (any distro) | [\`AppImage\` on Firebase Storage](https://firebasestorage.googleapis.com/v0/b/cursor-auto-runner-linux.firebasestorage.app/o/linux%2F${VERSION}%2Fcursor-auto-runner-${VERSION}.AppImage?alt=media) | \`chmod +x\` and run |"
+            echo "| Linux (Arch) | [\`.pacman\` on Firebase Storage](https://firebasestorage.googleapis.com/v0/b/cursor-auto-runner-linux.firebasestorage.app/o/linux%2F${VERSION}%2Fcursor-auto-runner-${VERSION}.pacman?alt=media) | \`sudo pacman -U\` the downloaded package |"
             if [[ -f virustotal-report.md ]]; then
               echo ""
               cat virustotal-report.md
             fi
           } > release-notes.md
 
-      - uses: softprops/action-gh-release@v3
-        with:
-          files: |
-            artifacts/windows/**
-            artifacts/linux/**
-            artifacts/macos/**
-          body_path: release-notes.md
-          generate_release_notes: true
-
-      - name: Mirror Linux artifacts to Firebase Storage
+      - name: Publish Linux packages to Firebase Storage
         env:
           FIREBASE_SERVICE_ACCOUNT_LINUX: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LINUX }}
           FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
         run: |
           set -euo pipefail
           if [[ -z "${FIREBASE_SERVICE_ACCOUNT_LINUX:-}" || -z "${FIREBASE_STORAGE_BUCKET:-}" ]]; then
-            echo "::notice::Skipping Firebase Linux mirror (set FIREBASE_SERVICE_ACCOUNT_LINUX and FIREBASE_STORAGE_BUCKET)"
-            exit 0
+            echo "::error::FIREBASE_SERVICE_ACCOUNT_LINUX and FIREBASE_STORAGE_BUCKET are required. Linux packages are published to Firebase Storage, not GitHub Releases." >&2
+            exit 1
           fi
           VERSION="${GITHUB_REF_NAME#v}"
           echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
@@ -272,6 +264,14 @@ jobs:
           chmod +x scripts/upload-linux-firebase.sh scripts/mirror-release-firebase.sh
           bash scripts/upload-linux-firebase.sh "$VERSION" artifacts/linux
           bash scripts/mirror-release-firebase.sh "$VERSION" artifacts
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            artifacts/windows/**
+            artifacts/macos/**
+          body_path: release-notes.md
+          generate_release_notes: true
 
       - name: Verify publish secrets
         env:

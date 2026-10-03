@@ -1,11 +1,9 @@
-# Linux binaries on Firebase Storage (optional mirror)
+# Linux binaries on Firebase Storage
 
-Release artifacts are mirrored to **Firebase Storage** (public read):
+Linux AppImage, `.deb`, and `.pacman` are **published to Firebase Storage**, not attached to the GitHub Release. Those packages are larger than GitHub's 100 MB limit for files stored in a git repository. Storage is the download source for [GitHub Pages](https://kurtstevenk.github.io/cursor-auto-runner/).
 
-- **`linux/<version>/`** — Linux AppImage, `.deb`, `.pacman` (legacy path; still updated each release).
-- **`releases/<version>/`** — full platform mirror (Windows `.exe`, macOS `.dmg`/`.zip`, Linux packages), same filenames as GitHub Releases.
-
-GitHub Releases remain the primary source; Firebase is a CDN-style mirror for the landing page and direct downloads.
+- **`linux/<version>/`** — Linux AppImage, `.deb`, `.pacman`. This is the public download path.
+- **`releases/<version>/`** — Windows and macOS installers, plus a copy of the Linux packages.
 
 **Public site:** [https://cursor-auto-runner-linux.web.app](https://cursor-auto-runner-linux.web.app) (Firebase Hosting, built from `firebase-landing/`).
 
@@ -72,4 +70,4 @@ After upload, files are available at:
 
 `https://firebasestorage.googleapis.com/v0/b/BUCKET/o/linux%2FVERSION%2FFILENAME?alt=media`
 
-Use these on the landing page as optional Linux mirrors alongside GitHub Releases.
+GitHub Pages uses these URLs for the Linux AppImage, `.deb`, and `.pacman` buttons.

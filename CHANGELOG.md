@@ -20,6 +20,11 @@ and each shipped task gets its own version number.
 - **CI:** override `node-gyp` to 13.0.2 (VS 2026 / Python 3.14); run Windows jobs on `windows-2022` for reliable native module builds.
 - **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
 
+## [1.2.45] - 2026-10-03
+
+### Changed
+- **Linux downloads:** GitHub Pages and release notes link AppImage, `.deb`, and `.pacman` on Firebase Storage (`linux/<version>/`). The release job uploads those packages there before publishing the GitHub Release, and no longer attaches them to the Release. GitHub's 100 MB git limit does not apply to Storage.
+
 ## [1.2.44] - 2026-10-02
 
 ### Added
