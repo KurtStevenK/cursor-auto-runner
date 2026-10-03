@@ -211,6 +211,23 @@ jobs:
         with:
           path: artifacts
 
+      - name: Publish Linux packages to Firebase Storage
+        env:
+          FIREBASE_SERVICE_ACCOUNT_LINUX: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LINUX }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${FIREBASE_SERVICE_ACCOUNT_LINUX:-}" || -z "${FIREBASE_STORAGE_BUCKET:-}" ]]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT_LINUX and FIREBASE_STORAGE_BUCKET are required. Linux packages are published to Firebase Storage, not GitHub Releases." >&2
+            exit 1
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          chmod +x scripts/upload-linux-firebase.sh scripts/mirror-release-firebase.sh
+          bash scripts/upload-linux-firebase.sh "$VERSION" artifacts/linux
+          bash scripts/mirror-release-firebase.sh "$VERSION" artifacts
+
       - name: VirusTotal scan release artifacts
         env:
           VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
@@ -247,23 +264,6 @@ jobs:
               cat virustotal-report.md
             fi
           } > release-notes.md
-
-      - name: Publish Linux packages to Firebase Storage
-        env:
-          FIREBASE_SERVICE_ACCOUNT_LINUX: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LINUX }}
-          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${FIREBASE_SERVICE_ACCOUNT_LINUX:-}" || -z "${FIREBASE_STORAGE_BUCKET:-}" ]]; then
-            echo "::error::FIREBASE_SERVICE_ACCOUNT_LINUX and FIREBASE_STORAGE_BUCKET are required. Linux packages are published to Firebase Storage, not GitHub Releases." >&2
-            exit 1
-          fi
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "$FIREBASE_SERVICE_ACCOUNT_LINUX" > "$RUNNER_TEMP/firebase-sa.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
-          chmod +x scripts/upload-linux-firebase.sh scripts/mirror-release-firebase.sh
-          bash scripts/upload-linux-firebase.sh "$VERSION" artifacts/linux
-          bash scripts/mirror-release-firebase.sh "$VERSION" artifacts
 
       - uses: softprops/action-gh-release@v3
         with:
