@@ -123,7 +123,7 @@ Download overview: [Firebase landing](https://cursor-auto-runner-linux.web.app) 
 | Linux (Debian/Ubuntu) | APT ([`KurtStevenK/apt`](https://github.com/KurtStevenK/apt)) | `sudo apt-get install cursor-auto-runner` — [one-time repo setup](packaging/apt/README.md) |
 | Linux (Debian/Ubuntu) | `cursor-auto-runner_<version>_amd64.deb` | `sudo apt install ./cursor-auto-runner_<version>_amd64.deb` |
 | Linux (Arch) | `cursor-auto-runner-<version>.pacman` | `sudo pacman -U cursor-auto-runner-<version>.pacman` |
-| Linux (any distro) | `cursor-auto-runner-<version>.AppImage` | `chmod +x` and run; optional [Firebase mirror](https://cursor-auto-runner-linux.web.app) ([setup](packaging/linux/firebase/README.md)) |
+| Linux (any distro) | `cursor-auto-runner-<version>.AppImage` | `chmod +x` and run. Direct downloads are on [Firebase Storage](https://cursor-auto-runner-linux.web.app) ([setup](packaging/linux/firebase/README.md)), not GitHub Releases. |
 
 ### Install (from source)
 
