@@ -7,6 +7,9 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+### Changed
+- **Repo hygiene:** ignore local `.vscode/` and `.cursor/plans/`; drop tracked Cursor plan files from the public repository (keep `.cursor/rules/` for shared guidance).
+
 ### Added
 - **GitHub Pages landing:** copy-to-clipboard buttons for Chocolatey, APT, and Homebrew install commands.
 - **Protected `master`:** PR-only merges; [AGENTS.md](AGENTS.md) and **CI** workflow for branch protection; Cursor rule for shipping/releases.
