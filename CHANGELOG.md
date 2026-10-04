@@ -8,11 +8,14 @@ and each shipped task gets its own version number.
 ## Unreleased
 
 ### Added
+- **GitHub Pages landing:** copy-to-clipboard buttons for Chocolatey, APT, and Homebrew install commands.
 - **Protected `master`:** PR-only merges; [AGENTS.md](AGENTS.md) and **CI** workflow for branch protection; Cursor rule for shipping/releases.
 - **Firebase landing release data:** `scripts/sync-firebase-release-data.js` refreshes checksum manifest from GitHub Releases; CI runs it before Hosting deploy; release job mirrors all platforms via `mirror-release-firebase.sh`.
 - **README:** security & trust section with VirusTotal, Electron hardening, and verify-download steps.
 
 ### Changed
+- **Docs:** independent personal OSS disclaimer in README and GitHub Pages landing; [AGENTS.md](AGENTS.md) distribution scope; Homebrew README clarifies one repo (`homebrew-tap`) vs `KurtStevenK/tap` brew id; removed legacy org tap migration notes.
+- **Firebase landing:** shorter Homebrew tap hints in install commands.
 - **Firebase landing:** React 19, Vite 8, TypeScript 7, framer-motion 13, @react-three/fiber 9 / drei 10.
 - **CI:** bump pinned GitHub Actions (checkout, setup-node, artifacts, CodeQL, Pages, dependency-review, action-gh-release); add `firebase-landing` build job.
 - **Build:** `electron-builder` 25 → 26; TypeScript 5 → 7; Electron 33 → 44; `jimp` 0 → 1; `better-sqlite3` 12 → 13; `@types/node` 22 → 26.

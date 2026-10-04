@@ -140,7 +140,7 @@ export function InstallCommands({ mirrorV }: Props) {
               <CopyCommand
                 label="Add tap (first time)"
                 command="brew tap KurtStevenK/tap"
-                hint="Same repo as KurtStevenK/homebrew-tap on GitHub — Homebrew exposes it as KurtStevenK/tap. One-time; enables the short cask name below."
+                hint="One-time; maps to github.com/KurtStevenK/homebrew-tap (Homebrew shows it as KurtStevenK/tap)."
               />
               <CopyCommand
                 label="Install cask"
@@ -402,9 +402,9 @@ export function InstallCommands({ mirrorV }: Props) {
                 hint="npm install && npm run dev — requires Node.js 20+ and Linux/macOS/Windows build deps for native modules."
               />
               <CopyCommand
-                label="Clone Homebrew tap (homebrew-tap)"
+                label="Clone Homebrew tap"
                 command="gh repo clone KurtStevenK/homebrew-tap"
-                hint="This is what macOS users add with brew tap KurtStevenK/tap. Edit Casks/cursor-auto-runner.rb (version + DMG sha256) after each release."
+                hint="Same repo as brew tap KurtStevenK/tap. Edit Casks/cursor-auto-runner.rb (version + DMG sha256) after each release."
               />
               <CopyCommand
                 label="Clone APT repository"

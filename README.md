@@ -10,6 +10,11 @@
 </p>
 
 <p align="center">
+  Independent open-source project by <a href="https://github.com/KurtStevenK">KurtStevenK</a>;
+  not affiliated with Cursor (Anysphere) or any employer.
+</p>
+
+<p align="center">
   <a href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest"><img src="https://img.shields.io/github/v/release/KurtStevenK/cursor-auto-runner?label=release" alt="release" /></a>
   <a href="https://cursor-auto-runner-linux.web.app"><img src="https://img.shields.io/badge/download-Firebase_landing-red" alt="download" /></a>
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="license" />

@@ -63,6 +63,27 @@
   .dl a.btn.alt { background: rgba(59,130,246,0.9); color: #fff; }
   .dl a.btn.ghost { background: rgba(255,255,255,0.07); color: var(--text); border: 1px solid rgba(255,255,255,0.12); }
   .dl code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px; font-size: 12px; color: var(--text); }
+  .install-cmd {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 8px 10px;
+  }
+  .install-cmd code {
+    flex: 1; min-width: 0; word-break: break-all;
+    background: transparent; padding: 0; font-size: 12px;
+  }
+  .install-cmd-note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .install-cmd-note a { color: var(--blue-light); }
+  .copy-btn {
+    flex-shrink: 0; display: grid; place-items: center;
+    width: 34px; height: 34px; padding: 0; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(34,197,94,0.1); color: var(--green);
+    cursor: pointer; transition: background .15s ease, border-color .15s ease;
+  }
+  .copy-btn:hover { background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.4); }
+  .copy-btn:focus-visible { outline: 2px solid var(--blue-light); outline-offset: 2px; }
+  .copy-btn.is-copied { color: var(--green); border-color: rgba(34,197,94,0.45); }
   .soon { font-size: 12px; color: var(--muted); font-style: italic; }
 
   .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
@@ -106,7 +127,15 @@
         <p>Installer for x64 and ARM64. Install over an older version — your stats and templates are kept.</p>
         <a class="btn" href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest/download/Cursor.Auto.Runner.Setup.1.2.45.exe">Download Installer (.exe)</a>
         <a class="btn ghost" href="https://community.chocolatey.org/packages/cursor-auto-runner">Chocolatey</a>
-        <p><code>choco install cursor-auto-runner</code></p>
+        <div class="install-cmd">
+          <code>choco install cursor-auto-runner</code>
+          <button type="button" class="copy-btn" data-copy="choco install cursor-auto-runner" aria-label="Copy install command" title="Copy to clipboard">
+            <svg class="copy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.75"/>
+              <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.75"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="dl">
         <h3><span class="os-ico">🐧</span> Linux</h3>
@@ -115,14 +144,31 @@
         <a class="btn ghost" href="https://github.com/KurtStevenK/apt">APT repository</a>
         <a class="btn ghost" href="https://firebasestorage.googleapis.com/v0/b/cursor-auto-runner-linux.firebasestorage.app/o/linux%2F1.2.45%2Fcursor-auto-runner_1.2.45_amd64.deb?alt=media">Download .deb</a>
         <a class="btn ghost" href="https://firebasestorage.googleapis.com/v0/b/cursor-auto-runner-linux.firebasestorage.app/o/linux%2F1.2.45%2Fcursor-auto-runner-1.2.45.pacman?alt=media">Download .pacman</a>
-        <p><code>sudo apt-get install cursor-auto-runner</code> after <a href="https://github.com/KurtStevenK/cursor-auto-runner/blob/master/packaging/apt/README.md">adding the repo</a></p>
+        <div class="install-cmd">
+          <code>sudo apt-get install cursor-auto-runner</code>
+          <button type="button" class="copy-btn" data-copy="sudo apt-get install cursor-auto-runner" aria-label="Copy install command" title="Copy to clipboard">
+            <svg class="copy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.75"/>
+              <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.75"/>
+            </svg>
+          </button>
+        </div>
+        <p class="install-cmd-note">after <a href="https://github.com/KurtStevenK/cursor-auto-runner/blob/master/packaging/apt/README.md">adding the repo</a></p>
       </div>
       <div class="dl">
         <h3><span class="os-ico">🍎</span> macOS</h3>
         <p>Universal DMG (x64 + ARM64). Grants Screen Recording &amp; Accessibility on first use.</p>
         <a class="btn alt" href="https://github.com/KurtStevenK/cursor-auto-runner/releases/latest/download/Cursor.Auto.Runner-1.2.45.dmg">Download DMG</a>
         <a class="btn ghost" href="https://github.com/KurtStevenK/homebrew-tap">Homebrew</a>
-        <p><code>brew install --cask KurtStevenK/tap/cursor-auto-runner</code></p>
+        <div class="install-cmd">
+          <code>brew install --cask KurtStevenK/tap/cursor-auto-runner</code>
+          <button type="button" class="copy-btn" data-copy="brew install --cask KurtStevenK/tap/cursor-auto-runner" aria-label="Copy install command" title="Copy to clipboard">
+            <svg class="copy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.75"/>
+              <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.75"/>
+            </svg>
+          </button>
+        </div>
         <p class="soon">Built via CI on tagged releases — DMGs can only be produced on macOS.</p>
       </div>
     </div>
@@ -148,9 +194,56 @@
 
     <footer>
       Cursor Auto Runner is free software under the <a href="https://github.com/KurtStevenK/cursor-auto-runner/blob/master/LICENSE">MIT License</a>.
-      Not affiliated with Cursor (Anysphere Inc.).<br />
+      Independent project by <a href="https://github.com/KurtStevenK">KurtStevenK</a>; not affiliated with Cursor (Anysphere Inc.) or any employer.<br />
       After every Cursor UI update, re-capture the button templates via the tray menu.
     </footer>
   </div>
+  <script>
+    (function () {
+      var COPY_SVG = '<svg class="copy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.75"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.75"/></svg>';
+      var OK_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+      function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(text);
+        }
+        return new Promise(function (resolve, reject) {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand('copy') ? resolve() : reject(new Error('copy failed'));
+          } catch (e) {
+            reject(e);
+          } finally {
+            document.body.removeChild(ta);
+          }
+        });
+      }
+
+      document.querySelectorAll('.copy-btn[data-copy]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var text = btn.getAttribute('data-copy');
+          if (!text) return;
+          copyText(text).then(function () {
+            btn.classList.add('is-copied');
+            btn.innerHTML = OK_SVG;
+            btn.setAttribute('title', 'Copied');
+            btn.setAttribute('aria-label', 'Copied');
+            window.setTimeout(function () {
+              btn.classList.remove('is-copied');
+              btn.innerHTML = COPY_SVG;
+              btn.setAttribute('title', 'Copy to clipboard');
+              btn.setAttribute('aria-label', 'Copy install command');
+            }, 2000);
+          }).catch(function () {});
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

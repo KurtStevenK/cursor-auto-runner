@@ -45,6 +45,8 @@ Releases are **not** tied to pushing `master`; they run on **tag push** `v*` ([B
 
 6. Watch [Build releases](https://github.com/KurtStevenK/cursor-auto-runner/actions/workflows/build.yml). Success means: GitHub Release assets, Homebrew tap, APT `gh-pages`, optional Firebase mirror, Chocolatey (if moderation allows).
 
+**Distribution scope:** Publish Cursor Auto Runner only under **`KurtStevenK/*`** (`cursor-auto-runner`, `homebrew-tap`, `apt`). Never add or document this app on employer org repos or Homebrew taps.
+
 ### If a release workflow fails
 
 - Re-run the failed job on the tag in the Actions UI, or push an empty commit via PR and a new patch tag — do not force-push tags.

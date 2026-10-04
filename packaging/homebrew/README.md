@@ -6,7 +6,7 @@ macOS users install with:
 brew install --cask KurtStevenK/tap/cursor-auto-runner
 ```
 
-Homebrew maps `KurtStevenK/tap` to the public repository **`KurtStevenK/homebrew-tap`**. The cask is updated automatically on every tagged release (`v*`) by the **Update Homebrew tap** step in [`.github/workflows/build.yml`](../../.github/workflows/build.yml).
+Homebrew maps `KurtStevenK/tap` to the public repository **`KurtStevenK/homebrew-tap`** (one GitHub repo; `tap` in brew commands is Homebrew’s short name, not a second repository). Personal tap for Cursor Auto Runner only. The cask is updated automatically on every tagged release (`v*`) by the **Update Homebrew tap** step in [`.github/workflows/build.yml`](../../.github/workflows/build.yml).
 
 ## One-time setup (maintainer)
 
@@ -61,20 +61,6 @@ sed -e "s/__VERSION__/$VERSION/g" \
 ```
 
 Compare output to the live tap cask or run `brew install --cask` with a local tap checkout.
-
-## If Homebrew asks to trust `gf-elektro/tap`
-
-The tap used to live under the **GF-Elektro** GitHub org (`GF-Elektro/homebrew-tap`), so `brew tap` / `brew install --cask cursor-auto-runner` could show **`gf-elektro/tap`** even though the app and DMGs are from **`KurtStevenK/cursor-auto-runner`**.
-
-Use your tap explicitly and remove the old one:
-
-```bash
-brew untap gf-elektro/tap
-brew tap KurtStevenK/tap
-brew install --cask KurtStevenK/tap/cursor-auto-runner
-```
-
-The canonical tap repo is **[KurtStevenK/homebrew-tap](https://github.com/KurtStevenK/homebrew-tap)** (CI updates it on every `v*` release).
 
 ## Troubleshooting
 
