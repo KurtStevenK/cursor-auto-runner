@@ -32,3 +32,7 @@ capture-debug-display*.png
 scripts/debug-window-region.js
 scripts/debug-detector-crop.js
 scripts/debug-window-sources.js
+
+# Local IDE / Cursor agent (keep .cursor/rules/ for shared project guidance)
+.vscode/
+.cursor/plans/
