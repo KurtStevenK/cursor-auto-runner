@@ -117,7 +117,7 @@
     "jimp": "^1.6.1"
   },
   "devDependencies": {
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.4",
     "electron": "^44.4.5",
     "electron-builder": "^26.15.3",
     "typescript": "^7.0.2"
