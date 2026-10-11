@@ -217,8 +217,11 @@ function handleMatch(request: Extract<MatchWorkerRequest, { type: 'match' }>): v
       match = workerMatch(crop.id, verified);
       break;
     }
-    // Prefer accent verification on colored UI. If it fails, still allow global
-    // matching so a bad accent mask alone cannot silence detection entirely.
+    // Modern Cursor actions are colored. Once a real-color crop has yielded
+    // components, bounded exact verification is both safer and dramatically
+    // cheaper than sweeping every tiny template across dense editor text.
+    // Keep the global path for monochrome/legacy captures and synthetic tests.
+    if (components.length > 0) continue;
     for (const template of eligible) {
       if (cancelled()) break;
       // "Always Run" also appears in prose and history. It is only safe when

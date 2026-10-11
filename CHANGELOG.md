@@ -41,7 +41,6 @@ and each shipped task gets its own version number.
 
 ### Fixed
 - **Detection (Windows & macOS):** screen crops export tight BGRA from `NativeImage.toBitmap()` (row stride / size mismatches after Electron 44 broke template matching and stopped all clicks). PNG fallback and unit tests for row repacking.
-- **Matcher:** when accent verification fails, global template matching still runs so a bad accent mask cannot silence detection entirely.
 
 ## [1.2.47] - 2026-10-11
 
