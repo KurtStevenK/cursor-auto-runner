@@ -48,8 +48,8 @@ export function showButtonTest(): void {
   const point = screen.getCursorScreenPoint();
   const scale = screen.getDisplayNearestPoint(point).scaleFactor || 1;
   testWindow = new BrowserWindow({
-    width: 520,
-    height: 300,
+    width: 440,
+    height: 360,
     show: false,
     title: BUTTON_TEST_TITLE,
     resizable: false,
@@ -96,30 +96,63 @@ function imageTag(name: string, scale: number): string {
 }
 
 function testHtml(scale: number): string {
+  const shellActions = `<div class="actions shell-actions">
+    ${imageTag('always-run.png', scale)}
+    ${imageTag('run.png', scale)}
+  </div>`;
+  const allowActions = `<div class="actions allow-actions">${imageTag('allow.png', scale)}</div>`;
+
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8" />
 <style>
-  body { margin: 0; background: #1e1e1e; color: #d4d4d4; font: 13px/1.4 -apple-system, Segoe UI, sans-serif; }
-  main { padding: 20px 24px; }
-  p { margin: 0 0 16px; max-width: 460px; }
-  .row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
-  figure { margin: 0; }
-  figcaption { color: #9aa0a6; font-size: 11px; margin-bottom: 6px; }
-  img { display: block; image-rendering: pixelated; }
+  body { margin: 0; background: #1e1e1e; color: #cccccc; font: 13px/1.45 -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; }
+  main { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .hint { margin: 0; color: #9aa0a6; font-size: 11px; line-height: 1.35; }
+  .card {
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    padding: 12px 14px 10px;
+  }
+  .card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #e0e0e0; font-size: 12px; font-weight: 600; }
+  .card-head .badge {
+    width: 18px; height: 18px; border-radius: 4px; background: #2d2d30;
+    border: 1px solid #454545; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #9cdcfe;
+  }
+  .card p { margin: 0 0 8px; color: #b0b0b0; font-size: 12px; }
+  .command {
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #d4d4d4;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-height: 28px; }
+  .shell-actions { margin-top: 2px; }
+  img { display: block; image-rendering: pixelated; flex-shrink: 0; }
 </style>
 </head>
 <body>
 <main>
-  <p>Start Auto Run to click Run or Allow. Start Auto Always Run to click Always Run, which sits to the left of Run. The click count in Stats should go up.</p>
-  <div class="row">
-    <figure><figcaption>Always Run</figcaption>${imageTag('always-run.png', scale)}</figure>
-    <figure><figcaption>Run</figcaption>${imageTag('run.png', scale)}</figure>
-  </div>
-  <div class="row">
-    <figure><figcaption>Allow</figcaption>${imageTag('allow.png', scale)}</figure>
-  </div>
+  <section class="card" aria-label="Shell approval">
+    <div class="card-head"><span class="badge">&gt;_</span> Shell</div>
+    <p>The agent wants to run this command. Use <strong>Start Auto Run</strong> to click the blue <strong>Run</strong> button, or <strong>Auto Always Run</strong> for <strong>Always Run</strong> (to its left).</p>
+    <div class="command">echo "cursor-auto-runner test" &amp;&amp; cat package.json | head -n 3</div>
+    ${shellActions}
+  </section>
+  <section class="card" aria-label="Permission approval">
+    <div class="card-head"><span class="badge">!</span> Approval</div>
+    <p>Some prompts only show a blue <strong>Allow</strong> control. Auto Run clicks it when it appears.</p>
+    ${allowActions}
+  </section>
+  <p class="hint">Tray → Test buttons… · Images match bundled templates at native scale. Stats click count should increase when a mode is active.</p>
 </main>
 </body>
 </html>`;
