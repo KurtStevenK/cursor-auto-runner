@@ -433,7 +433,8 @@ export function findBestExactMatchInBounds(
 const MAX_COARSE_CANDIDATES = 16;
 const MAX_COMPOSER_CANDIDATES = 8;
 const MIN_QUARTER_COARSE_PIXELS = 72;
-const COMPOSER_BAND_START = 0.55;
+/** Bottom fraction of the window where agent Run / Allow prompts appear. */
+export const COMPOSER_BAND_START = 0.55;
 
 function retainDistinctCandidate(
   candidates: MatchCandidate[],

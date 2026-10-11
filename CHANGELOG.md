@@ -7,10 +7,15 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.58] - 2026-10-11
+
 ### Fixed
-- **Homebrew:** the cask no longer deletes the app bundle during an upgrade. That delete ran before Homebrew could move the bundle, so `brew upgrade` removed `/Applications/Cursor Auto Runner.app` and then stopped with "App source is not there."
+- **Detection:** when accent-color UI is present but accent verification misses the Run button (busy agent chat), fall back to template matching in the composer band instead of skipping the crop entirely.
 
 ## [1.2.57] - 2026-10-11
+
+### Fixed
+- **Homebrew:** the cask no longer deletes the app bundle during an upgrade. That delete ran before Homebrew could move the bundle, so `brew upgrade` removed `/Applications/Cursor Auto Runner.app` and then stopped with "App source is not there."
 
 ### Added
 - **Tray menu:** **Check for updates…** compares the installed version with the latest GitHub Release. On macOS, **Install updates with Homebrew** (on by default for a cask install) runs `brew upgrade --cask cursor-auto-runner` in the background. Homebrew updates its taps first, then replaces the app and quits this copy.
