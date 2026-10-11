@@ -19,4 +19,13 @@ cask "cursor-auto-runner" do
   homepage "https://github.com/KurtStevenK/cursor-auto-runner"
 
   app "Cursor Auto Runner.app"
+
+  # Quit before uninstall so upgrades work when the app is running; explicit
+  # delete avoids hard failures if the user removed the bundle from Applications.
+  uninstall quit: [
+    "com.kurtstevenk.cursor-auto-runner",
+  ],
+           delete: [
+             "#{appdir}/Cursor Auto Runner.app",
+           ]
 end

@@ -184,6 +184,7 @@ The app appears in your system tray. Right-click the tray icon:
 
 | Menu item | Action |
 |---|---|
+| **Cursor Auto Runner *version*** | Shows the installed app version (informational) |
 | **Start Auto Run** | Clicks every *Run* button that appears in a Cursor window |
 | **Start Auto Always Run** | Prefers *Always Run*, falls back to *Run* |
 | **Stop** | Stops the automation (enabled only while running) |

@@ -7,28 +7,69 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.54] - 2026-10-11
+
+### Changed
+- **Firebase landing:** `three` 0.170 → 0.186, `@vitejs/plugin-react` 5 → 6.
+
+## [1.2.53] - 2026-10-11
+
+### Changed
+- **Firebase landing:** `framer-motion` 13 → 14.
+
+## [1.2.52] - 2026-10-11
+
+### Changed
+- **Build:** `@types/node` 26.6.3 → 26.6.4.
+
+## [1.2.51] - 2026-10-11
+
+### Changed
+- **Build:** Electron 44.4.5 → 44.5.1.
+
+## [1.2.50] - 2026-10-11
+
+### Fixed
+- **Homebrew:** cask quits the app and deletes the bundle on uninstall so upgrades are less brittle; [packaging/homebrew/README.md](packaging/homebrew/README.md) documents `brew reinstall --cask cursor-auto-runner --force` when `/Applications/Cursor Auto Runner.app` was removed manually.
+
+## [1.2.49] - 2026-10-11
+
+### Added
+- **Tray menu:** disabled header shows the installed version (`app.getVersion()`).
+
+## [1.2.48] - 2026-10-11
+
+### Fixed
+- **Detection (Windows & macOS):** screen crops export tight BGRA from `NativeImage.toBitmap()` (row stride / size mismatches after Electron 44 broke template matching and stopped all clicks). PNG fallback and unit tests for row repacking.
+
+## [1.2.47] - 2026-10-11
+
 ### Changed
 - **Repo hygiene:** ignore local `.vscode/` and `.cursor/plans/`; drop tracked Cursor plan files from the public repository (keep `.cursor/rules/` for shared guidance).
 
+## [1.2.46] - 2026-10-11
+
 ### Added
 - **GitHub Pages landing:** copy-to-clipboard buttons for Chocolatey, APT, and Homebrew install commands.
+
+### Changed
+- **Docs:** independent personal OSS disclaimer in README and GitHub Pages landing; [AGENTS.md](AGENTS.md) distribution scope; Homebrew README clarifies one repo (`homebrew-tap`) vs `KurtStevenK/tap` brew id; removed legacy org tap migration notes.
+- **Firebase landing:** shorter Homebrew tap hints in install commands.
+
+## [1.2.45] - 2026-10-03
+
+### Added
 - **Protected `master`:** PR-only merges; [AGENTS.md](AGENTS.md) and **CI** workflow for branch protection; Cursor rule for shipping/releases.
 - **Firebase landing release data:** `scripts/sync-firebase-release-data.js` refreshes checksum manifest from GitHub Releases; CI runs it before Hosting deploy; release job mirrors all platforms via `mirror-release-firebase.sh`.
 - **README:** security & trust section with VirusTotal, Electron hardening, and verify-download steps.
 
 ### Changed
-- **Docs:** independent personal OSS disclaimer in README and GitHub Pages landing; [AGENTS.md](AGENTS.md) distribution scope; Homebrew README clarifies one repo (`homebrew-tap`) vs `KurtStevenK/tap` brew id; removed legacy org tap migration notes.
-- **Firebase landing:** shorter Homebrew tap hints in install commands.
 - **Firebase landing:** React 19, Vite 8, TypeScript 7, framer-motion 13, @react-three/fiber 9 / drei 10.
 - **CI:** bump pinned GitHub Actions (checkout, setup-node, artifacts, CodeQL, Pages, dependency-review, action-gh-release); add `firebase-landing` build job.
 - **Build:** `electron-builder` 25 → 26; TypeScript 5 → 7; Electron 33 → 44; `jimp` 0 → 1; `better-sqlite3` 12 → 13; `@types/node` 22 → 26.
 - **Detector:** use `NativeImage.toBitmap()` (Electron 44 deprecates `getBitmap()`).
 - **CI:** override `node-gyp` to 13.0.2 (VS 2026 / Python 3.14); run Windows jobs on `windows-2022` for reliable native module builds.
 - **Firebase landing:** mirror version and SHA-256s come from `release-<version>.json` tied to root `package.json` (not a hardcoded Linux-only version).
-
-## [1.2.45] - 2026-10-03
-
-### Changed
 - **Linux downloads:** GitHub Pages and release notes link AppImage, `.deb`, and `.pacman` on Firebase Storage (`linux/<version>/`). The release job uploads those packages there before publishing the GitHub Release, and no longer attaches them to the Release. GitHub's 100 MB git limit does not apply to Storage.
 
 ## [1.2.44] - 2026-10-02
