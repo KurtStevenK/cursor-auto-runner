@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.45",
+  "version": "1.2.54",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -117,8 +117,8 @@
     "jimp": "^1.6.1"
   },
   "devDependencies": {
-    "@types/node": "^26.6.3",
-    "electron": "^44.4.5",
+    "@types/node": "^26.6.4",
+    "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
     "typescript": "^7.0.2"
   },

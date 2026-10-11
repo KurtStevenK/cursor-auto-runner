@@ -25,6 +25,7 @@ import {
   validateTemplateDimensions,
 } from './matcher';
 import { MatchWorkerClient } from './match-worker-client';
+import { nativeImageToTightBgra } from './native-image-bgra';
 import { selectWatchWindows, watchKindForTitle, type WatchKind } from './watch-windows';
 import {
   DetectionMetrics,
@@ -467,23 +468,7 @@ export class Detector {
   }
 
   private async bitmapBuffer(image: Electron.NativeImage): Promise<ArrayBuffer> {
-    const bitmap = image.toBitmap();
-    if (
-      bitmap.buffer instanceof ArrayBuffer &&
-      bitmap.byteOffset === 0 &&
-      bitmap.byteLength === bitmap.buffer.byteLength
-    ) {
-      return bitmap.buffer;
-    }
-    // Pooled Buffers cannot safely transfer their whole backing store. Copy in
-    // bounded chunks so a large high-DPI crop cannot stall tray events.
-    const owned = new Uint8Array(bitmap.byteLength);
-    const chunkBytes = 512 * 1024;
-    for (let offset = 0; offset < bitmap.byteLength; offset += chunkBytes) {
-      owned.set(bitmap.subarray(offset, Math.min(bitmap.byteLength, offset + chunkBytes)), offset);
-      await new Promise<void>((resolve) => setImmediate(resolve));
-    }
-    return owned.buffer;
+    return nativeImageToTightBgra(image);
   }
 
   private async captureCrops(

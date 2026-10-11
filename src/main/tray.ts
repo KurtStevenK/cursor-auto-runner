@@ -58,6 +58,11 @@ export class TrayUI {
 
     const menu: MenuItemConstructorOptions[] = [
       {
+        label: `Cursor Auto Runner ${app.getVersion()}`,
+        enabled: false,
+      },
+      { type: 'separator' },
+      {
         label: 'Start Auto Run',
         type: 'radio',
         checked: mode === 'run',
