@@ -7,6 +7,24 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.57] - 2026-10-11
+
+### Added
+- **Tray menu:** **Check for updates…** compares the installed version with the latest GitHub Release. On macOS, **Install updates with Homebrew** (on by default for a cask install) runs `brew upgrade --cask cursor-auto-runner` in the background. Homebrew updates its taps first, then replaces the app and quits this copy.
+
+## [1.2.56] - 2026-10-11
+
+### Fixed
+- **Detection (macOS):** Cursor is recognized by the app that owns the window, not by the document title. A FeatherShot window (`CHANGELOG.md — FeatherShot`) is watched the same way as any other project, including `cursor-auto-runner`.
+
+### Added
+- **Tray menu:** **Test buttons…** opens a window with the Run, Always Run, and Allow images. Start Auto Run or Auto Always Run and the click count should rise, without waiting for Cursor to show a prompt.
+
+## [1.2.55] - 2026-10-11
+
+### Fixed
+- **Detection (Windows & macOS):** a local Cursor window is watched again when RustDesk is not open. Workspace titles that contain `cursor-auto-runner` (macOS `file — cursor-auto-runner`, Windows `file - cursor-auto-runner - Cursor`) were treated as this app’s own window and skipped.
+
 ## [1.2.54] - 2026-10-11
 
 ### Changed

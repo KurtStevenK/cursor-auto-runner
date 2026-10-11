@@ -193,6 +193,9 @@ The app appears in your system tray. Right-click the tray icon:
 | **Capture templates…** | Submenu to capture reference images for *Run*, *Always Run* and *Allow*/*Approve* buttons, each in dark and light theme |
 | **Open templates folder** | Opens the folder where captured templates are stored |
 | **Stats…** | Opens the live stats overlay |
+| **Test buttons…** | Opens a window with the Run, Always Run, and Allow images so you can confirm clicks without waiting for a Cursor prompt |
+| **Check for updates…** | Compares this install with the latest GitHub Release |
+| **Install updates with Homebrew** | When checked, a newer release upgrades the cask in the background (`brew upgrade --cask cursor-auto-runner`). The app quits when the new version is ready |
 | **Quit** | Exits the app |
 
 ### Build installers
@@ -228,7 +231,7 @@ Static landing pages: `landing/` on GitHub Pages (`.github/workflows/pages.yml`)
 | **Permissions dialog every time** you start Auto Run (toggles already ON) | Upgrade to **v1.2.25+**. If it persists: quit the app, **remove** Cursor Auto Runner from Screen Recording and Accessibility, reopen from `/Applications`, enable both again, then use **Try again** in the dialog. Common after Homebrew upgrades while the DMG is ad-hoc signed. |
 | Watching the Cursor window but **0 clicks** on macOS | Grant Screen Recording and Accessibility to **Cursor Auto Runner** (not Cursor IDE). Upgrade to the latest build, then re-capture dark-theme Run / Always Run if the UI changed. Run `CURSOR_AUTO_RUNNER_DEBUG_DETECT=1` from Terminal to see match diagnostics. |
 | Clicks stopped after a Cursor update | Cursor's UI changed — re-capture the templates |
-| "Cursor window not found" in the overlay | Cursor is minimized, or the RustDesk session is not visible — unminimize Cursor or open the remote desktop fullscreen |
+| "Cursor window not found" in the overlay | Cursor is minimized, or the RustDesk session is not visible — unminimize Cursor or open the remote desktop fullscreen. On macOS the document title (for example FeatherShot) is enough; the app is identified by the Cursor process. Use **Test buttons…** in the tray menu to confirm clicking |
 | Wrong clicks on a scaled monitor | Re-capture templates on that display (multi-scale matching covers common cases) |
 | Tray or stats feels slow | Update to the worker-based build, remove captures containing command text, and run `npm run bench:matcher` |
 | `[stats] better-sqlite3 unavailable` in dev after building an installer | electron-builder rebuilt the native module for another arch. Run `npm run rebuild:dev` (rebuilds for Electron x64) |

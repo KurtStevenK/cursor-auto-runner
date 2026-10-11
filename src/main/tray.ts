@@ -12,6 +12,16 @@ export type TrayCallbacks = {
   openOverlay: () => void;
   capture: (name: 'run' | 'always-run' | 'allow', theme: 'dark' | 'light') => void;
   openTemplatesFolder: () => void;
+  showButtonTest: () => void;
+  checkForUpdates: () => void;
+  updateMenu: () => {
+    statusLabel: string | null;
+    actionLabel: string;
+    actionEnabled: boolean;
+    showHomebrewToggle: boolean;
+    homebrewInstall: boolean;
+  };
+  setHomebrewInstall: (value: boolean) => void;
   getPollInterval: () => number;
   setPollInterval: (ms: number) => void;
 };
@@ -107,7 +117,12 @@ export class TrayUI {
       { type: 'separator' },
       { label: 'Open templates folder', click: () => this.cb.openTemplatesFolder() },
       { label: 'Stats…', click: () => this.cb.openOverlay() },
+      {
+        label: 'Test buttons…',
+        click: () => this.cb.showButtonTest(),
+      },
       { type: 'separator' },
+      ...this.updateItems(),
       { label: 'Quit', click: () => app.quit() },
     ];
     this.menu = Menu.buildFromTemplate(menu);
@@ -118,6 +133,27 @@ export class TrayUI {
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send(IPC.MODE_CHANGED, mode);
     }
+  }
+
+  private updateItems(): MenuItemConstructorOptions[] {
+    const update = this.cb.updateMenu();
+    const items: MenuItemConstructorOptions[] = [];
+    if (update.statusLabel) items.push({ label: update.statusLabel, enabled: false });
+    items.push({
+      label: update.actionLabel,
+      enabled: update.actionEnabled,
+      click: () => this.cb.checkForUpdates(),
+    });
+    if (update.showHomebrewToggle) {
+      items.push({
+        label: 'Install updates with Homebrew',
+        type: 'checkbox',
+        checked: update.homebrewInstall,
+        click: (item) => this.cb.setHomebrewInstall(Boolean(item.checked)),
+      });
+    }
+    items.push({ type: 'separator' });
+    return items;
   }
 
   destroy(): void {

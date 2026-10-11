@@ -35,6 +35,8 @@ export interface Settings {
   cooldownMs: number;
   restoreLastMode: boolean;
   lastMode: Mode;
+  /** macOS Homebrew cask: install a newer GitHub Release in the background. */
+  installUpdatesWithHomebrew: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -43,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   cooldownMs: 2000,
   restoreLastMode: false,
   lastMode: 'idle',
+  installUpdatesWithHomebrew: true,
 };
 
 export const IPC = {
