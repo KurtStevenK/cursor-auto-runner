@@ -20,12 +20,9 @@ cask "cursor-auto-runner" do
 
   app "Cursor Auto Runner.app"
 
-  # Quit before uninstall so upgrades work when the app is running; explicit
-  # delete avoids hard failures if the user removed the bundle from Applications.
-  uninstall quit: [
-    "com.kurtstevenk.cursor-auto-runner",
-  ],
-           delete: [
-             "#{appdir}/Cursor Auto Runner.app",
-           ]
+  # Quit before uninstall so an upgrade can move the bundle. Do not also
+  # `delete` the app path: Homebrew runs uninstall directives before it moves
+  # the app back into the Caskroom, so deleting it first makes every upgrade
+  # fail with "App source … is not there."
+  uninstall quit: "com.kurtstevenk.cursor-auto-runner"
 end
