@@ -10,6 +10,8 @@ import { StatsStore } from './stats';
 import { SettingsStore } from './settings';
 import { TrayUI } from './tray';
 import { ensureMacPermissions } from './permissions';
+import { setButtonTestListener, showButtonTest } from './button-test';
+import { UpdateController } from './updates';
 import { startCapture, stopCapture, templatesBaseDir } from './capture';
 import * as fs from 'fs';
 import { IPC, Mode, StatsSnapshot, DEFAULT_SETTINGS } from '../shared/types';
@@ -32,6 +34,7 @@ let stats: StatsStore;
 let settings: SettingsStore;
 let controller: ModeController;
 let tray: TrayUI;
+let updates: UpdateController;
 let overlay: BrowserWindow | null = null;
 let statsTimer: NodeJS.Timeout | null = null;
 let lastStatsSentAt = 0;
@@ -178,6 +181,10 @@ app.whenReady().then(() => {
         },
       }).catch((err) => console.error('[capture] failed:', err));
     },
+    showButtonTest: () => showButtonTest(),
+    checkForUpdates: () => updates.checkFromMenu(),
+    updateMenu: () => updates.menuState(),
+    setHomebrewInstall: (value) => updates.setAutoInstall(value),
     openTemplatesFolder: () => {
       // The folder where new captures land (userData when packaged).
       const dir = path.join(templatesBaseDir(), 'assets', 'templates');
@@ -185,7 +192,14 @@ app.whenReady().then(() => {
       void shell.openPath(dir);
     },
   });
+  setButtonTestListener(() => detector.invalidateWindowCache());
+  updates = new UpdateController({
+    getAutoInstall: () => settings.get().installUpdatesWithHomebrew,
+    setAutoInstall: (value) => settings.set({ installUpdatesWithHomebrew: value }),
+    onChange: () => tray?.rebuild(),
+  });
   tray.show();
+  updates.start();
 
   ipcMain.handle(IPC.GET_STATS, () => currentSnapshot());
   ipcMain.on(IPC.SET_MODE, (_e, mode: Mode) => {

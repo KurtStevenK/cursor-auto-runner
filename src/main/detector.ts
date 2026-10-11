@@ -26,7 +26,9 @@ import {
 } from './matcher';
 import { MatchWorkerClient } from './match-worker-client';
 import { nativeImageToTightBgra } from './native-image-bgra';
-import { selectWatchWindows, watchKindForTitle, type WatchKind } from './watch-windows';
+import { getButtonTestWindow } from './button-test';
+import { listOwnedWindows, ownerForWindow } from './owned-windows';
+import { selectWatchWindows, watchKindForWindow, type WatchKind } from './watch-windows';
 import {
   DetectionMetrics,
   perfNow,
@@ -39,6 +41,7 @@ interface WindowInfo {
   width: number;
   height: number;
   title: string;
+  owner?: string | null;
   focus: () => Promise<boolean>;
 }
 
@@ -52,6 +55,8 @@ interface CropContext {
   cropY: number;
   /** When set, match coordinates are relative to a per-window thumbnail. */
   windowLogical?: WindowRegion;
+  /** Identifies which watched window this crop came from. */
+  windowKey: string;
   focus: () => Promise<boolean>;
 }
 
@@ -95,10 +100,31 @@ const DEBUG_DETECT =
   process.env.CURSOR_AUTO_RUNNER_DEBUG_MATCH === '1';
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function windowKey(window: { title: string; left: number; top: number }): string {
+  return `${window.title}\0${window.left}\0${window.top}`;
+}
+
+function dedupeWindows(windows: WindowInfo[]): WindowInfo[] {
+  const unique: WindowInfo[] = [];
+  for (const window of windows) {
+    const duplicate = unique.some(
+      (other) =>
+        other.title === window.title &&
+        Math.abs(other.left - window.left) < 20 &&
+        Math.abs(other.top - window.top) < 20
+    );
+    if (!duplicate) unique.push(window);
+  }
+  return unique;
+}
+
+function reindexCrops(crops: CropContext[]): CropContext[] {
+  return crops.map((crop, id) => ({ ...crop, id, payload: { ...crop.payload, id } }));
+}
+
 function windowRank(window: WindowInfo): number {
   const title = window.title.toLowerCase();
   if (title.includes('auto runner')) return -1_000_000;
-  if (title.includes('cursor-auto-runner')) return -100_000;
   return window.width * window.height;
 }
 
@@ -276,18 +302,36 @@ export class Detector {
     await this.matcher.dispose();
   }
 
+  /** Drop the short window cache so a just-opened test window is seen immediately. */
+  invalidateWindowCache(): void {
+    this.windowCache = null;
+  }
+
   /** Find all Cursor windows, caching the native enumeration briefly. */
   private async findCursorWindows(): Promise<WindowInfo[]> {
     const now = Date.now();
     if (this.windowCache && now - this.windowCache.at < 750) return this.windowCache.windows;
 
+    const found = await this.collectWatchWindows(false);
+    const refreshed = found.length > 0 ? found : await this.collectWatchWindows(true);
+    this.watchedKind = refreshed.length > 0 ? watchKindForWindow(refreshed[0]) : null;
+    this.windowCache = { at: now, windows: refreshed };
+    return refreshed;
+  }
+
+  private async collectWatchWindows(forceOwners: boolean): Promise<WindowInfo[]> {
     const found: WindowInfo[] = [];
+    let enumerated = false;
     try {
+      const owned = await listOwnedWindows(forceOwners);
+      const ownedTitles = new Set(owned.map((window) => window.title));
       const windows = await getWindows();
       const candidates = await Promise.all(
         windows.map(async (win) => {
           const rawTitle = (await win.title) || '';
-          if (!watchKindForTitle(rawTitle)) return null;
+          const mightWatch =
+            ownedTitles.has(rawTitle) || watchKindForWindow({ title: rawTitle }) !== null;
+          if (!mightWatch) return null;
           const region = await win.region;
           if (!region || region.width <= 50 || region.height <= 50) return null;
           const display = electronScreen.getDisplayNearestPoint({
@@ -295,25 +339,33 @@ export class Detector {
             y: region.top + region.height / 2,
           });
           const normalized = normalizeWindowRegionForDisplay(region, display);
-          return {
+          const info: WindowInfo = {
             left: normalized.left,
             top: normalized.top,
             width: normalized.width,
             height: normalized.height,
             title: rawTitle,
             focus: () => win.focus(),
-          } satisfies WindowInfo;
+          };
+          info.owner = ownerForWindow(info, owned);
+          if (!watchKindForWindow(info)) return null;
+          return info;
         })
       );
       const visible = candidates.filter((candidate): candidate is WindowInfo => candidate !== null);
+      const testWindow = getButtonTestWindow();
+      if (testWindow) visible.push(testWindow);
       const displays = electronScreen.getAllDisplays().map((display) => display.bounds);
-      found.push(...selectWatchWindows(visible, displays));
-      found.sort((left, right) => windowRank(right) - windowRank(left));
+      found.push(...dedupeWindows(selectWatchWindows(visible, displays)));
+      enumerated = true;
     } catch (error) {
       console.error('[detector] window enumeration failed:', error);
     }
-    this.watchedKind = found.length > 0 ? watchKindForTitle(found[0].title) : null;
-    this.windowCache = { at: now, windows: found };
+    if (!enumerated) {
+      const testWindow = getButtonTestWindow();
+      if (testWindow) found.push(testWindow);
+    }
+    found.sort((left, right) => windowRank(right) - windowRank(left));
     return found;
   }
 
@@ -375,13 +427,16 @@ export class Detector {
     sources: Electron.DesktopCapturerSource[],
     title: string
   ): Electron.DesktopCapturerSource | undefined {
-    const lower = title.toLowerCase();
     const exact = sources.find((source) => source.name === title);
     if (exact) return exact;
-    const wanted = watchKindForTitle(title);
-    const partial = sources.filter((source) => wanted !== null && watchKindForTitle(source.name) === wanted);
-    if (partial.length === 1) return partial[0];
-    return partial.find((source) => lower.includes(source.name.toLowerCase()) || source.name.toLowerCase().includes(lower.slice(0, 24)));
+    const lower = title.toLowerCase();
+    const partial = sources.filter((source) => {
+      const name = source.name.toLowerCase();
+      if (name === lower) return true;
+      if (lower.length < 8 || name.length < 8) return false;
+      return name.includes(lower) || lower.includes(name);
+    });
+    return partial.length === 1 ? partial[0] : undefined;
   }
 
   private async captureDarwinWindowCrops(
@@ -434,6 +489,7 @@ export class Detector {
           width: window.width,
           height: window.height,
         },
+        windowKey: windowKey(window),
         focus: window.focus,
       });
     }
@@ -559,6 +615,7 @@ export class Detector {
           captureScaleY: scaleY,
           cropX,
           cropY,
+          windowKey: windowKey(window),
           focus: window.focus,
         });
       }
@@ -607,7 +664,7 @@ export class Detector {
       }
       metrics.windowsMs = perfNow() - windowsStartedAt;
       this.windowFound = cursorWindows.length > 0;
-      this.watchedKind = cursorWindows.length > 0 ? watchKindForTitle(cursorWindows[0].title) : null;
+      this.watchedKind = cursorWindows.length > 0 ? watchKindForWindow(cursorWindows[0]) : null;
       if (!this.windowFound) return null;
 
       const displays = electronScreen.getAllDisplays();
@@ -617,8 +674,12 @@ export class Detector {
       let crops = capture.crops;
       if (process.platform === 'darwin') {
         const windowCrops = await this.captureDarwinWindowCrops(cursorWindows, 0, cancelled);
-        if (windowCrops.length > 0) crops = windowCrops;
+        if (windowCrops.length > 0) {
+          const covered = new Set(windowCrops.map((crop) => crop.windowKey));
+          crops = [...windowCrops, ...capture.crops.filter((crop) => !covered.has(crop.windowKey))];
+        }
       }
+      crops = reindexCrops(crops);
       metrics.captureMs = perfNow() - captureStartedAt;
       metrics.cropCount = crops.length;
       metrics.sourceMissCount = capture.sourceMissCount;
