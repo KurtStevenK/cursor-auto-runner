@@ -7,6 +7,9 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+### Fixed
+- **Homebrew:** the cask no longer deletes the app bundle during an upgrade. That delete ran before Homebrew could move the bundle, so `brew upgrade` removed `/Applications/Cursor Auto Runner.app` and then stopped with "App source is not there."
+
 ## [1.2.57] - 2026-10-11
 
 ### Added

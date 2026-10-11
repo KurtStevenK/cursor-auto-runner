@@ -70,7 +70,7 @@ Compare output to the live tap cask or run `brew install --cask` with a local ta
 | 404 on DMG URL | Release asset basename differs from cask (spaces vs dots) | Ensure `npm run dist:mac` ran the rename script; CI uses the same dotted paths in `build.yml` |
 | Tap not updated | Missing `TAP_TOKEN` or release job failed before tap step | Check **Build releases** logs for **Verify publish secrets** / **Update Homebrew tap** |
 | Stale cask version | Tag built before tap step succeeded | Re-run **Build releases** on the tag or push a patch tag |
-| Upgrade: `App source … is not there` | The `.app` was removed from `/Applications` but Homebrew still tracks the cask | `brew reinstall --cask cursor-auto-runner --force` (or `brew uninstall --cask cursor-auto-runner --force` then `brew install --cask KurtStevenK/tap/cursor-auto-runner`) |
+| Upgrade: `App source … is not there` | Homebrew deleted `/Applications/Cursor Auto Runner.app` and then failed while moving that bundle back into the Caskroom. A one-time `brew reinstall --cask cursor-auto-runner --force` finishes the install. Do not add `uninstall delete` for the same path the `app` stanza already owns. |
 
 Functional check after install: open **Cursor Auto Runner** from Applications; grant **Screen Recording** and **Accessibility** when prompted.
 
