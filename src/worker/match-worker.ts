@@ -7,6 +7,7 @@ import type {
   TemplatePayload,
   WorkerMatch,
 } from '../shared/match-protocol';
+import type { ClickMode } from '../shared/types';
 import {
   ColorComponent,
   evaluatePreparedMatch,
@@ -14,6 +15,7 @@ import {
   findBestExactMatchInBounds,
   grayFromBGRA,
   MatchCandidate,
+  COMPOSER_BAND_START,
   orderTemplatesForMode,
   prepareHaystack,
   prepareTemplateVariants,
@@ -36,7 +38,7 @@ let templateCount = 0;
 interface VerifiedMatch {
   candidate: MatchCandidate;
   template: PreparedTemplate;
-  path: 'accent' | 'anchored-row';
+  path: 'accent' | 'anchored-row' | 'global';
 }
 
 function post(response: MatchWorkerResponse): void {
@@ -90,6 +92,46 @@ function componentFitsTemplate(component: ColorComponent, template: PreparedTemp
   const widthRatio = component.width / template.image.width;
   const heightRatio = component.height / template.image.height;
   return widthRatio >= 0.45 && widthRatio <= 1.45 && heightRatio >= 0.45 && heightRatio <= 1.45;
+}
+
+/**
+ * When accent seeds exist but none verify (busy chat UI, slightly stale
+ * templates), search only the composer band instead of skipping matching.
+ */
+function findComposerBandMatch(
+  haystack: ReturnType<typeof prepareHaystack>,
+  templates: PreparedTemplate[],
+  mode: ClickMode,
+  confidence: number,
+  cancelled: () => boolean
+): VerifiedMatch | null {
+  const height = haystack.image.height;
+  const yMin = Math.floor(height * COMPOSER_BAND_START);
+  let best: VerifiedMatch | null = null;
+  for (const template of templates) {
+    if (template.mode === 'always-run' && mode !== 'always-run') continue;
+    if (template.mode === 'run' && mode === 'allow') continue;
+    if (template.mode === 'allow' && mode === 'always-run') continue;
+    if (cancelled()) return null;
+    const candidate = findBestExactMatchInBounds(
+      haystack,
+      template,
+      {
+        x0: 0,
+        y0: yMin,
+        x1: haystack.image.width - template.image.width,
+        y1: height - template.image.height,
+      },
+      confidence,
+      cancelled,
+      template.mode === 'always-run' ? 'rightmost' : 'score'
+    );
+    if (!candidate) continue;
+    if (!best || candidate.score > best.candidate.score) {
+      best = { candidate, template, path: 'global' };
+    }
+  }
+  return best;
 }
 
 function findAccentVerifiedMatch(
@@ -217,11 +259,27 @@ function handleMatch(request: Extract<MatchWorkerRequest, { type: 'match' }>): v
       match = workerMatch(crop.id, verified);
       break;
     }
-    // Modern Cursor actions are colored. Once a real-color crop has yielded
-    // components, bounded exact verification is both safer and dramatically
-    // cheaper than sweeping every tiny template across dense editor text.
-    // Keep the global path for monochrome/legacy captures and synthetic tests.
-    if (components.length > 0) continue;
+    // Modern Cursor actions are colored. Prefer accent verification, but do not
+    // give up when unrelated blue UI produced components yet the Run button
+    // still matches in the composer band (common with busy agent chats).
+    if (components.length > 0) {
+      // Always Run still requires accent/anchored-row safety; only Run/Allow get
+      // a composer-band fallback when accent seeds fail in a busy chat UI.
+      if (request.mode === 'run' || request.mode === 'allow') {
+        const composer = findComposerBandMatch(
+          haystack,
+          eligible,
+          request.mode,
+          request.confidence,
+          cancelled
+        );
+        if (composer) {
+          match = workerMatch(crop.id, composer);
+          break;
+        }
+      }
+      continue;
+    }
     for (const template of eligible) {
       if (cancelled()) break;
       // "Always Run" also appears in prose and history. It is only safe when
