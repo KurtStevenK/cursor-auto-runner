@@ -9,6 +9,7 @@ import {
   templateFingerprint,
   validateTemplateDimensions,
 } from '../src/main/matcher';
+import { selectCatalogGroup, type CatalogFile } from '../src/main/template-catalog';
 
 function image(width: number, height: number): GrayImage {
   const data = new Float32Array(width * height);
@@ -44,7 +45,7 @@ test('bundled catalog stays small, valid, and complementary', async () => {
 
   for (const mode of ['run', 'always-run', 'allow'] as const) {
     const matching = files
-      .filter((file) => file === `${mode}.png` || file === `${mode}-2.png`)
+      .filter((file) => file === `${mode}.png` || file.startsWith(`${mode}-`))
       .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
     assert.ok(matching.length >= 1, `${mode} needs a bundled fallback`);
 
@@ -69,6 +70,25 @@ test('bundled catalog stays small, valid, and complementary', async () => {
       matching.length,
       `${mode} references must not be perceptual duplicates`
     );
-    assert.ok(uniqueFingerprints.length <= 2, `${mode} catalog must remain bounded`);
+    assert.ok(uniqueFingerprints.length <= 3, `${mode} catalog must remain bounded`);
   }
+});
+
+test('newest local captures stay in the catalog when older names would fill the slot', () => {
+  const files: CatalogFile[] = [
+    { file: 'run-2.png', source: 'bundled', mtimeMs: 1 },
+    { file: 'run.png', source: 'bundled', mtimeMs: 1 },
+    { file: 'run-2.png', source: 'user', mtimeMs: 10 },
+    { file: 'run.png', source: 'user', mtimeMs: 20 },
+    { file: 'run-3.png', source: 'user', mtimeMs: 30 },
+  ];
+  const kept = selectCatalogGroup(files, () => true).selected.map(
+    (file) => `${file.source}:${file.file}`
+  );
+  assert.deepEqual(kept, [
+    'bundled:run-2.png',
+    'bundled:run.png',
+    'user:run-3.png',
+    'user:run.png',
+  ]);
 });

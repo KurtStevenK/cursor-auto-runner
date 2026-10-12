@@ -30,6 +30,7 @@ assert.deepEqual(packagedTemplates, [
   'assets/templates/dark/always-run-2.png',
   'assets/templates/dark/always-run.png',
   'assets/templates/dark/run-2.png',
+  'assets/templates/dark/run-3.png',
   'assets/templates/dark/run.png',
 ]);
 

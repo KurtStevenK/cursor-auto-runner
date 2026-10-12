@@ -386,7 +386,8 @@ export function findBestExactMatchInBounds(
   bounds: MatchBounds,
   minConfidence: number,
   cancelled: () => boolean = () => false,
-  preference: 'score' | 'rightmost' = 'score'
+  preference: 'score' | 'rightmost' = 'score',
+  step = 1
 ): MatchCandidate | null {
   if (template.image.width > haystack.image.width || template.image.height > haystack.image.height) {
     return null;
@@ -403,11 +404,12 @@ export function findBestExactMatchInBounds(
     Math.ceil(bounds.y1)
   );
   if (x1 < x0 || y1 < y0) return null;
+  const stride = Math.max(1, Math.floor(step));
 
   let best: MatchCandidate | null = null;
-  for (let y = y0; y <= y1; y++) {
+  for (let y = y0; y <= y1; y += stride) {
     if ((y & 7) === 0 && cancelled()) return null;
-    for (let x = x0; x <= x1; x++) {
+    for (let x = x0; x <= x1; x += stride) {
       const score = nccAt(
         haystack.image,
         haystack.fullIntegral,

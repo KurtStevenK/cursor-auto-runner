@@ -7,6 +7,12 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.59] - 2026-10-13
+
+### Fixed
+- **Clicks (Windows & macOS):** Run is clicked again when the approval row is on screen. The current arrow-style Run button did not match the two older bundled templates. A newer capture that does match was ignored because the catalog kept only three images and filled those slots in filename order (`run-2` before `run-3`). Bundled templates now include that button, and the two newest local captures are kept as well.
+- **Auto Always Run:** colored text in the agent chat no longer cancels the search. If accent verification misses, the composer band is searched for Run or Allow, and Always Run is clicked when it sits on that same row. Auto Run already had this fallback; Always Run stopped after the first colored region.
+
 ## [1.2.58] - 2026-10-11
 
 ### Fixed
