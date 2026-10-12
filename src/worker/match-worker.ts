@@ -97,6 +97,7 @@ function componentFitsTemplate(component: ColorComponent, template: PreparedTemp
 /**
  * When accent seeds exist but none verify (busy chat UI, slightly stale
  * templates), search only the composer band instead of skipping matching.
+ * A stride-3 pass keeps a miss cheap; a small exact window confirms a hit.
  */
 function findComposerBandMatch(
   haystack: ReturnType<typeof prepareHaystack>,
@@ -113,7 +114,7 @@ function findComposerBandMatch(
     if (template.mode === 'run' && mode === 'allow') continue;
     if (template.mode === 'allow' && mode === 'always-run') continue;
     if (cancelled()) return null;
-    const candidate = findBestExactMatchInBounds(
+    const coarse = findBestExactMatchInBounds(
       haystack,
       template,
       {
@@ -122,10 +123,25 @@ function findComposerBandMatch(
         x1: haystack.image.width - template.image.width,
         y1: height - template.image.height,
       },
-      confidence,
+      0.45,
       cancelled,
-      template.mode === 'always-run' ? 'rightmost' : 'score'
+      'score',
+      3
     );
+    if (!coarse) continue;
+    const refined = findBestExactMatchInBounds(
+      haystack,
+      template,
+      {
+        x0: coarse.x - 6,
+        y0: coarse.y - 6,
+        x1: coarse.x + 6,
+        y1: coarse.y + 6,
+      },
+      confidence,
+      cancelled
+    );
+    const candidate = refined ?? (coarse.score >= confidence ? coarse : null);
     if (!candidate) continue;
     if (!best || candidate.score > best.candidate.score) {
       best = { candidate, template, path: 'global' };
@@ -263,20 +279,24 @@ function handleMatch(request: Extract<MatchWorkerRequest, { type: 'match' }>): v
     // give up when unrelated blue UI produced components yet the Run button
     // still matches in the composer band (common with busy agent chats).
     if (components.length > 0) {
-      // Always Run still requires accent/anchored-row safety; only Run/Allow get
-      // a composer-band fallback when accent seeds fail in a busy chat UI.
-      if (request.mode === 'run' || request.mode === 'allow') {
-        const composer = findComposerBandMatch(
-          haystack,
-          eligible,
-          request.mode,
-          request.confidence,
-          cancelled
-        );
-        if (composer) {
-          match = workerMatch(crop.id, composer);
-          break;
-        }
+      // Colored chat UI often produces accent seeds that are not the button.
+      // Search the composer band for Run or Allow, then anchor Always Run to
+      // that hit. Do not scan the whole window for the words "Always Run".
+      const composer = findComposerBandMatch(
+        haystack,
+        eligible,
+        request.mode === 'allow' ? 'allow' : 'run',
+        request.confidence,
+        cancelled
+      );
+      if (composer) {
+        const verified =
+          request.mode === 'always-run' && composer.template.mode === 'run'
+            ? findAlwaysRunNear(haystack, composer, eligible, request.confidence, cancelled) ??
+              composer
+            : composer;
+        match = workerMatch(crop.id, verified);
+        break;
       }
       continue;
     }

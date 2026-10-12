@@ -28,6 +28,7 @@ import { MatchWorkerClient } from './match-worker-client';
 import { nativeImageToTightBgra } from './native-image-bgra';
 import { getButtonTestWindow } from './button-test';
 import { listOwnedWindows, ownerForWindow } from './owned-windows';
+import { selectCatalogGroup, type CatalogFile } from './template-catalog';
 import { selectWatchWindows, watchKindForWindow, type WatchKind } from './watch-windows';
 import {
   DetectionMetrics,
@@ -90,9 +91,6 @@ const EMPTY_METRICS: DetectionMetrics = {
   workerHeapBytes: 0,
   cancelled: false,
 };
-// Two curated bundled references plus one local capture keep matching bounded
-// while guaranteeing that stale user captures cannot hide all known-good ones.
-const MAX_TEMPLATES_PER_MODE_AND_THEME = 3;
 const MAX_CAPTURE_WIDTH = 1920;
 const MAX_CAPTURE_HEIGHT = 1080;
 const DEBUG_DETECT =
@@ -159,8 +157,8 @@ export class Detector {
     // app.getAppPath() is the project root in dev and resources/app.asar when
     // packaged; the asar-patched fs reads bundled templates from either.
     const bundled = this.options.bundledRoot ?? app.getAppPath();
-    // Keep bundled fallbacks ahead of user captures so a stale local catalog
-    // cannot consume every bounded slot.
+    // Bundled references are listed first. Local captures are selected separately
+    // so a newer screenshot is not dropped behind older bundled files.
     const bundledTemplates = path.join(bundled, 'assets', 'templates');
     const dirs = [bundledTemplates];
     const userCandidates = [
@@ -188,63 +186,95 @@ export class Detector {
     this.loadAttempted = true;
     const payloads: TemplatePayload[] = [];
     const fingerprints: LoadedFingerprint[] = [];
-    const acceptedPerGroup = new Map<string, number>();
     let duplicates = 0;
     let rejected = 0;
     let limited = 0;
+    const bundledDir = this.templatesDirs()[0];
 
+    interface LoadedCatalogFile extends CatalogFile {
+      mode: 'always-run' | 'run' | 'allow';
+      theme: 'dark' | 'light';
+      image?: Awaited<ReturnType<typeof loadTemplate>>;
+    }
+
+    const grouped = new Map<string, LoadedCatalogFile[]>();
     for (const dir of this.templatesDirs()) {
+      const source: CatalogFile['source'] = dir === bundledDir ? 'bundled' : 'user';
       for (const theme of ['dark', 'light'] as const) {
         const themeDir = path.join(dir, theme);
         if (!fs.existsSync(themeDir)) continue;
-        const files = fs
+        const names = fs
           .readdirSync(themeDir)
-          .filter((file) => file.toLowerCase().endsWith('.png'))
-          .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
-
+          .filter((file) => file.toLowerCase().endsWith('.png'));
         for (const mode of ['always-run', 'run', 'allow'] as const) {
-          const matching = files.filter(
+          const matching = names.filter(
             (file) => file === `${mode}.png` || file.startsWith(`${mode}-`)
           );
+          const group = `${mode}:${theme}`;
+          const bucket = grouped.get(group) ?? [];
           for (const fileName of matching) {
             const file = path.join(themeDir, fileName);
-            const group = `${mode}:${theme}`;
-            if ((acceptedPerGroup.get(group) ?? 0) >= MAX_TEMPLATES_PER_MODE_AND_THEME) {
-              limited++;
-              continue;
-            }
+            let mtimeMs = 0;
             try {
-              const image = await loadTemplate(file);
-              const validation = validateTemplateDimensions(image.width, image.height);
-              if (!validation.valid) {
-                rejected++;
-                console.warn(`[detector] skipped ${file}: ${validation.reason}`);
-                continue;
-              }
-              const fingerprint = templateFingerprint(image);
-              const duplicate = fingerprints.some(
-                (entry) =>
-                  entry.mode === mode &&
-                  entry.theme === theme &&
-                  fingerprintDistance(entry.fingerprint, fingerprint) <= 8
-              );
-              if (duplicate) {
-                duplicates++;
-                continue;
-              }
-              fingerprints.push({ mode, theme, fingerprint });
-              acceptedPerGroup.set(group, (acceptedPerGroup.get(group) ?? 0) + 1);
-              const data = image.data.buffer.slice(
-                image.data.byteOffset,
-                image.data.byteOffset + image.data.byteLength
-              ) as ArrayBuffer;
-              payloads.push({ file, mode, theme, width: image.width, height: image.height, data });
-            } catch (error) {
-              rejected++;
-              console.error(`[detector] failed to load template ${file}:`, error);
+              mtimeMs = fs.statSync(file).mtimeMs;
+            } catch {
+              mtimeMs = 0;
             }
+            bucket.push({ file, source, mtimeMs, mode, theme });
           }
+          grouped.set(group, bucket);
         }
+      }
+    }
+
+    for (const files of grouped.values()) {
+      for (const candidate of files) {
+        try {
+          candidate.image = await loadTemplate(candidate.file);
+        } catch (error) {
+          rejected++;
+          console.error(`[detector] failed to load template ${candidate.file}:`, error);
+        }
+      }
+      const { selected, skippedForCap } = selectCatalogGroup(files, (candidate) => {
+        const image = candidate.image;
+        if (!image) return false;
+        const validation = validateTemplateDimensions(image.width, image.height);
+        if (!validation.valid) {
+          rejected++;
+          console.warn(`[detector] skipped ${candidate.file}: ${validation.reason}`);
+          return false;
+        }
+        const fingerprint = templateFingerprint(image);
+        const duplicate = fingerprints.some(
+          (entry) =>
+            entry.mode === candidate.mode &&
+            entry.theme === candidate.theme &&
+            fingerprintDistance(entry.fingerprint, fingerprint) <= 8
+        );
+        if (duplicate) {
+          duplicates++;
+          return false;
+        }
+        fingerprints.push({ mode: candidate.mode, theme: candidate.theme, fingerprint });
+        return true;
+      });
+      limited += skippedForCap;
+      for (const candidate of selected) {
+        const image = candidate.image;
+        if (!image) continue;
+        const data = image.data.buffer.slice(
+          image.data.byteOffset,
+          image.data.byteOffset + image.data.byteLength
+        ) as ArrayBuffer;
+        payloads.push({
+          file: candidate.file,
+          mode: candidate.mode,
+          theme: candidate.theme,
+          width: image.width,
+          height: image.height,
+          data,
+        });
       }
     }
 

@@ -545,3 +545,145 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
     await worker.terminate();
   }
 });
+
+test('always-run still clicks Run when accent color hides the button component', async () => {
+  const workerPath = path.join(__dirname, '..', 'src', 'worker', 'match-worker.js');
+  const worker = new Worker(workerPath);
+  try {
+    const templates = await Promise.all(
+      ['run-2.png', 'always-run-2.png'].map(async (file) => {
+        const image = await loadTemplate(path.join(process.cwd(), 'assets', 'templates', 'dark', file));
+        return {
+          file,
+          mode: file.startsWith('always-run') ? 'always-run' as const : 'run' as const,
+          theme: 'dark' as const,
+          width: image.width,
+          height: image.height,
+          data: image.data.buffer.slice(0) as ArrayBuffer,
+        };
+      })
+    );
+    const init: MatchWorkerRequest = { type: 'init', requestId: 70, templates };
+    const readyPromise = waitFor(worker, 70);
+    worker.postMessage(init, templates.map((template) => template.data));
+    await readyPromise;
+
+    const fixture = await loadBgraFixture(path.join(process.cwd(), 'tests', 'fixtures', 'run-capped.png'));
+    const width = 900;
+    const height = 420;
+    const buttonX = 520;
+    const buttonY = 340;
+    const bgra = new Uint8Array(width * height * 4);
+    for (let index = 0; index < width * height; index++) {
+      const offset = index * 4;
+      bgra[offset] = 24;
+      bgra[offset + 1] = 24;
+      bgra[offset + 2] = 24;
+      bgra[offset + 3] = 255;
+    }
+    for (let y = 0; y < fixture.height; y++) {
+      for (let x = 0; x < fixture.width; x++) {
+        const source = (y * fixture.width + x) * 4;
+        const offset = ((buttonY + y) * width + buttonX + x) * 4;
+        bgra[offset] = fixture.bgra[source];
+        bgra[offset + 1] = fixture.bgra[source + 1];
+        bgra[offset + 2] = fixture.bgra[source + 2];
+        bgra[offset + 3] = 255;
+      }
+    }
+    // A saturated bridge swallows the button into one oversized component, the
+    // same way busy chat color can, while a small accent mark stays behind.
+    for (let x = 80; x <= buttonX + 5; x++) {
+      const offset = ((buttonY + 5) * width + x) * 4;
+      bgra[offset] = 180;
+      bgra[offset + 1] = 90;
+      bgra[offset + 2] = 20;
+      bgra[offset + 3] = 255;
+    }
+    for (let y = 12; y < 36; y++) {
+      for (let x = 12; x < 48; x++) {
+        const offset = (y * width + x) * 4;
+        bgra[offset] = 40;
+        bgra[offset + 1] = 120;
+        bgra[offset + 2] = 240;
+        bgra[offset + 3] = 255;
+      }
+    }
+    const request: MatchWorkerRequest = {
+      type: 'match',
+      requestId: 71,
+      mode: 'always-run',
+      confidence: 0.88,
+      crops: [{
+        id: 71,
+        width,
+        height,
+        captureToNativeScaleX: 0.75,
+        captureToNativeScaleY: 0.75,
+        bgra: bgra.buffer,
+      }],
+      cancelBuffer: new SharedArrayBuffer(4),
+    };
+    const resultPromise = waitFor(worker, 71);
+    worker.postMessage(request, [bgra.buffer]);
+    const result = await resultPromise;
+    assert.equal(result.type, 'result');
+    if (result.type !== 'result') return;
+    assert.equal(result.match?.mode, 'run');
+    assert.equal(result.match?.path, 'global');
+    assert.ok(Math.abs((result.match?.x ?? -100) - buttonX) <= 1);
+    assert.ok(Math.abs((result.match?.y ?? -100) - buttonY) <= 1);
+  } finally {
+    await worker.terminate();
+  }
+});
+
+test('shipped Run template matches the current arrow button', async () => {
+  const workerPath = path.join(__dirname, '..', 'src', 'worker', 'match-worker.js');
+  const worker = new Worker(workerPath);
+  try {
+    const image = await loadTemplate(
+      path.join(process.cwd(), 'assets', 'templates', 'dark', 'run-3.png')
+    );
+    const template = {
+      file: 'run-3.png',
+      mode: 'run' as const,
+      theme: 'dark' as const,
+      width: image.width,
+      height: image.height,
+      data: image.data.buffer.slice(0) as ArrayBuffer,
+    };
+    const init: MatchWorkerRequest = { type: 'init', requestId: 80, templates: [template] };
+    const readyPromise = waitFor(worker, 80);
+    worker.postMessage(init, [template.data]);
+    await readyPromise;
+
+    const fixture = await loadBgraFixture(
+      path.join(process.cwd(), 'tests', 'fixtures', 'approval-run-row.png')
+    );
+    const request: MatchWorkerRequest = {
+      type: 'match',
+      requestId: 81,
+      mode: 'always-run',
+      confidence: 0.88,
+      crops: [{
+        id: 81,
+        width: fixture.width,
+        height: fixture.height,
+        captureToNativeScaleX: 1,
+        captureToNativeScaleY: 1,
+        bgra: fixture.bgra.buffer as ArrayBuffer,
+      }],
+      cancelBuffer: new SharedArrayBuffer(4),
+    };
+    const resultPromise = waitFor(worker, 81);
+    worker.postMessage(request, [fixture.bgra.buffer as ArrayBuffer]);
+    const result = await resultPromise;
+    assert.equal(result.type, 'result');
+    if (result.type !== 'result') return;
+    assert.equal(result.match?.mode, 'run');
+    assert.ok((result.match?.score ?? 0) >= 0.88);
+  } finally {
+    await worker.terminate();
+  }
+});
