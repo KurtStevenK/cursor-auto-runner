@@ -4,7 +4,6 @@
  * not match our worker's packed BGRA layout.
  */
 import type { NativeImage } from 'electron';
-import { Jimp } from 'jimp';
 
 export function expectedBgraByteLength(width: number, height: number): number {
   return width * height * 4;
@@ -37,22 +36,6 @@ function toBitmapBuffer(image: NativeImage): Buffer {
   return image.toBitmap();
 }
 
-async function bgraFromPng(image: NativeImage): Promise<Uint8Array> {
-  const decoded = await Jimp.read(Buffer.from(image.toPNG()));
-  const { width, height } = decoded.bitmap;
-  const out = new Uint8Array(width * height * 4);
-  const rgba = decoded.bitmap.data;
-  for (let i = 0; i < width * height; i++) {
-    const src = i * 4;
-    const dst = i * 4;
-    out[dst] = rgba[src + 2];
-    out[dst + 1] = rgba[src + 1];
-    out[dst + 2] = rgba[src];
-    out[dst + 3] = rgba[src + 3];
-  }
-  return out;
-}
-
 export async function nativeImageToTightBgra(image: NativeImage): Promise<ArrayBuffer> {
   const { width, height } = image.getSize();
   const expected = expectedBgraByteLength(width, height);
@@ -74,5 +57,7 @@ export async function nativeImageToTightBgra(image: NativeImage): Promise<ArrayB
     }
   }
 
-  return copyToOwnedArrayBuffer(await bgraFromPng(image));
+  throw new Error(
+    `Unexpected bitmap length ${bytes.byteLength} for ${width}x${height} image (expected ${expected})`
+  );
 }

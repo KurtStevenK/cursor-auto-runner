@@ -20,10 +20,11 @@ import {
 import { ensureMacScreenCapture } from './permissions';
 import {
   fingerprintDistance,
-  loadTemplate,
+  type GrayImage,
   templateFingerprint,
   validateTemplateDimensions,
 } from './matcher';
+import { loadTemplateNative } from './template-loader';
 import { MatchWorkerClient } from './match-worker-client';
 import { nativeImageToTightBgra } from './native-image-bgra';
 import { getButtonTestWindow } from './button-test';
@@ -194,7 +195,7 @@ export class Detector {
     interface LoadedCatalogFile extends CatalogFile {
       mode: 'always-run' | 'run' | 'allow';
       theme: 'dark' | 'light';
-      image?: Awaited<ReturnType<typeof loadTemplate>>;
+      image?: GrayImage;
     }
 
     const grouped = new Map<string, LoadedCatalogFile[]>();
@@ -230,7 +231,7 @@ export class Detector {
     for (const files of grouped.values()) {
       for (const candidate of files) {
         try {
-          candidate.image = await loadTemplate(candidate.file);
+          candidate.image = await loadTemplateNative(candidate.file);
         } catch (error) {
           rejected++;
           console.error(`[detector] failed to load template ${candidate.file}:`, error);

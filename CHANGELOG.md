@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.61] - 2026-10-18
+
+### Changed
+- **Installer size:** button templates are decoded with Electron's built-in image support instead of the `jimp` library, which is no longer shipped in the app (about 30 MB less inside `app.asar`). Detection behaviour is unchanged.
+
 ## [1.2.60] - 2026-10-18
 
 ### Changed

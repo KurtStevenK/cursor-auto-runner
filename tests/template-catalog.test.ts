@@ -5,10 +5,10 @@ import * as path from 'node:path';
 import {
   fingerprintDistance,
   GrayImage,
-  loadTemplate,
   templateFingerprint,
   validateTemplateDimensions,
 } from '../src/main/matcher';
+import { loadTemplate } from './helpers/load-template';
 import { selectCatalogGroup, type CatalogFile } from '../src/main/template-catalog';
 
 function image(width: number, height: number): GrayImage {
