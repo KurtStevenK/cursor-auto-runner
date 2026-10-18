@@ -38,6 +38,10 @@ Tagged releases run the same scan in CI when `VIRUSTOTAL_API_KEY` is configured;
 1. **Rotate/revoke** the credential immediately (Apple cert, PAT, GPG key, Firebase SA, VirusTotal key, etc.).
 2. Remove the file from history: [GitHub — removing sensitive data](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
 
+## Known advisories in dependencies
+
+`npm audit --omit=dev` reports moderate advisories (GHSA-5v7r-6r5c-r473, an infinite loop in `file-type` on malformed input) through `@nut-tree-fork/nut-js`, which pins `jimp` 0.22.x. Cursor Auto Runner only uses nut.js for mouse, window-listing and focus calls and never decodes images through it, so the vulnerable parser is not reached. Overriding `jimp` to 1.x would break nut.js's own image code at runtime, so no override is applied. We track upstream nut.js releases and will update when one moves to a patched `jimp`.
+
 ## Reporting vulnerabilities
 
 Please report security issues via [GitHub Security Advisories](https://github.com/KurtStevenK/cursor-auto-runner/security/advisories/new) or email the maintainer listed in [`package.json`](package.json).

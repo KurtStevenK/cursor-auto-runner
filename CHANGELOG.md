@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.83] - 2026-10-18
+
+### Changed
+- **Security:** SECURITY.md documents the `npm audit` advisory reported through `@nut-tree-fork/nut-js` (a `file-type` parser loop), why the app does not reach that code path, and why no dependency override is applied.
+
 ## [1.2.82] - 2026-10-18
 
 ### Added
