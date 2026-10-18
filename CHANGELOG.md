@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.82] - 2026-10-18
+
+### Added
+- **Research:** a macOS Accessibility-API detection spike (`scripts/spike-ax-buttons.js`, `docs/ax-detection-spike.md`) that walks Cursor's accessibility tree for Run / Always Run / Allow buttons. Documentation only; runtime behaviour is unchanged.
+
 ## [1.2.81] - 2026-10-18
 
 ### Changed
