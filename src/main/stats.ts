@@ -6,13 +6,18 @@
  * cannot be loaded, a JSON-lines fallback in userData is used so the
  * app keeps working everywhere.
  */
-import { app } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DayCount, ClickMode, Mode, StatsSnapshot } from '../shared/types';
 import { perfNow, reportStatsDuration } from './perf';
 
 export type { Mode };
+
+function defaultUserDataDir(): string {
+  // Lazy so this module can be loaded under plain Node (tests).
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require('electron').app.getPath('userData');
+}
 
 interface ClickEvent {
   ts: number;
@@ -39,7 +44,7 @@ export class StatsStore {
   private dirty = false;
   private snapshotCache: { at: number; snapshot: StatsSnapshot } | null = null;
 
-  constructor(private readonly userDataDir = app.getPath('userData')) {
+  constructor(private readonly userDataDir: string = defaultUserDataDir()) {
     this.jsonPath = path.join(userDataDir, 'clicks-fallback.json');
     this.init();
   }

@@ -7,6 +7,14 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.72] - 2026-10-18
+
+### Fixed
+- **Settings:** values read from `settings.json` are validated and clamped (refresh interval 150–60000 ms, confidence 0.5–0.99, cooldown 0–60 s, known modes), and the file is written atomically. Corrupt files fall back to defaults.
+
+### Changed
+- **Tests:** settings and stats stores run under plain Node and have unit tests.
+
 ## [1.2.71] - 2026-10-18
 
 ### Changed
