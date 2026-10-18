@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.100] - 2026-10-18
+
+### Fixed
+- **CI:** a `.gitattributes` file forces LF line endings on checkout so the Biome format check passes on Windows runners, which default to CRLF.
+
 ## [1.2.99] - 2026-10-18
 
 ### Fixed
