@@ -14,7 +14,7 @@ import { setButtonTestListener, showButtonTest } from './button-test';
 import { UpdateController } from './updates';
 import { startCapture, stopCapture, templatesBaseDir } from './capture';
 import * as fs from 'fs';
-import { IPC, Mode, StatsSnapshot, DEFAULT_SETTINGS } from '../shared/types';
+import { IPC, Mode, Settings, StatsSnapshot, DEFAULT_SETTINGS } from '../shared/types';
 import { installFileLogger, logDirectory } from './log';
 import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
 
@@ -133,6 +133,24 @@ async function applyMode(mode: Mode): Promise<void> {
   controller.set(mode);
 }
 
+/** Persist a settings patch and apply its side effects live. */
+function applySettings(patch: Partial<Settings>): void {
+  settings.set(patch);
+  const s = settings.get();
+  if (patch.confidence !== undefined) controller.setConfidence(s.confidence);
+  if (patch.cooldownMs !== undefined) controller.setCooldown(s.cooldownMs);
+  if (patch.launchAtLogin !== undefined) applyLoginItem(s.launchAtLogin);
+  tray?.rebuild();
+}
+
+function applyLoginItem(openAtLogin: boolean): void {
+  try {
+    app.setLoginItemSettings({ openAtLogin });
+  } catch (err) {
+    console.error('[settings] setLoginItemSettings failed:', err);
+  }
+}
+
 app.whenReady().then(() => {
   installFileLogger(app.getPath('logs'));
   console.log(`Cursor Auto Runner ${app.getVersion()} starting (${process.platform}, Electron ${process.versions.electron})`);
@@ -170,6 +188,8 @@ app.whenReady().then(() => {
       tray.rebuild();
       sendStats(true);
     },
+    getSettings: () => settings.get(),
+    updateSettings: (patch) => applySettings(patch),
     capture: (name, theme) => {
       // Pause the auto-clicker while the screen is frozen for capture.
       const prevMode = controller.current;
@@ -225,8 +245,16 @@ app.whenReady().then(() => {
     sendStats(true); // echo the new value back to the overlay (and tray)
   });
 
-  // Optionally restore the last used mode on launch.
+  // Reconcile the OS login item with the stored setting (the user may have
+  // changed it in system settings; the stored value wins only if it differs).
   const s = settings.get();
+  try {
+    if (app.getLoginItemSettings().openAtLogin !== s.launchAtLogin) applyLoginItem(s.launchAtLogin);
+  } catch (err) {
+    console.error('[settings] getLoginItemSettings failed:', err);
+  }
+
+  // Optionally restore the last used mode on launch.
   if (s.restoreLastMode && s.lastMode !== 'idle') {
     void applyMode(s.lastMode);
   }

@@ -115,3 +115,15 @@ test('health resets after a successful detect', async () => {
     console.error = orig;
   }
 });
+
+test('setConfidence and setCooldown apply live and are clamped', () => {
+  const t = setup([null]);
+  t.c.setConfidence(0.95);
+  t.c.setCooldown(500);
+  assert.equal((t.c as never as { opts: { confidence: number } }).opts.confidence, 0.95);
+  assert.equal((t.c as never as { opts: { cooldownMs: number } }).opts.cooldownMs, 500);
+  t.c.setConfidence(5);
+  t.c.setCooldown(-1);
+  assert.equal((t.c as never as { opts: { confidence: number } }).opts.confidence, 0.99);
+  assert.equal((t.c as never as { opts: { cooldownMs: number } }).opts.cooldownMs, 0);
+});

@@ -4,7 +4,7 @@
  */
 import { app, BrowserWindow, Menu, nativeImage, Tray, MenuItemConstructorOptions } from 'electron';
 import * as path from 'path';
-import { Mode, IPC, stepPoll } from '../shared/types';
+import { Mode, IPC, Settings, stepPoll } from '../shared/types';
 
 export type TrayCallbacks = {
   getMode: () => Mode;
@@ -25,7 +25,12 @@ export type TrayCallbacks = {
   setHomebrewInstall: (value: boolean) => void;
   getPollInterval: () => number;
   setPollInterval: (ms: number) => void;
+  getSettings: () => Settings;
+  updateSettings: (patch: Partial<Settings>) => void;
 };
+
+export const CONFIDENCE_CHOICES = [0.8, 0.84, 0.88, 0.92, 0.95];
+export const COOLDOWN_CHOICES_MS = [500, 1000, 2000, 5000];
 
 export class TrayUI {
   private tray: Tray | null = null;
@@ -108,6 +113,7 @@ export class TrayUI {
         click: () => this.cb.setPollInterval(slower!),
       },
       { type: 'separator' },
+      this.settingsMenu(),
       {
         label: 'Capture templates…',
         submenu: (['run', 'always-run', 'allow'] as const).flatMap((name) => [
@@ -135,6 +141,46 @@ export class TrayUI {
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send(IPC.MODE_CHANGED, mode);
     }
+  }
+
+  private settingsMenu(): MenuItemConstructorOptions {
+    const s = this.cb.getSettings();
+    const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;
+    return {
+      label: 'Settings',
+      submenu: [
+        {
+          label: 'Start at login',
+          type: 'checkbox',
+          checked: s.launchAtLogin,
+          click: (item) => this.cb.updateSettings({ launchAtLogin: Boolean(item.checked) }),
+        },
+        {
+          label: 'Restore last mode on launch',
+          type: 'checkbox',
+          checked: s.restoreLastMode,
+          click: (item) => this.cb.updateSettings({ restoreLastMode: Boolean(item.checked) }),
+        },
+        {
+          label: 'Confidence',
+          submenu: CONFIDENCE_CHOICES.map((v) => ({
+            label: v.toFixed(2),
+            type: 'radio' as const,
+            checked: near(s.confidence, v),
+            click: () => this.cb.updateSettings({ confidence: v }),
+          })),
+        },
+        {
+          label: 'Click cooldown',
+          submenu: COOLDOWN_CHOICES_MS.map((ms) => ({
+            label: `${ms / 1000} s`,
+            type: 'radio' as const,
+            checked: s.cooldownMs === ms,
+            click: () => this.cb.updateSettings({ cooldownMs: ms }),
+          })),
+        },
+      ],
+    };
   }
 
   private updateItems(): MenuItemConstructorOptions[] {

@@ -7,6 +7,12 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.76] - 2026-10-18
+
+### Added
+- **Settings submenu:** the tray menu has a new *Settings* submenu with *Start at login*, *Restore last mode on launch*, *Confidence* (0.80 / 0.84 / 0.88 / 0.92 / 0.95) and *Click cooldown* (0.5 s / 1 s / 2 s / 5 s). Changes are saved and apply immediately without restarting.
+- **Start at login:** the app can now launch automatically when you sign in (off by default).
+
 ## [1.2.75] - 2026-10-18
 
 ### Changed

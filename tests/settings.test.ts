@@ -51,3 +51,9 @@ test('set() persists sanitized values and a new store re-reads them', () => {
   assert.equal(again.lastMode, 'run');
   assert.equal(fs.existsSync(path.join(dir, 'settings.json.tmp')), false);
 });
+
+test('launchAtLogin defaults to false and only accepts booleans', () => {
+  assert.equal(DEFAULT_SETTINGS.launchAtLogin, false);
+  assert.equal(sanitizeSettings({ launchAtLogin: true }).launchAtLogin, true);
+  assert.equal(sanitizeSettings({ launchAtLogin: 'yes' }).launchAtLogin, false);
+});

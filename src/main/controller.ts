@@ -65,6 +65,16 @@ export class ModeController {
     this.opts.pollIntervalMs = Math.max(150, Math.min(60000, ms));
   }
 
+  /** Apply a new match confidence live (next detect call). */
+  setConfidence(v: number): void {
+    this.opts.confidence = Math.max(0.5, Math.min(0.99, v));
+  }
+
+  /** Apply a new click cooldown live. */
+  setCooldown(ms: number): void {
+    this.opts.cooldownMs = Math.max(0, Math.min(60000, ms));
+  }
+
   /** Current poll interval (for display in the overlay). */
   get pollIntervalMs(): number {
     return this.opts.pollIntervalMs;

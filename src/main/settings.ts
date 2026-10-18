@@ -29,6 +29,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     lastMode: MODES.includes(r.lastMode as Mode) ? (r.lastMode as Mode) : d.lastMode,
     installUpdatesWithHomebrew:
       typeof r.installUpdatesWithHomebrew === 'boolean' ? r.installUpdatesWithHomebrew : d.installUpdatesWithHomebrew,
+    launchAtLogin: typeof r.launchAtLogin === 'boolean' ? r.launchAtLogin : d.launchAtLogin,
   };
 }
 

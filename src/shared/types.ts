@@ -37,6 +37,8 @@ export interface Settings {
   lastMode: Mode;
   /** macOS Homebrew cask: install a newer GitHub Release in the background. */
   installUpdatesWithHomebrew: boolean;
+  /** Start the app when the user logs in. */
+  launchAtLogin: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -46,6 +48,7 @@ export const DEFAULT_SETTINGS: Settings = {
   restoreLastMode: false,
   lastMode: 'idle',
   installUpdatesWithHomebrew: true,
+  launchAtLogin: false,
 };
 
 export const IPC = {
