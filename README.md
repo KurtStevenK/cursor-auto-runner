@@ -240,7 +240,7 @@ Static landing pages: `landing/` on GitHub Pages (`.github/workflows/pages.yml`)
 
 ## Platform notes
 
-- **Windows** — works out of the box.
+- **Windows** — works out of the box. *Settings → Experimental: per-window capture (Windows)* captures each Cursor window at full size instead of a downscaled display image; it is off by default and untested on 4K displays until someone reports back (use the bug-report form).
 - **macOS** — grant two permissions on first use: *Screen Recording* and *Accessibility* (System Settings → Privacy & Security). The app shows a hint dialog with a direct link when needed.
 - **Linux** — works out of the box on X11. Under Wayland see the Linux paragraph below.
 

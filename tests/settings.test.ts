@@ -66,6 +66,12 @@ test('launchAtLogin defaults to false and only accepts booleans', () => {
   assert.equal(sanitizeSettings({ launchAtLogin: 'yes' }).launchAtLogin, false);
 });
 
+test('windowCaptureOnWindows defaults to false and only accepts booleans', () => {
+  assert.equal(DEFAULT_SETTINGS.windowCaptureOnWindows, false);
+  assert.equal(sanitizeSettings({ windowCaptureOnWindows: true }).windowCaptureOnWindows, true);
+  assert.equal(sanitizeSettings({ windowCaptureOnWindows: 1 }).windowCaptureOnWindows, false);
+});
+
 test('toggleShortcut only accepts the offered accelerators', () => {
   assert.equal(DEFAULT_SETTINGS.toggleShortcut, '');
   assert.equal(

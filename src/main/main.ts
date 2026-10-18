@@ -388,7 +388,11 @@ app.whenReady().then(() => {
   startPerformanceMonitor();
   settings = new SettingsStore(undefined, app.getVersion());
   stats = new StatsStore();
-  detector = new Detector();
+  detector = new Detector({
+    useWindowCapture: () =>
+      process.platform === 'darwin' ||
+      (process.platform === 'win32' && settings.get().windowCaptureOnWindows),
+  });
   controller = new ModeController(
     detector,
     stats,

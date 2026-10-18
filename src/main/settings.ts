@@ -73,6 +73,10 @@ export function sanitizeSettings(raw: unknown): Settings {
     autoCheckUpdates:
       typeof r.autoCheckUpdates === 'boolean' ? r.autoCheckUpdates : d.autoCheckUpdates,
     launchAtLogin: typeof r.launchAtLogin === 'boolean' ? r.launchAtLogin : d.launchAtLogin,
+    windowCaptureOnWindows:
+      typeof r.windowCaptureOnWindows === 'boolean'
+        ? r.windowCaptureOnWindows
+        : d.windowCaptureOnWindows,
     toggleShortcut: (SHORTCUT_CHOICES as readonly unknown[]).includes(r.toggleShortcut)
       ? (r.toggleShortcut as string)
       : d.toggleShortcut,

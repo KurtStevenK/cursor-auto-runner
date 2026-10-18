@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.110] - 2026-10-18
+
+### Added
+- **Experimental (Windows):** a Settings toggle "per-window capture" captures each Cursor window at its native resolution instead of a 1080p-capped display thumbnail, which should help small buttons on 4K displays. Off by default and untested on real 4K hardware; please report results via the bug form.
+
 ## [1.2.109] - 2026-10-18
 
 ### Changed

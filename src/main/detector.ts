@@ -44,6 +44,11 @@ export interface DetectorOptions {
   loadImage?: (file: string) => Promise<GrayImage>;
   /** Clock, injectable for tests. Defaults to Date.now. */
   now?: () => number;
+  /**
+   * Whether to prefer full-size per-window captures over display thumbnails.
+   * Defaults to macOS only; experimental and opt-in on Windows.
+   */
+  useWindowCapture?: () => boolean;
 }
 
 /** A cached miss is re-checked by the matcher once it is older than this. */
@@ -119,6 +124,7 @@ export class Detector {
   private readonly matcher: Matcher;
   private windowProvider: WindowProvider | null;
   private captureProvider: CaptureProvider | null;
+  private readonly useWindowCaptureFn: () => boolean;
   private readonly displaysFn: () => DisplayInfo[];
   private readonly templateDirsFn: () => string[];
   private readonly loadImageFn: (file: string) => Promise<GrayImage>;
@@ -146,6 +152,7 @@ export class Detector {
     this.matcher = options.matcher ?? new MatchWorkerClient();
     this.windowProvider = options.windows ?? null;
     this.captureProvider = options.capture ?? null;
+    this.useWindowCaptureFn = options.useWindowCapture ?? (() => process.platform === 'darwin');
     this.displaysFn =
       options.displays ?? (() => electron().screen.getAllDisplays() as DisplayInfo[]);
     this.templateDirsFn = options.templateDirs ?? (() => defaultTemplateDirs(options.bundledRoot));
@@ -340,7 +347,10 @@ export class Detector {
       const captureProvider = this.capturer();
       const capture = await captureProvider.captureCrops(cursorWindows, displays, cancelled);
       let crops = capture.crops;
-      if (process.platform === 'darwin' && captureProvider.captureWindowCrops) {
+      // Experimental on Windows: desktopCapturer window sources are named by
+      // window title like on macOS, so title matching is unchanged. Windows with
+      // no matching source simply keep their display crops (see below).
+      if (this.useWindowCaptureFn() && captureProvider.captureWindowCrops) {
         const windowCrops = await captureProvider.captureWindowCrops(cursorWindows, 0, cancelled);
         if (windowCrops.length > 0) {
           const covered = new Set(windowCrops.map((crop) => crop.windowKey));

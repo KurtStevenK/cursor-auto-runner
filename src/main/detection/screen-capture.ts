@@ -17,7 +17,7 @@ export interface CaptureProvider {
     displays: DisplayInfo[],
     cancelled: () => boolean
   ): Promise<CaptureResult>;
-  /** Per-window thumbnails at native size (macOS). Preferred over display crops. */
+  /** Per-window thumbnails at native size (macOS; experimental opt-in on Windows). Preferred over display crops. */
   captureWindowCrops?(
     windows: WindowInfo[],
     startId: number,
@@ -105,7 +105,9 @@ export class ElectronCaptureProvider implements CaptureProvider {
     startId: number,
     cancelled: () => boolean
   ): Promise<CropContext[]> {
-    if (process.platform !== 'darwin' || windows.length === 0) return [];
+    // macOS by default; opt-in and experimental on Windows (the detector gates it).
+    if ((process.platform !== 'darwin' && process.platform !== 'win32') || windows.length === 0)
+      return [];
     await ensureMacScreenCapture();
     const sources = await desktopCapturer.getSources({
       types: ['window'],

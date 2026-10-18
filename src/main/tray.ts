@@ -176,6 +176,17 @@ export class TrayUI {
                 click: (item) => this.cb.updateSettings({ launchAtLogin: Boolean(item.checked) }),
               },
             ] as MenuItemConstructorOptions[])),
+        ...(process.platform === 'win32'
+          ? ([
+              {
+                label: 'Experimental: per-window capture (Windows)',
+                type: 'checkbox',
+                checked: s.windowCaptureOnWindows,
+                click: (item) =>
+                  this.cb.updateSettings({ windowCaptureOnWindows: Boolean(item.checked) }),
+              },
+            ] as MenuItemConstructorOptions[])
+          : []),
         {
           label: 'Restore last mode on launch',
           type: 'checkbox',

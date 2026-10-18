@@ -53,6 +53,8 @@ export interface Settings {
   autoCheckUpdates: boolean;
   /** Start the app when the user logs in. */
   launchAtLogin: boolean;
+  /** Experimental, Windows only: capture each Cursor window at full size instead of display thumbnails. */
+  windowCaptureOnWindows: boolean;
   /** Electron accelerator for the global start/stop shortcut; '' = disabled. */
   toggleShortcut: string;
   /** Bring the Cursor window to the front before each click. */
@@ -90,6 +92,7 @@ export const DEFAULT_SETTINGS: Settings = {
   installUpdatesWithHomebrew: true,
   autoCheckUpdates: true,
   launchAtLogin: false,
+  windowCaptureOnWindows: false,
   toggleShortcut: '',
   focusCursorBeforeClick: true,
   pauseWhileTyping: true,
