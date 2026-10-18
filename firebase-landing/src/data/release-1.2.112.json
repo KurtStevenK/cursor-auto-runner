@@ -1,0 +1,30 @@
+{
+  "version": "1.2.112",
+  "assets": [
+    {
+      "name": "Cursor.Auto.Runner-1.2.112-arm64-mac.zip",
+      "sha256": "766c6826fc573f299708b6d1df52172c228f3ae233e330925e4ab0b4b3c0cb6a",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.112-arm64.dmg",
+      "sha256": "cb67441ba4550db9564b2f8884b88ae0a394457afe51243d263a0e0bc79735c7",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.112-mac.zip",
+      "sha256": "e7e2e4b745a3518101c05708e050b3edd4e1eecec7415ee086760cafd463d502",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner-1.2.112.dmg",
+      "sha256": "0197db671b08f12489ceffbc059203f09860e82d045d8d5007304578f3934c26",
+      "platform": "macOS"
+    },
+    {
+      "name": "Cursor.Auto.Runner.Setup.1.2.112.exe",
+      "sha256": "f9c7092470d703856be1d11472a056609aa403d701e09740c699b918055709d2",
+      "platform": "Windows"
+    }
+  ]
+}

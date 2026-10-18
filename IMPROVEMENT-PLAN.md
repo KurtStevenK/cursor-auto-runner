@@ -187,11 +187,25 @@ All items that can be done from this machine were implemented, each as its own r
 | Review #10: quit guard extracted and tested | 1.2.107 | `before-quit` re-entry from `quitAndInstall` covered by unit tests, with a 5 s cleanup timeout |
 | Matcher timing test stabilised | 1.2.108 | Budgets doubled; the 2 s regression gate stays in `bench:matcher` |
 | Status update | 1.2.109 | |
+| A4 experimental per-window capture (Windows) | 1.2.110 | opt-in |
+| F3 Windows signing wired, gated on secrets | 1.2.111 | |
+| H1 canonical landing page | 1.2.112 | released as `v1.2.112` |
+| Release-state docs | 1.2.113 | |
+| Release verification record and Firebase manifest | 1.2.114 | |
 
 Not done, and why:
 
 - **A2 light templates** need real screenshots of Cursor's light theme; nothing on this machine can produce them. The loader, catalog and tests already handle a `light` folder.
-- **A4 native-resolution window capture on Windows** cannot be tested from macOS. The capture provider is now injectable (A5), so this is a contained change for a Windows session.
-- **F3 Windows code signing** needs a SignPath or Azure Trusted Signing account.
-- **H1 landing consolidation** is a product decision (which URL is canonical).
-- **E4 required status checks** is a GitHub repository setting.
+- **A4 native-resolution window capture on Windows** shipped as an opt-in experimental toggle (1.2.110) because it cannot be tested from macOS; it needs a report from a 4K Windows user before becoming the default.
+- **F3 Windows code signing** is wired into the release workflow (1.2.111) and activates when the Azure Trusted Signing secrets exist; the account itself is the maintainer's to create (`packaging/windows/README.md`).
+- **H1 landing consolidation**: the Firebase page is declared canonical and the GitHub Pages landing links to it (1.2.112); removing the Pages site remains a product decision.
+- **E4 required status checks** was already enforced on `master` (the `quality` check, strict); AGENTS.md now says so instead of calling it optional.
+
+## Release 1.2.112 (2026-10-18)
+
+- PR #47 merged into `master` (merge commit `435b5a8`) after all seven CI checks passed; tag `v1.2.112` pushed.
+- Release workflow run 39145521558: `quality`, `linux` and `windows` succeeded; `macos` failed before building, at `xcrun notarytool history` with HTTP 401 ("Invalid credentials"). The step is unchanged since `v1.2.59` passed on 2026-10-12, so the stored `APPLE_APP_SPECIFIC_PASSWORD` has been revoked or expired. Fix: generate a new app-specific password at appleid.apple.com, update the secret (`scripts/refresh-csc-github-secrets.sh` / `scripts/push-apple-signing-to-github.sh`), then re-run the failed jobs of that run; the `release` and `chocolatey` jobs follow automatically.
+- Windows update feed validated from the CI artifact: `latest.yml` lists `Cursor.Auto.Runner.Setup.1.2.112.exe` with sha512 and size, which is the name GitHub serves for the uploaded installer. Together with the local signed `dist:mac` check this covers both feed rewrites end to end up to the upload step.
+- After the Apple app-specific password was regenerated and the secret updated, the failed jobs were re-run and every job succeeded (`macos`, `release`, `chocolatey`). The GitHub Release `v1.2.112` is published with the Windows installer, four macOS DMG/ZIP files, blockmaps, `latest.yml` and `latest-mac.yml`; the Homebrew cask is at 1.2.112; Chocolatey accepted the push (moderation pending as usual); Linux packages are on Firebase Storage.
+- Update feed verified against the published release: every `url`/`path` in both feed files answers HTTP 200, and electron-updater (dev-mode harness pointed at the GitHub provider, current version forced to 1.2.59) read the feed, selected `Cursor.Auto.Runner-1.2.112-arm64-mac.zip` and downloaded it with checksum verification (143,618,738 bytes). The only unexercised step is `quitAndInstall()` itself, whose re-entry logic is unit-tested (1.2.107); the first real in-app update will be 1.2.112 → the next release.
+- Firebase release manifest for 1.2.112 added for the landing page (`npm run sync:firebase-release-data 1.2.112`).
