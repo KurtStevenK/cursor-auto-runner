@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.105] - 2026-10-18
+
+### Fixed
+- **CI:** the coverage job no longer fails on slow runners; timing assertions run with a 20× budget under coverage instrumentation, which made the matcher several times slower there. Plain `npm test` budgets are unchanged.
+
 ## [1.2.104] - 2026-10-18
 
 ### Changed

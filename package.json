@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.104",
+  "version": "1.2.105",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "dist:linux": "npm run compile && electron-builder --linux --publish never",
     "rebuild:dev": "electron-rebuild -f -w better-sqlite3 -a x64",
     "test": "npm run compile && node --test dist/tests/*.test.js",
-    "test:coverage": "npm run compile && TEST_TIMING_SCALE=4 node --test --experimental-test-coverage --test-coverage-include='dist/src/**' --test-coverage-exclude='dist/src/main/main.js' --test-coverage-exclude='dist/src/main/detector.js' --test-coverage-exclude='dist/src/main/tray.js' --test-coverage-exclude='dist/src/main/updates.js' --test-coverage-exclude='dist/src/main/capture.js' --test-coverage-exclude='dist/src/main/button-test.js' --test-coverage-exclude='dist/src/main/permissions.js' --test-coverage-exclude='dist/src/main/mac-*.js' --test-coverage-exclude='dist/src/main/*preload.js' --test-coverage-exclude='dist/src/main/clicker.js' --test-coverage-exclude='dist/src/main/match-worker-client.js' --test-coverage-exclude='dist/src/main/native-image-bgra.js' --test-coverage-exclude='dist/src/main/template-loader.js' --test-coverage-exclude='dist/src/main/perf.js' --test-coverage-exclude='dist/src/overlay/**' --test-coverage-lines=80 --test-coverage-branches=70 dist/tests/*.test.js",
+    "test:coverage": "npm run compile && TEST_TIMING_SCALE=20 node --test --experimental-test-coverage --test-coverage-include='dist/src/**' --test-coverage-exclude='dist/src/main/main.js' --test-coverage-exclude='dist/src/main/detector.js' --test-coverage-exclude='dist/src/main/tray.js' --test-coverage-exclude='dist/src/main/updates.js' --test-coverage-exclude='dist/src/main/capture.js' --test-coverage-exclude='dist/src/main/button-test.js' --test-coverage-exclude='dist/src/main/permissions.js' --test-coverage-exclude='dist/src/main/mac-*.js' --test-coverage-exclude='dist/src/main/*preload.js' --test-coverage-exclude='dist/src/main/clicker.js' --test-coverage-exclude='dist/src/main/match-worker-client.js' --test-coverage-exclude='dist/src/main/native-image-bgra.js' --test-coverage-exclude='dist/src/main/template-loader.js' --test-coverage-exclude='dist/src/main/perf.js' --test-coverage-exclude='dist/src/overlay/**' --test-coverage-lines=80 --test-coverage-branches=70 dist/tests/*.test.js",
     "test:stats": "npm run compile && electron scripts/test-stats.js",
     "test:overlay": "npm run compile && electron scripts/test-overlay.js",
     "test:packaged-worker": "node scripts/check-packaged-worker.js",
