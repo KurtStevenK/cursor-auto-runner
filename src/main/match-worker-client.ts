@@ -1,4 +1,3 @@
-import { app } from 'electron';
 import { Worker } from 'node:worker_threads';
 import type { ClickMode } from '../shared/types';
 import type {
@@ -17,6 +16,11 @@ interface PendingRequest {
   reject: (error: Error) => void;
 }
 
+export interface MatchWorkerClientOptions {
+  /** Absolute worker script path; defaults to the compiled worker resolved via Electron. */
+  workerPath?: string;
+}
+
 export class MatchWorkerClient {
   private worker: Worker | null = null;
   private requestId = 0;
@@ -26,7 +30,12 @@ export class MatchWorkerClient {
   private crashCount = 0;
   private retryAfter = 0;
 
+  constructor(private readonly options: MatchWorkerClientOptions = {}) {}
+
   private workerPath(): string {
+    if (this.options.workerPath) return this.options.workerPath;
+    // Resolved lazily so this module loads under plain Node (tests).
+    const { app } = require('electron') as typeof import('electron');
     return resolveMatchWorkerPath(__dirname, app.isPackaged);
   }
 

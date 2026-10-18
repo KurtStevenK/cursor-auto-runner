@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.88] - 2026-10-18
+
+### Changed
+- **Internal:** the detection orchestrator is split into `src/main/detection/` (template loader, window finder, screen capture) with injectable providers, and a fixture-driven end-to-end test runs the real matcher worker under plain Node. No behaviour change.
+
 ## [1.2.87] - 2026-10-18
 
 ### Added
