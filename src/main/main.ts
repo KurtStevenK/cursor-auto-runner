@@ -15,6 +15,7 @@ import { UpdateController } from './updates';
 import { startCapture, stopCapture, templatesBaseDir } from './capture';
 import * as fs from 'fs';
 import { IPC, Mode, StatsSnapshot, DEFAULT_SETTINGS } from '../shared/types';
+import { installFileLogger, logDirectory } from './log';
 import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
 
 // Ensure a clean tray/app identity on Windows
@@ -133,6 +134,8 @@ async function applyMode(mode: Mode): Promise<void> {
 }
 
 app.whenReady().then(() => {
+  installFileLogger(app.getPath('logs'));
+  console.log(`Cursor Auto Runner ${app.getVersion()} starting (${process.platform}, Electron ${process.versions.electron})`);
   startPerformanceMonitor();
   settings = new SettingsStore();
   stats = new StatsStore();
@@ -185,6 +188,9 @@ app.whenReady().then(() => {
     checkForUpdates: () => updates.checkFromMenu(),
     updateMenu: () => updates.menuState(),
     setHomebrewInstall: (value) => updates.setAutoInstall(value),
+    openLogFolder: () => {
+      void shell.openPath(logDirectory());
+    },
     openTemplatesFolder: () => {
       // The folder where new captures land (userData when packaged).
       const dir = path.join(templatesBaseDir(), 'assets', 'templates');

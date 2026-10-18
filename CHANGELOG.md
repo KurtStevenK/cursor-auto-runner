@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.68] - 2026-10-18
+
+### Added
+- **Diagnostics:** the app writes a rotating log file (`cursor-auto-runner.log` in the OS log folder, for example `~/Library/Logs/Cursor Auto Runner` on macOS). The tray menu gains **Open log folder**, and uncaught errors are logged.
+
 ## [1.2.67] - 2026-10-18
 
 ### Added

@@ -12,6 +12,7 @@ export type TrayCallbacks = {
   openOverlay: () => void;
   capture: (name: 'run' | 'always-run' | 'allow', theme: 'dark' | 'light') => void;
   openTemplatesFolder: () => void;
+  openLogFolder: () => void;
   showButtonTest: () => void;
   checkForUpdates: () => void;
   updateMenu: () => {
@@ -116,6 +117,7 @@ export class TrayUI {
       },
       { type: 'separator' },
       { label: 'Open templates folder', click: () => this.cb.openTemplatesFolder() },
+      { label: 'Open log folder', click: () => this.cb.openLogFolder() },
       { label: 'Stats…', click: () => this.cb.openOverlay() },
       {
         label: 'Test buttons…',
