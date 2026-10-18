@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.75] - 2026-10-18
+
+### Changed
+- **Tests:** `npm run test:coverage` reports unit-test coverage of the testable modules and fails below 80 % lines / 70 % branches; CI runs it on the macOS and Linux test jobs. Timing assertions scale with `TEST_TIMING_SCALE` so instrumented runs stay green.
+
 ## [1.2.74] - 2026-10-18
 
 ### Changed

@@ -35,5 +35,5 @@ test('hashing a 1920x1080 crop is fast', () => {
     hashBgra(a, 1920, 1080);
     best = Math.min(best, performance.now() - start);
   }
-  assert.ok(best < 20, `best run took ${best.toFixed(2)} ms`);
+  assert.ok(best < 20 * (Number(process.env.TEST_TIMING_SCALE) || 1), `best run took ${best.toFixed(2)} ms`);
 });

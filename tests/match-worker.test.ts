@@ -7,6 +7,9 @@ import type { MatchWorkerRequest, MatchWorkerResponse } from '../src/shared/matc
 import { loadTemplate } from './helpers/load-template';
 import { resizeGray } from '../src/worker/matcher-core';
 
+/** Coverage instrumentation slows the worker; scale timing budgets via TEST_TIMING_SCALE. */
+const TIMING_SCALE = Number(process.env.TEST_TIMING_SCALE) || 1;
+
 function waitFor(worker: Worker, requestId: number): Promise<MatchWorkerResponse> {
   return new Promise((resolve, reject) => {
     const onMessage = (response: MatchWorkerResponse) => {
@@ -498,7 +501,7 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
       assert.equal(result.match?.path, entry.path);
       assert.ok(Math.abs((result.match?.x ?? -100) - entry.expected.x) <= 1);
       assert.ok(Math.abs((result.match?.y ?? -100) - entry.expected.y) <= 1);
-      assert.ok(result.matchMs < 750, `full-window match took ${result.matchMs.toFixed(1)} ms`);
+      assert.ok(result.matchMs < 750 * TIMING_SCALE, `full-window match took ${result.matchMs.toFixed(1)} ms`);
       requestId++;
     }
 
@@ -537,7 +540,7 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
     if (noButtonResult.type === 'result') {
       assert.equal(noButtonResult.match, null);
       assert.ok(
-        noButtonResult.matchMs < 500,
+        noButtonResult.matchMs < 500 * TIMING_SCALE,
         `colored no-button path took ${noButtonResult.matchMs.toFixed(1)} ms`
       );
     }
