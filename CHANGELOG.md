@@ -7,6 +7,12 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.103] - 2026-10-18
+
+### Changed
+
+- Internal: the two sandboxed preloads and the overlay renderer are now bundled with esbuild after `tsc`, so they import the IPC channel names, poll ladder and types from `src/shared/` instead of keeping copies in sync by hand. No behaviour change.
+
 ## [1.2.102] - 2026-10-18
 
 ### Fixed

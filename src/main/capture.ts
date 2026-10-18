@@ -10,6 +10,7 @@ import { app, BrowserWindow, desktopCapturer, ipcMain, screen } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { validateTemplateDimensions } from './matcher';
+import { CAPTURE_IPC } from '../shared/types';
 
 export type CaptureName = 'run' | 'always-run' | 'allow';
 export type CaptureTheme = 'dark' | 'light';
@@ -114,7 +115,7 @@ function validateRegion(
 function registerHandlers(): void {
   if (handlersRegistered) return;
   handlersRegistered = true;
-  ipcMain.on('capture-region', (e, r: unknown) => {
+  ipcMain.on(CAPTURE_IPC.REGION, (e, r: unknown) => {
     if (!shot || !target) return;
     if (!activeWin || e.sender !== activeWin.webContents) return;
     const region = validateRegion(r, shot.image.getSize(), shot.scaleFactor);
@@ -131,7 +132,7 @@ function registerHandlers(): void {
     if (!validation.valid) {
       const reason = validation.reason ?? 'invalid selection';
       callbacks.onRejected?.(reason);
-      activeWin?.webContents.send('capture-rejected', reason);
+      activeWin?.webContents.send(CAPTURE_IPC.REJECTED, reason);
       return;
     }
     const dir = path.join(templatesBaseDir(), 'assets', 'templates', target.theme);
@@ -147,7 +148,7 @@ function registerHandlers(): void {
     if (existing.some((name) => fs.readFileSync(path.join(dir, name)).equals(png))) {
       const reason = 'an identical template already exists';
       callbacks.onRejected?.(reason);
-      activeWin?.webContents.send('capture-rejected', reason);
+      activeWin?.webContents.send(CAPTURE_IPC.REJECTED, reason);
       return;
     }
     // Numbered variants instead of overwriting: run.png, run-2.png, …
@@ -158,9 +159,9 @@ function registerHandlers(): void {
     fs.writeFileSync(file, png);
     console.log(`template saved: ${file} (${size.width}x${size.height})`);
     callbacks.onSaved?.(file);
-    activeWin?.webContents.send('capture-saved', path.basename(file));
+    activeWin?.webContents.send(CAPTURE_IPC.SAVED, path.basename(file));
   });
-  ipcMain.on('capture-cancel', (e) => {
+  ipcMain.on(CAPTURE_IPC.CANCEL, (e) => {
     if (!activeWin || e.sender !== activeWin.webContents) return;
     // onDone fires from the window's 'closed' event (see startCapture).
     activeWin.close();

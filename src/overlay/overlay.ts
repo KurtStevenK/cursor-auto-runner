@@ -1,61 +1,12 @@
 /** Overlay renderer: live stats display.
- *  Compiled by tsconfig.overlay.json as a standalone ES module and loaded by
- *  index.html via <script type="module"> — it must NOT import runtime modules.
- *  The shared types are therefore duplicated here (keep in sync with
- *  src/shared/types.ts), mirroring the preload's self-contained IPC constants. */
-export type Mode = 'idle' | 'run' | 'always-run';
-
-export interface StatsSnapshot {
-  session: number;
-  day: number;
-  week: number;
-  month: number;
-  total: number;
-  byDay: { date: string; count: number }[];
-  mode: Mode;
-  since: string;
-  windowFound: boolean;
-  watchedKind: 'cursor' | 'rustdesk' | null;
-  pollIntervalMs: number;
-  effectivePollIntervalMs?: number;
-  health?: {
-    lastMatchAt: number | null;
-    lastDetectAt: number | null;
-    consecutiveErrors: number;
-    lastError: string | null;
-    templateCount: number;
-    missStreakMinutes: number | null;
-  };
-}
-
-// Duplicated from shared/types.ts (page must stay self-contained).
-const POLL_LADDER_MS = [150, 300, 500, 700, 1000, 1500, 2500, 4000, 6000];
-
-function stepPoll(current: number, dir: -1 | 1): number | null {
-  const idx = POLL_LADDER_MS.indexOf(current);
-  if (idx !== -1) return POLL_LADDER_MS[idx + dir] ?? null;
-  const candidates = POLL_LADDER_MS.filter((v) => (dir === -1 ? v < current : v > current));
-  return candidates.length
-    ? dir === -1
-      ? candidates[candidates.length - 1]
-      : candidates[0]
-    : null;
-}
+ *  Bundled by scripts/bundle-renderer.js (esbuild, ESM) and loaded by
+ *  index.html via <script type="module">; shared code comes from src/shared. */
+import type { AutoRunnerBridge } from '../shared/bridge';
+import { type DayCount, type Mode, type StatsSnapshot, stepPoll } from '../shared/types';
 
 declare global {
   interface Window {
-    autoRunner: {
-      getStats: () => Promise<StatsSnapshot>;
-      setMode: (mode: Mode) => void;
-      close: () => void;
-      setPollInterval: (ms: number) => void;
-      captureTemplate: () => void;
-      onStats: (cb: (snap: StatsSnapshot) => void) => void;
-      onModeChanged: (cb: (mode: Mode) => void) => void;
-      onDetectionState: (
-        cb: (state: { windowFound: boolean; watchedKind: 'cursor' | 'rustdesk' | null }) => void
-      ) => void;
-    };
+    autoRunner: AutoRunnerBridge;
   }
 }
 
@@ -72,7 +23,7 @@ function renderBadge(mode: Mode): void {
     mode === 'run' ? 'Auto Run active' : mode === 'always-run' ? 'Auto Always Run active' : 'Idle';
 }
 
-function renderSpark(byDay: { date: string; count: number }[]): void {
+function renderSpark(byDay: DayCount[]): void {
   const svg = $('sparkSvg');
   const labels = $('sparkLabels');
   const W = 340,

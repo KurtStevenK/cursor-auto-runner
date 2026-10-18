@@ -26,7 +26,7 @@ npm run bench:matcher    # worker latency and main-thread heartbeat benchmark
 - `src/main/`: Electron main process (tray, controller, capture window, settings, stats, logging).
 - `src/worker/`: matcher worker thread. Runs NCC template matching off the main thread.
 - `src/shared/`: types and the message protocol shared by main, worker and overlay.
-- `src/overlay/`: the stats window.
+- `src/overlay/`: the stats window. It and the two preloads (`src/main/preload.ts`, `capture-preload.ts`) are bundled by esbuild (`scripts/bundle-renderer.js`) after `tsc`, so they import from `src/shared/` like everything else.
 - `tests/`: `node:test` suites. Fixtures live in `tests/fixtures/`.
 - `scripts/`: diagnostics, benchmarks, template capture and packaging helpers.
 - `packaging/`: Homebrew cask, APT repository, Chocolatey package and Linux/macOS packaging notes.

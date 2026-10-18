@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.102",
+  "version": "1.2.103",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -12,7 +12,7 @@
   },
   "homepage": "https://github.com/KurtStevenK/cursor-auto-runner#readme",
   "scripts": {
-    "compile": "tsc -p tsconfig.json && tsc -p tsconfig.overlay.json && node scripts/copy-overlay-assets.js",
+    "compile": "tsc -p tsconfig.json && tsc -p tsconfig.renderer.json && node scripts/bundle-renderer.js && node scripts/copy-overlay-assets.js",
     "start": "npm run compile && electron .",
     "generate:icons": "node scripts/generate-icons.js",
     "capture-templates": "npm run compile && electron dist/scripts/capture-templates.js",
@@ -144,6 +144,7 @@
     "@types/node": "^26.6.4",
     "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
     "jimp": "^1.6.1",
     "typescript": "^7.0.2"
   },

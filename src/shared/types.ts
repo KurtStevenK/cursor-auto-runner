@@ -126,6 +126,14 @@ export const IPC = {
   CAPTURE_TEMPLATE: 'capture-template',
 } as const;
 
+/** IPC channels of the template-capture window (capture.ts <-> capture-preload.ts). */
+export const CAPTURE_IPC = {
+  REGION: 'capture-region',
+  CANCEL: 'capture-cancel',
+  SAVED: 'capture-saved',
+  REJECTED: 'capture-rejected',
+} as const;
+
 /** Adjustable detection refresh interval, ms. Faster = checks more often. */
 export const POLL_LADDER_MS = [150, 300, 500, 700, 1000, 1500, 2500, 4000, 6000];
 
