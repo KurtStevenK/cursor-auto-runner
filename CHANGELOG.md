@@ -7,6 +7,12 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.62] - 2026-10-18
+
+### Fixed
+- **IPC hardening:** the overlay's set-mode message is validated against the known modes before it is applied.
+- **Template capture:** resuming the previous mode after a capture session goes through the same macOS permission check as starting it from the tray.
+
 ## [1.2.61] - 2026-10-18
 
 ### Changed

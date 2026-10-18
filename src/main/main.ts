@@ -176,7 +176,7 @@ app.whenReady().then(() => {
         onDone: () => {
           // Resume what was running before the capture session.
           if (prevMode !== 'idle') {
-            controller.set(prevMode);
+            void applyMode(prevMode);
           }
         },
       }).catch((err) => console.error('[capture] failed:', err));
@@ -202,7 +202,12 @@ app.whenReady().then(() => {
   updates.start();
 
   ipcMain.handle(IPC.GET_STATS, () => currentSnapshot());
-  ipcMain.on(IPC.SET_MODE, (_e, mode: Mode) => {
+  ipcMain.on(IPC.SET_MODE, (_e, mode: unknown) => {
+    // The renderer is untrusted: only known Mode values may reach applyMode.
+    if (mode !== 'idle' && mode !== 'run' && mode !== 'always-run') {
+      console.warn('[ipc] ignored invalid SET_MODE payload:', mode);
+      return;
+    }
     void applyMode(mode);
   });
   ipcMain.on(IPC.CLOSE_OVERLAY, () => overlay?.close());
