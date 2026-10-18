@@ -28,14 +28,19 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           FIREBASE_SERVICE_ACCOUNT_LINUX: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LINUX }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [[ -z "${FIREBASE_TOKEN:-}" && -z "${FIREBASE_SERVICE_ACCOUNT_LINUX:-}" ]]; then
             echo "::notice::Skipping Firebase deploy (set FIREBASE_TOKEN or FIREBASE_SERVICE_ACCOUNT_LINUX with Hosting Admin)"
             exit 0
           fi
+          # package.json is bumped per task and usually runs ahead of the latest
+          # published release, so sync the newest GitHub Release, not the package version.
+          LATEST=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq '.tagName' | sed 's/^v//')
+          echo "Latest published release: ${LATEST:-none}"
           set +e
-          sync_log=$(node scripts/sync-firebase-release-data.js)
+          sync_log=$(node scripts/sync-firebase-release-data.js "$LATEST")
           sync_rc=$?
           set -e
           printf '%s\n' "$sync_log"
