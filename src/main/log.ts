@@ -41,6 +41,20 @@ function rotate(): void {
   size = 0;
 }
 
+/**
+ * Clears the active stream after a write error, but only if the erroring stream
+ * is still the current one. A late 'error' from a previously rotated and closed
+ * stream must not discard the new active stream.
+ */
+export function handleStreamError(erroring: fs.WriteStream | null): void {
+  if (stream === erroring) stream = null;
+}
+
+/** True while a write stream is open for the active log file. */
+export function hasOpenStream(): boolean {
+  return stream !== null;
+}
+
 function openStream(): fs.WriteStream | null {
   if (stream) return stream;
   try {
@@ -51,11 +65,10 @@ function openStream(): fs.WriteStream | null {
       size = 0;
     }
     if (size > MAX_BYTES) rotate();
-    stream = fs.createWriteStream(logFilePath(), { flags: 'a' });
-    stream.on('error', () => {
-      stream = null;
-    });
-    return stream;
+    const created = fs.createWriteStream(logFilePath(), { flags: 'a' });
+    stream = created;
+    created.on('error', () => handleStreamError(created));
+    return created;
   } catch {
     stream = null;
     return null;
@@ -91,8 +104,13 @@ export function installFileLogger(dir: string): void {
       append(level, args);
     };
   }
+  // Trade-off: registering an 'uncaughtException' listener stops Node/Electron from
+  // terminating the process on an uncaught error, and it also suppresses Electron's
+  // default main-process error dialog. These handlers only log, so the app can keep
+  // running in a possibly inconsistent state. The "[fatal]" prefix makes these
+  // entries easy to find in the log file.
   onException = (err) => {
-    console.error('uncaughtException:', err?.stack ? err.stack : err);
+    console.error('[fatal] uncaughtException:', err?.stack ? err.stack : err);
   };
   onRejection = (reason) => {
     console.error(

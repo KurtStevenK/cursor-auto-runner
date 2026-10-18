@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.99] - 2026-10-18
+
+### Fixed
+- **Logging:** a late error from a rotated log stream no longer discards the active stream.
+
 ## [1.2.98] - 2026-10-18
 
 ### Fixed
