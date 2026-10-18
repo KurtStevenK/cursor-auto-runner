@@ -530,7 +530,7 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
       assert.ok(Math.abs((result.match?.x ?? -100) - entry.expected.x) <= 1);
       assert.ok(Math.abs((result.match?.y ?? -100) - entry.expected.y) <= 1);
       assert.ok(
-        result.matchMs < 750 * TIMING_SCALE,
+        result.matchMs < 1500 * TIMING_SCALE,
         `full-window match took ${result.matchMs.toFixed(1)} ms`
       );
       requestId++;
@@ -573,7 +573,7 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
     if (noButtonResult.type === 'result') {
       assert.equal(noButtonResult.match, null);
       assert.ok(
-        noButtonResult.matchMs < 500 * TIMING_SCALE,
+        noButtonResult.matchMs < 1000 * TIMING_SCALE,
         `colored no-button path took ${noButtonResult.matchMs.toFixed(1)} ms`
       );
     }

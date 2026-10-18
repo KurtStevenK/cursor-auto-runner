@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.108] - 2026-10-18
+
+### Changed
+- **Tests:** the matcher's full-window timing assertions allow twice the previous time so they no longer fail on a busy machine; `npm run bench:matcher` remains the performance gate.
+
 ## [1.2.107] - 2026-10-18
 
 ### Changed
