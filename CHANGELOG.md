@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.112] - 2026-10-18
+
+### Changed
+- **Landing pages:** the Firebase page is the canonical download page; the GitHub Pages landing links to it and declares it canonical.
+
 ## [1.2.111] - 2026-10-18
 
 ### Added
