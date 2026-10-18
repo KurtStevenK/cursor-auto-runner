@@ -201,9 +201,15 @@ function openOverlay(): void {
   });
 }
 
+let applyModeSeq = 0;
+
 async function applyMode(mode: Mode): Promise<void> {
+  const seq = ++applyModeSeq;
   if (mode !== 'idle') {
     const ok = await ensureMacPermissions();
+    // A newer request (e.g. Stop) or a screen lock arrived during the await:
+    // do not override it.
+    if (seq !== applyModeSeq || screenLocked) return;
     if (!ok) {
       controller.set('idle');
       return;
@@ -257,6 +263,7 @@ function onHealthChange(): void {
 /** Start the template capture flow (tray menu and overlay button). */
 /** Switch to idle without recording it as the user's last mode. */
 function setIdleTransient(): void {
+  applyModeSeq++; // invalidate any applyMode still awaiting permissions
   suppressModePersist = true;
   try {
     controller.set('idle');

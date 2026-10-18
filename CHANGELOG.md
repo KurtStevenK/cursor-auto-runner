@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.95] - 2026-10-18
+
+### Fixed
+- A Stop, screen lock or suspend that arrives while the macOS permission check is still pending is no longer overridden when the check finishes.
+
 ## [1.2.94] - 2026-10-18
 
 ### Fixed
