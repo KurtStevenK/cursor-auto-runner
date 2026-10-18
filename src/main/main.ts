@@ -383,6 +383,7 @@ app.whenReady().then(() => {
   });
   setButtonTestListener(() => detector.invalidateWindowCache());
   updates = new UpdateController({
+    getAutoCheck: () => settings.get().autoCheckUpdates,
     getAutoInstall: () => settings.get().installUpdatesWithHomebrew,
     setAutoInstall: (value) => settings.set({ installUpdatesWithHomebrew: value }),
     onChange: () => tray?.rebuild(),

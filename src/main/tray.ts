@@ -176,6 +176,12 @@ export class TrayUI {
           checked: s.pauseWhileTyping,
           click: (item) => this.cb.updateSettings({ pauseWhileTyping: Boolean(item.checked) }),
         },
+        {
+          label: 'Check for updates automatically',
+          type: 'checkbox',
+          checked: s.autoCheckUpdates,
+          click: (item) => this.cb.updateSettings({ autoCheckUpdates: Boolean(item.checked) }),
+        },
         { label: 'Show welcome…', click: () => this.cb.showWelcome?.() },
         {
           label: 'Keep stats window on top',

@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.88",
+  "version": "1.2.89",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -120,11 +120,19 @@
       ],
       "icon": "assets/icons",
       "category": "Utility"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "KurtStevenK",
+        "repo": "cursor-auto-runner"
+      }
+    ]
   },
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
-    "better-sqlite3": "^13.0.3"
+    "better-sqlite3": "^13.0.3",
+    "electron-updater": "^6.8.9"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

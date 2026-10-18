@@ -7,6 +7,15 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.89] - 2026-10-18
+
+### Added
+- In-app updates on Windows and macOS (non-Homebrew installs) through electron-updater: "Download update", live "Downloading NN%" in the tray menu, then "Restart now / Later". Release builds now publish `latest.yml` and `latest-mac.yml`. Homebrew installs keep the cask upgrade; Linux keeps the release-page notification.
+- Settings checkbox "Check for updates automatically" (on by default) to switch off the check after launch.
+
+### Changed
+- The GitHub API fallback sends `If-None-Match` and treats a 304 as "no change".
+
 ## [1.2.88] - 2026-10-18
 
 ### Changed

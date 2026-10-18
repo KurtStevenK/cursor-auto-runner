@@ -58,6 +58,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     lastMode: MODES.includes(r.lastMode as Mode) ? (r.lastMode as Mode) : d.lastMode,
     installUpdatesWithHomebrew:
       typeof r.installUpdatesWithHomebrew === 'boolean' ? r.installUpdatesWithHomebrew : d.installUpdatesWithHomebrew,
+    autoCheckUpdates: typeof r.autoCheckUpdates === 'boolean' ? r.autoCheckUpdates : d.autoCheckUpdates,
     launchAtLogin: typeof r.launchAtLogin === 'boolean' ? r.launchAtLogin : d.launchAtLogin,
     toggleShortcut: (SHORTCUT_CHOICES as readonly unknown[]).includes(r.toggleShortcut)
       ? (r.toggleShortcut as string)

@@ -35,3 +35,17 @@ export function caskroomForBrew(brewPath: string): string {
   const prefix = brewPath.replace(/\/bin\/brew$/, '');
   return `${prefix}/Caskroom/${CASK_NAME}`;
 }
+
+export type UpdateChannel = 'brew' | 'electron-updater' | 'github-page';
+
+/** Which update mechanism applies: Homebrew cask, electron-updater (NSIS / macOS), or the release page. */
+export function updateChannelFor(input: {
+  platform: string;
+  isPackaged: boolean;
+  brewCask: boolean;
+}): UpdateChannel {
+  if (!input.isPackaged) return 'github-page';
+  if (input.platform === 'darwin' && input.brewCask) return 'brew';
+  if (input.platform === 'win32' || input.platform === 'darwin') return 'electron-updater';
+  return 'github-page';
+}

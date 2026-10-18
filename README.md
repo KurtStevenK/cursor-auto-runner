@@ -55,6 +55,7 @@
 - **Allow / Approve buttons** — permission and tool-call approvals are clicked too, at any position, in both modes. Cursor has used different labels for this button over time (*Allow*, *Approve*); matching is image-based, so captured variants cover them.
 - **Repeat clicks** — if a button stays visible after clicking (first click only focused the window, or Cursor asks again), the app clicks it again automatically.
 - **Adjustable refresh interval** — set how often the screen is checked from the tray menu (*Faster* / *Slower*); the current value is shown right in the menu.
+- **Updates** — Windows and macOS installs update in place (download, then *Restart now*); Homebrew installs upgrade the cask; Linux shows a notification with the release page. *Settings → Check for updates automatically* turns the launch-time check off.
 - **Settings submenu** — *Start at login*, *Restore last mode on launch*, match *Confidence* (0.80–0.95) and *Click cooldown* (0.5–5 s) are changeable from the tray menu and apply immediately.
 - **Global shortcut** — optionally toggle auto-run on and off from anywhere (*Settings → Keyboard shortcut*: Ctrl/Cmd+Alt+R, Ctrl/Cmd+Shift+R or Ctrl/Cmd+Alt+Shift+R). It switches between *Stop* and the last mode you used.
 - **Focus and typing guards** — *Pause while I am typing* skips a click (and retries on the next check) while you are using the mouse or keyboard; *Focus Cursor before clicking* can be turned off to stop the app bringing Cursor to the front.
@@ -202,7 +203,8 @@ The app appears in your system tray. Right-click the tray icon:
 | **Open templates folder** | Opens the folder where captured templates are stored |
 | **Stats…** | Opens the live stats overlay |
 | **Test buttons…** | Opens a window with the Run, Always Run, and Allow images so you can confirm clicks without waiting for a Cursor prompt |
-| **Check for updates…** | Compares this install with the latest GitHub Release |
+| **Check for updates…** | Windows and macOS (not Homebrew): downloads the signed update in the app and offers *Restart now / Later*. Homebrew installs and Linux compare against the latest GitHub Release |
+| **Settings → Check for updates automatically** | On by default: one check a few seconds after launch. Turn it off to contact GitHub only when you choose *Check for updates…* |
 | **Install updates with Homebrew** | When checked, a newer release upgrades the cask in the background (`brew upgrade --cask cursor-auto-runner`). The app quits when the new version is ready |
 | **Quit** | Exits the app |
 
@@ -245,6 +247,7 @@ When the app detects Wayland (`XDG_SESSION_TYPE=wayland`, or `WAYLAND_DISPLAY` s
 | Symptom | Fix |
 |---|---|
 | Nothing is clicked | Capture templates for your theme (`npm run capture-templates`) |
+| **Update did not install** | Windows and macOS installs update themselves through the tray menu (*Download update*, then *Restart to install*); a Homebrew install uses `brew upgrade --cask cursor-auto-runner` instead. Linux shows the release page. Details are in the log folder. |
 | **„Damaged“ / can’t be opened** after Homebrew (macOS) | The DMG was signed but not notarized, or CI stopped on `notarytool` HTTP 401. Regenerate the app-specific password and ship a new tag — [packaging/mac/README.md](packaging/mac/README.md). |
 | **Permissions dialog every time** you start Auto Run (toggles already ON) | Upgrade to **v1.2.25+**. If it persists: quit the app, **remove** Cursor Auto Runner from Screen Recording and Accessibility, reopen from `/Applications`, enable both again, then use **Try again** in the dialog. Common after Homebrew upgrades while the DMG is ad-hoc signed. |
 | Watching the Cursor window but **0 clicks** on macOS | Grant Screen Recording and Accessibility to **Cursor Auto Runner** (not Cursor IDE). Upgrade to the latest build, then re-capture dark-theme Run / Always Run if the UI changed. Run `CURSOR_AUTO_RUNNER_DEBUG_DETECT=1` from Terminal to see match diagnostics. |

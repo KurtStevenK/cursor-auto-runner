@@ -49,6 +49,8 @@ export interface Settings {
   lastMode: Mode;
   /** macOS Homebrew cask: install a newer GitHub Release in the background. */
   installUpdatesWithHomebrew: boolean;
+  /** Check GitHub for a newer release shortly after launch. */
+  autoCheckUpdates: boolean;
   /** Start the app when the user logs in. */
   launchAtLogin: boolean;
   /** Electron accelerator for the global start/stop shortcut; '' = disabled. */
@@ -86,6 +88,7 @@ export const DEFAULT_SETTINGS: Settings = {
   restoreLastMode: false,
   lastMode: 'idle',
   installUpdatesWithHomebrew: true,
+  autoCheckUpdates: true,
   launchAtLogin: false,
   toggleShortcut: '',
   focusCursorBeforeClick: true,
