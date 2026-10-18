@@ -41,6 +41,8 @@ let shot: { image: Electron.NativeImage; scaleFactor: number } | null = null;
 let target: { name: CaptureName; theme: CaptureTheme } | null = null;
 let callbacks: CaptureCallbacks = {};
 let handlersRegistered = false;
+// Set by stopCapture (app quit): do not resume the previous mode.
+let stopping = false;
 
 const html = (buttonName: string) => `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
@@ -158,9 +160,10 @@ function registerHandlers(): void {
     callbacks.onSaved?.(file);
     activeWin?.webContents.send('capture-saved', path.basename(file));
   });
-  ipcMain.on('capture-cancel', () => {
-    callbacks.onDone?.();
-    activeWin?.close();
+  ipcMain.on('capture-cancel', (e) => {
+    if (!activeWin || e.sender !== activeWin.webContents) return;
+    // onDone fires from the window's 'closed' event (see startCapture).
+    activeWin.close();
   });
 }
 
@@ -186,11 +189,37 @@ export async function startCapture(
   cb: CaptureCallbacks = {}
 ): Promise<void> {
   registerHandlers();
+  stopping = false;
   callbacks = cb;
   target = { name, theme };
-  await captureScreen();
-  if (!shot) throw new Error('screen capture failed');
+  // onDone fires exactly once per session, whichever way it ends: ESC,
+  // Cmd+W / Alt+F4, being replaced by a newer capture, or a setup failure.
+  let done = false;
+  const finish = (): void => {
+    if (done) return;
+    done = true;
+    // A newer session may already own `callbacks`; only clear our own.
+    if (callbacks === cb) callbacks = {};
+    if (!stopping) cb.onDone?.();
+  };
+  let win: BrowserWindow | null = null;
+  try {
+    await captureScreen();
+    if (!shot) throw new Error('screen capture failed');
+    win = await openCaptureWindow(name, finish);
+  } catch (err) {
+    try {
+      if (win && !win.isDestroyed()) win.close();
+    } catch {
+      /* already gone */
+    }
+    finish();
+    throw err;
+  }
+}
 
+async function openCaptureWindow(name: CaptureName, finish: () => void): Promise<BrowserWindow> {
+  if (!shot) throw new Error('screen capture failed');
   const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
   activeWin?.close();
   activeWin = new BrowserWindow({
@@ -211,23 +240,27 @@ export async function startCapture(
       preload: path.join(__dirname, 'capture-preload.js'),
     },
   });
-  activeWin.on('closed', () => {
-    activeWin = null;
+  const win = activeWin;
+  win.on('closed', () => {
+    if (activeWin === win) activeWin = null;
+    finish();
   });
   // Freeze the screen behind the selection UI. The page is loaded from a
   // small data: URL (no temp files); the screenshot is injected afterwards as
   // a data: URL, since a multi-MB data URL exceeds Chromium's navigation limit.
-  const win = activeWin;
   await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html(name)));
   const dataUrl = 'data:image/png;base64,' + shot.image.toPNG().toString('base64');
   await win.webContents.executeJavaScript(
     `document.getElementById('shot').src = ${JSON.stringify(dataUrl)};`
   );
-  activeWin.show();
+  if (win.isDestroyed()) throw new Error('capture window closed during setup');
+  win.show();
+  return win;
 }
 
 /** Finish any running capture session (used by tray Quit). */
 export function stopCapture(): void {
+  stopping = true;
   activeWin?.close();
   activeWin = null;
 }

@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.93] - 2026-10-18
+
+### Fixed
+- Template capture now always restores the previous mode: the pause is released when the capture window closes for any reason (ESC, Cmd+W / Alt+F4, replaced by a second capture, or a setup failure), exactly once.
+
 ## [1.2.92] - 2026-10-18
 
 ### Changed

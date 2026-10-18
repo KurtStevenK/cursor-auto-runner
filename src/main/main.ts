@@ -295,13 +295,23 @@ async function showWelcome(): Promise<void> {
   }
 }
 
+let activeCaptures = 0;
+let captureResumeMode: Mode = 'idle';
+
 function startTemplateCapture(name: 'run' | 'always-run' | 'allow', theme: 'dark' | 'light'): void {
   // Pause the auto-clicker while the screen is frozen for capture.
-  const prevMode = controller.current;
+  // A second capture may start while one is open: remember the mode from
+  // before the FIRST one and resume only when the last session is done.
+  if (activeCaptures === 0) captureResumeMode = controller.current;
+  activeCaptures++;
   setIdleTransient();
   void startCapture(name, theme, {
     onSaved: () => detector.resetTemplates(),
     onDone: () => {
+      activeCaptures = Math.max(0, activeCaptures - 1);
+      if (activeCaptures > 0) return;
+      const prevMode = captureResumeMode;
+      captureResumeMode = 'idle';
       // Resume what was running before the capture session.
       if (prevMode !== 'idle') {
         void applyMode(prevMode);
