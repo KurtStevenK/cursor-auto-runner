@@ -4,7 +4,7 @@
  */
 import { app, BrowserWindow, Menu, nativeImage, Tray, MenuItemConstructorOptions } from 'electron';
 import * as path from 'path';
-import { Mode, IPC, Settings, stepPoll } from '../shared/types';
+import { Mode, IPC, Settings, SHORTCUT_CHOICES, stepPoll } from '../shared/types';
 
 export type TrayCallbacks = {
   getMode: () => Mode;
@@ -177,6 +177,15 @@ export class TrayUI {
             type: 'radio' as const,
             checked: s.cooldownMs === ms,
             click: () => this.cb.updateSettings({ cooldownMs: ms }),
+          })),
+        },
+        {
+          label: 'Keyboard shortcut',
+          submenu: SHORTCUT_CHOICES.map((acc) => ({
+            label: acc === '' ? 'Off' : acc.replace('CommandOrControl', process.platform === 'darwin' ? 'Cmd' : 'Ctrl'),
+            type: 'radio' as const,
+            checked: s.toggleShortcut === acc,
+            click: () => this.cb.updateSettings({ toggleShortcut: acc }),
           })),
         },
       ],

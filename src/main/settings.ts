@@ -1,7 +1,7 @@
 /** Settings: JSON config persisted in userData. */
 import * as path from 'path';
 import * as fs from 'fs';
-import { Settings, DEFAULT_SETTINGS, Mode } from '../shared/types';
+import { Settings, DEFAULT_SETTINGS, Mode, SHORTCUT_CHOICES } from '../shared/types';
 
 function defaultUserDataDir(): string {
   // Lazy so this module can be loaded under plain Node (tests).
@@ -30,6 +30,9 @@ export function sanitizeSettings(raw: unknown): Settings {
     installUpdatesWithHomebrew:
       typeof r.installUpdatesWithHomebrew === 'boolean' ? r.installUpdatesWithHomebrew : d.installUpdatesWithHomebrew,
     launchAtLogin: typeof r.launchAtLogin === 'boolean' ? r.launchAtLogin : d.launchAtLogin,
+    toggleShortcut: (SHORTCUT_CHOICES as readonly unknown[]).includes(r.toggleShortcut)
+      ? (r.toggleShortcut as string)
+      : d.toggleShortcut,
   };
 }
 

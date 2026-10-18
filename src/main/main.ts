@@ -2,7 +2,7 @@
  * Cursor Auto Runner — main process entry point.
  * Wires tray, mode controller, detector, stats store and overlay window.
  */
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, Notification, shell } from 'electron';
 import * as path from 'path';
 import { Detector } from './detector';
 import { ModeController } from './controller';
@@ -14,7 +14,7 @@ import { setButtonTestListener, showButtonTest } from './button-test';
 import { UpdateController } from './updates';
 import { startCapture, stopCapture, templatesBaseDir } from './capture';
 import * as fs from 'fs';
-import { IPC, Mode, Settings, StatsSnapshot, DEFAULT_SETTINGS } from '../shared/types';
+import { IPC, Mode, Settings, StatsSnapshot, DEFAULT_SETTINGS, nextToggleMode } from '../shared/types';
 import { installFileLogger, logDirectory } from './log';
 import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
 
@@ -42,6 +42,8 @@ let lastStatsSentAt = 0;
 let lastWindowFound: boolean | null = null;
 let lastWatchedKind: string | null = null;
 let quitCleanupStarted = false;
+let lastActiveMode: Mode = 'run';
+let registeredShortcut = '';
 
 function currentSnapshot(): StatsSnapshot {
   const snap = stats.snapshot(controller.current);
@@ -140,7 +142,37 @@ function applySettings(patch: Partial<Settings>): void {
   if (patch.confidence !== undefined) controller.setConfidence(s.confidence);
   if (patch.cooldownMs !== undefined) controller.setCooldown(s.cooldownMs);
   if (patch.launchAtLogin !== undefined) applyLoginItem(s.launchAtLogin);
+  if (patch.toggleShortcut !== undefined) registerToggleShortcut(s.toggleShortcut);
   tray?.rebuild();
+}
+
+function registerToggleShortcut(accelerator: string): void {
+  if (registeredShortcut) {
+    globalShortcut.unregister(registeredShortcut);
+    registeredShortcut = '';
+  }
+  if (!accelerator) return;
+  let ok = false;
+  try {
+    ok = globalShortcut.register(accelerator, () => {
+      void applyMode(nextToggleMode(controller.current, lastActiveMode));
+    });
+  } catch (err) {
+    console.error('[shortcut] register threw:', err);
+  }
+  if (ok) {
+    registeredShortcut = accelerator;
+    return;
+  }
+  console.error(`[shortcut] could not register ${accelerator} (already in use?)`);
+  try {
+    new Notification({
+      title: 'Cursor Auto Runner',
+      body: `The shortcut ${accelerator} could not be registered; another app may be using it.`,
+    }).show();
+  } catch {
+    /* notifications are best effort */
+  }
 }
 
 function applyLoginItem(openAtLogin: boolean): void {
@@ -167,6 +199,7 @@ app.whenReady().then(() => {
       cooldownMs: settings.get().cooldownMs,
     },
     (mode) => {
+      if (mode !== 'idle') lastActiveMode = mode;
       settings.set({ lastMode: mode });
       tray?.rebuild();
       sendStats(true);
@@ -254,6 +287,8 @@ app.whenReady().then(() => {
     console.error('[settings] getLoginItemSettings failed:', err);
   }
 
+  registerToggleShortcut(s.toggleShortcut);
+
   // Optionally restore the last used mode on launch.
   if (s.restoreLastMode && s.lastMode !== 'idle') {
     void applyMode(s.lastMode);
@@ -267,6 +302,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', (event) => {
   if (quitCleanupStarted) return;
   quitCleanupStarted = true;
+  globalShortcut.unregisterAll();
   event.preventDefault();
   if (statsTimer) clearTimeout(statsTimer);
   statsTimer = null;

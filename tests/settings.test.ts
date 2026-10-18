@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { SettingsStore, sanitizeSettings } from '../src/main/settings';
-import { DEFAULT_SETTINGS } from '../src/shared/types';
+import { DEFAULT_SETTINGS, nextToggleMode } from '../src/shared/types';
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'car-settings-'));
 
@@ -56,4 +56,18 @@ test('launchAtLogin defaults to false and only accepts booleans', () => {
   assert.equal(DEFAULT_SETTINGS.launchAtLogin, false);
   assert.equal(sanitizeSettings({ launchAtLogin: true }).launchAtLogin, true);
   assert.equal(sanitizeSettings({ launchAtLogin: 'yes' }).launchAtLogin, false);
+});
+
+test('toggleShortcut only accepts the offered accelerators', () => {
+  assert.equal(DEFAULT_SETTINGS.toggleShortcut, '');
+  assert.equal(sanitizeSettings({ toggleShortcut: 'CommandOrControl+Alt+R' }).toggleShortcut, 'CommandOrControl+Alt+R');
+  assert.equal(sanitizeSettings({ toggleShortcut: 'Ctrl+Q' }).toggleShortcut, '');
+  assert.equal(sanitizeSettings({ toggleShortcut: 5 }).toggleShortcut, '');
+});
+
+test('nextToggleMode toggles between idle and the last active mode', () => {
+  assert.equal(nextToggleMode('run', 'run'), 'idle');
+  assert.equal(nextToggleMode('always-run', 'always-run'), 'idle');
+  assert.equal(nextToggleMode('idle', 'always-run'), 'always-run');
+  assert.equal(nextToggleMode('idle', 'idle'), 'run');
 });

@@ -39,6 +39,8 @@ export interface Settings {
   installUpdatesWithHomebrew: boolean;
   /** Start the app when the user logs in. */
   launchAtLogin: boolean;
+  /** Electron accelerator for the global start/stop shortcut; '' = disabled. */
+  toggleShortcut: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -49,7 +51,25 @@ export const DEFAULT_SETTINGS: Settings = {
   lastMode: 'idle',
   installUpdatesWithHomebrew: true,
   launchAtLogin: false,
+  toggleShortcut: '',
 };
+
+/** Accelerators offered in the tray menu ('' = off). Anything else is rejected. */
+export const SHORTCUT_CHOICES = [
+  '',
+  'CommandOrControl+Alt+R',
+  'CommandOrControl+Shift+R',
+  'CommandOrControl+Alt+Shift+R',
+] as const;
+
+/**
+ * Mode the global shortcut switches to: idle -> the last non-idle mode
+ * (default 'run'), any running mode -> idle.
+ */
+export function nextToggleMode(current: Mode, lastActive: Mode): Mode {
+  if (current !== 'idle') return 'idle';
+  return lastActive === 'idle' ? 'run' : lastActive;
+}
 
 export const IPC = {
   SET_MODE: 'set-mode',

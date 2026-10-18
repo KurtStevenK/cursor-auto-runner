@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.77] - 2026-10-18
+
+### Added
+- **Global shortcut:** *Settings → Keyboard shortcut* in the tray menu can register `Ctrl/Cmd+Alt+R`, `Ctrl/Cmd+Shift+R` or `Ctrl/Cmd+Alt+Shift+R` (off by default) to toggle between *Stop* and the last mode you used. If the shortcut is already taken by another app, a notification tells you.
+
 ## [1.2.76] - 2026-10-18
 
 ### Added
