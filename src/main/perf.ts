@@ -11,6 +11,7 @@ export interface DetectionMetrics {
   displayCount: number;
   cropCount: number;
   sourceMissCount: number;
+  skippedUnchanged: number;
   workerHeapBytes: number;
   cancelled: boolean;
 }

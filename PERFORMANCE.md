@@ -125,3 +125,7 @@ For live event-loop and phase logging:
 $env:CURSOR_AUTO_RUNNER_PERF = "1"
 npm start
 ```
+
+## Unchanged-screen skip
+
+Before matching, each captured crop is hashed (sampled FNV-1a); a crop whose hash equals that of the previous pass, which was a miss, is not sent to the matcher worker, and the count is reported as `skippedUnchanged` in the perf metrics.

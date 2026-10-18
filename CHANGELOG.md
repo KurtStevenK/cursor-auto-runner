@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.69] - 2026-10-18
+
+### Changed
+- **CPU usage:** when a watched window's pixels have not changed since the last miss, the matcher pass is skipped. Idle polling at short intervals now costs almost nothing.
+
 ## [1.2.68] - 2026-10-18
 
 ### Added

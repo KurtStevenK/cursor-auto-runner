@@ -36,6 +36,7 @@ import {
   perfNow,
   reportDetectionMetrics,
 } from './perf';
+import { hashBgra } from '../shared/crop-hash';
 
 interface WindowInfo {
   left: number;
@@ -89,6 +90,7 @@ const EMPTY_METRICS: DetectionMetrics = {
   displayCount: 0,
   cropCount: 0,
   sourceMissCount: 0,
+  skippedUnchanged: 0,
   workerHeapBytes: 0,
   cancelled: false,
 };
@@ -149,6 +151,9 @@ export class Detector {
   private disposing = false;
 
   windowFound = false;
+  /** Per-crop hash of the last pass that produced a miss (unchanged-screen skip). */
+  private missHashes = new Map<string, { hash: number; lastMissAt: number }>();
+  private lastDetectParams: { mode: ClickMode; confidence: number } | null = null;
   watchedKind: WatchKind | null = null;
   lastMetrics: DetectionMetrics = { ...EMPTY_METRICS };
 
@@ -320,6 +325,7 @@ export class Detector {
     this.loadAttempted = false;
     this.templateCount = 0;
     this.totalVariantCount = 0;
+    this.missHashes.clear();
   }
 
   cancelPending(): void {
@@ -336,6 +342,7 @@ export class Detector {
   /** Drop the short window cache so a just-opened test window is seen immediately. */
   invalidateWindowCache(): void {
     this.windowCache = null;
+    this.missHashes.clear();
   }
 
   /** Find all Cursor windows, caching the native enumeration briefly. */
@@ -720,11 +727,54 @@ export class Detector {
       }
       if (crops.length === 0) return null;
 
+      if (
+        !this.lastDetectParams ||
+        this.lastDetectParams.mode !== mode ||
+        this.lastDetectParams.confidence !== confidence
+      ) {
+        this.missHashes.clear();
+        this.lastDetectParams = { mode, confidence };
+      }
+      // Hash before the buffers are transferred (and detached) to the worker.
+      const hashes = new Map<number, { key: string; hash: number }>();
+      const toMatch: CropContext[] = [];
+      let cropsDropped = 0;
+      for (const crop of crops) {
+        const key = `${crop.windowKey}\0${crop.cropX}\0${crop.cropY}`;
+        const hash = hashBgra(new Uint8Array(crop.payload.bgra), crop.payload.width, crop.payload.height);
+        hashes.set(crop.id, { key, hash });
+        const previous = this.missHashes.get(key);
+        if (previous && previous.hash === hash) {
+          cropsDropped++;
+        } else {
+          toMatch.push(crop);
+        }
+      }
+      metrics.skippedUnchanged = cropsDropped;
+      if (toMatch.length === 0) return null;
+      crops = toMatch;
+
       const response = await this.matcher.match(
         mode,
         confidence,
         crops.map((crop) => crop.payload)
       );
+      if (response.cancelled || cancelled()) {
+        for (const crop of crops) this.missHashes.delete(hashes.get(crop.id)!.key);
+      } else if (response.match) {
+        const matched = crops.find((candidate) => candidate.id === response.match!.cropId);
+        const prefix = matched ? `${matched.windowKey}\0` : null;
+        for (const key of [...this.missHashes.keys()]) {
+          if (prefix && key.startsWith(prefix)) this.missHashes.delete(key);
+        }
+        for (const crop of crops) this.missHashes.delete(hashes.get(crop.id)!.key);
+      } else {
+        const now = Date.now();
+        for (const crop of crops) {
+          const entry = hashes.get(crop.id)!;
+          this.missHashes.set(entry.key, { hash: entry.hash, lastMissAt: now });
+        }
+      }
       metrics.matchMs = response.matchMs;
       metrics.variantCount = response.variantCount;
       metrics.workerHeapBytes = response.workerHeapBytes;
