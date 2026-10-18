@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.107] - 2026-10-18
+
+### Changed
+- **Stability:** the quit handler is a small tested guard. The first quit request runs cleanup (with a 5 s cap on native disposal) and then quits; re-entrant quit requests, such as the one `quitAndInstall()` issues after downloading an update, pass straight through so an update can never be blocked by cleanup.
+
 ## [1.2.106] - 2026-10-18
 
 ### Fixed

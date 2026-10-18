@@ -40,6 +40,7 @@ import {
 import { isWaylandSession, WAYLAND_NOTICE } from './platform-notes';
 import { installFileLogger, logDirectory } from './log';
 import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
+import { createQuitGuard } from './quit-guard';
 
 // Ensure a clean tray/app identity on Windows
 app.setAppUserModelId('com.kurtstevenk.cursor-auto-runner');
@@ -64,7 +65,6 @@ let statsTimer: NodeJS.Timeout | null = null;
 let lastStatsSentAt = 0;
 let lastWindowFound: boolean | null = null;
 let lastWatchedKind: string | null = null;
-let quitCleanupStarted = false;
 let lastActiveMode: Mode = 'run';
 let registeredShortcut = '';
 let modeBeforeSleep: Mode | null = null;
@@ -539,20 +539,24 @@ app.on('second-instance', openOverlay);
 app.on('window-all-closed', () => {
   // Keep running in the tray.
 });
-app.on('before-quit', (event) => {
-  if (quitCleanupStarted) return;
-  quitCleanupStarted = true;
-  globalShortcut.unregisterAll();
-  event.preventDefault();
-  if (statsTimer) clearTimeout(statsTimer);
-  statsTimer = null;
-  stopPerformanceMonitor();
-  stopCapture();
-  if (controller) {
-    suppressModePersist = true; // keep lastMode so "restore last mode" works after quit
-    controller.set('idle');
-  }
-  stats?.dispose();
-  tray?.destroy();
-  void Promise.resolve(detector?.dispose()).finally(() => app.quit());
-});
+// Guarded so a re-entrant before-quit (from app.quit(), including quitAndInstall) never re-runs cleanup.
+app.on(
+  'before-quit',
+  createQuitGuard(
+    async () => {
+      globalShortcut.unregisterAll();
+      if (statsTimer) clearTimeout(statsTimer);
+      statsTimer = null;
+      stopPerformanceMonitor();
+      stopCapture();
+      if (controller) {
+        suppressModePersist = true; // keep lastMode so "restore last mode" works after quit
+        controller.set('idle');
+      }
+      stats?.dispose();
+      tray?.destroy();
+      await detector?.dispose();
+    },
+    () => app.quit()
+  )
+);
