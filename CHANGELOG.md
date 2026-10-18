@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.92] - 2026-10-18
+
+### Changed
+- **Docs:** `IMPROVEMENT-PLAN.md` records the review findings, the roadmap, and which version shipped each item.
+
 ## [1.2.91] - 2026-10-18
 
 ### Added
