@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.115] - 2026-10-18
+
+### Fixed
+- **Landing page:** when no manifest matches the package version (which is bumped per task), the build now uses the newest published release manifest and shows that version, instead of falling back to a 1.2.28 file.
+
 ## [1.2.114] - 2026-10-18
 
 ### Changed
