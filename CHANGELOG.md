@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.71] - 2026-10-18
+
+### Changed
+- **Tests:** the mode controller is now unit-tested (click, cooldown, repeat-click, stop, error backoff); its detector, clicker and stats dependencies are injectable.
+
 ## [1.2.70] - 2026-10-18
 
 ### Fixed
