@@ -11,9 +11,16 @@ const path = require('path');
 
 app.whenReady().then(() => {
   ipcMain.handle('get-stats', () => ({
-    session: 1, day: 2, week: 3, month: 4, total: 5,
-    byDay: [{ date: '2026-09-29', count: 2 }], mode: 'always-run',
-    since: new Date().toISOString(), windowFound: true, pollIntervalMs: 4000,
+    session: 1,
+    day: 2,
+    week: 3,
+    month: 4,
+    total: 5,
+    byDay: [{ date: '2026-09-29', count: 2 }],
+    mode: 'always-run',
+    since: new Date().toISOString(),
+    windowFound: true,
+    pollIntervalMs: 4000,
   }));
   ipcMain.on('set-mode', () => {});
   ipcMain.on('close-overlay', () => {
@@ -22,7 +29,10 @@ app.whenReady().then(() => {
   });
 
   const win = new BrowserWindow({
-    width: 380, height: 560, show: false, frame: false,
+    width: 380,
+    height: 560,
+    show: false,
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, '..', 'dist', 'src', 'main', 'preload.js'),
       contextIsolation: true,
@@ -43,11 +53,16 @@ app.whenReady().then(() => {
         app.quit();
         return;
       }
-      const snap = await win.webContents.executeJavaScript('window.autoRunner.getStats().then(s => s.total)');
+      const snap = await win.webContents.executeJavaScript(
+        'window.autoRunner.getStats().then(s => s.total)'
+      );
       console.log('>>> getStats().total =', snap);
       await win.webContents.executeJavaScript("document.getElementById('close').click()");
       console.log('>>> clicked #close — waiting for IPC…');
-      setTimeout(() => { console.log('>>> NO close-overlay received — X button BROKEN'); app.quit(); }, 3000);
+      setTimeout(() => {
+        console.log('>>> NO close-overlay received — X button BROKEN');
+        app.quit();
+      }, 3000);
     } catch (e) {
       console.log('>>> TEST ERROR:', e.message);
       app.quit();

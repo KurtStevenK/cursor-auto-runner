@@ -4,11 +4,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   fingerprintDistance,
-  GrayImage,
-  loadTemplate,
+  type GrayImage,
   templateFingerprint,
   validateTemplateDimensions,
 } from '../src/main/matcher';
+import { loadTemplate } from './helpers/load-template';
 import { selectCatalogGroup, type CatalogFile } from '../src/main/template-catalog';
 
 function image(width: number, height: number): GrayImage {
@@ -49,7 +49,9 @@ test('bundled catalog stays small, valid, and complementary', async () => {
       .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
     assert.ok(matching.length >= 1, `${mode} needs a bundled fallback`);
 
-    const images = await Promise.all(matching.map((file) => loadTemplate(path.join(templateDir, file))));
+    const images = await Promise.all(
+      matching.map((file) => loadTemplate(path.join(templateDir, file)))
+    );
     for (const entry of images) {
       assert.equal(validateTemplateDimensions(entry.width, entry.height).valid, true);
     }
@@ -57,11 +59,7 @@ test('bundled catalog stays small, valid, and complementary', async () => {
     const uniqueFingerprints: Uint8Array[] = [];
     for (const entry of images) {
       const fingerprint = templateFingerprint(entry);
-      if (
-        uniqueFingerprints.every(
-          (accepted) => fingerprintDistance(accepted, fingerprint) > 8
-        )
-      ) {
+      if (uniqueFingerprints.every((accepted) => fingerprintDistance(accepted, fingerprint) > 8)) {
         uniqueFingerprints.push(fingerprint);
       }
     }

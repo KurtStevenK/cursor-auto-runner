@@ -21,6 +21,7 @@ See [`.gitignore`](.gitignore) for the full ignore list.
 | `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | macOS Developer ID sign + notarize | [packaging/mac/README.md](packaging/mac/README.md) |
 | `APT_GPG_PRIVATE_KEY`, `APT_GPG_PASSPHRASE`, `TAP_TOKEN` | APT repo + tap push | [packaging/apt/README.md](packaging/apt/README.md) |
 | `FIREBASE_SERVICE_ACCOUNT_LINUX`, `FIREBASE_STORAGE_BUCKET` | Linux release mirror | [packaging/linux/firebase/README.md](packaging/linux/firebase/README.md) |
+| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TRUSTED_SIGNING_ENDPOINT`, `AZURE_TRUSTED_SIGNING_ACCOUNT`, `AZURE_CERTIFICATE_PROFILE` | Optional Windows code signing (Azure Trusted Signing) | [packaging/windows/README.md](packaging/windows/README.md) |
 | `CHOCOLATEY_API_KEY` | Chocolatey publish | [packaging/chocolatey/README.md](packaging/chocolatey/README.md) |
 | `VIRUSTOTAL_API_KEY` | Optional release artifact scan in CI | [.env.example](.env.example), GitHub Actions secret |
 
@@ -37,6 +38,10 @@ Tagged releases run the same scan in CI when `VIRUSTOTAL_API_KEY` is configured;
 
 1. **Rotate/revoke** the credential immediately (Apple cert, PAT, GPG key, Firebase SA, VirusTotal key, etc.).
 2. Remove the file from history: [GitHub — removing sensitive data](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
+
+## Known advisories in dependencies
+
+`npm audit --omit=dev` reports moderate advisories (GHSA-5v7r-6r5c-r473, an infinite loop in `file-type` on malformed input) through `@nut-tree-fork/nut-js`, which pins `jimp` 0.22.x. Cursor Auto Runner only uses nut.js for mouse, window-listing and focus calls and never decodes images through it, so the vulnerable parser is not reached. Overriding `jimp` to 1.x would break nut.js's own image code at runtime, so no override is applied. We track upstream nut.js releases and will update when one moves to a patched `jimp`.
 
 ## Reporting vulnerabilities
 

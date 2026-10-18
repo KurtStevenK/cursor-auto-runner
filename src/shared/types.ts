@@ -21,7 +21,19 @@ export interface StatsSnapshot {
   since: string; // session start ISO timestamp
   windowFound: boolean; // was a Cursor or RustDesk window detected on the last poll?
   watchedKind: WatchKind | null;
-  pollIntervalMs: number; // current detection refresh interval
+  pollIntervalMs: number; // current detection refresh interval (user setting)
+  effectivePollIntervalMs: number; // interval actually used right now (adaptive)
+  health: DetectionHealth;
+}
+
+export interface DetectionHealth {
+  lastMatchAt: number | null;
+  lastDetectAt: number | null;
+  consecutiveErrors: number;
+  lastError: string | null;
+  templateCount: number;
+  /** Minutes since the last click (or mode start) while a mode is active; null when idle. */
+  missStreakMinutes: number | null;
 }
 
 export interface DetectionState {
@@ -37,7 +49,39 @@ export interface Settings {
   lastMode: Mode;
   /** macOS Homebrew cask: install a newer GitHub Release in the background. */
   installUpdatesWithHomebrew: boolean;
+  /** Check GitHub for a newer release shortly after launch. */
+  autoCheckUpdates: boolean;
+  /** Start the app when the user logs in. */
+  launchAtLogin: boolean;
+  /** Experimental, Windows only: capture each Cursor window at full size instead of display thumbnails. */
+  windowCaptureOnWindows: boolean;
+  /** Electron accelerator for the global start/stop shortcut; '' = disabled. */
+  toggleShortcut: string;
+  /** Bring the Cursor window to the front before each click. */
+  focusCursorBeforeClick: boolean;
+  /** Skip clicks while the user is actively using the mouse or keyboard. */
+  pauseWhileTyping: boolean;
+  /** Keep the stats overlay above other windows. */
+  overlayAlwaysOnTop: boolean;
+  /** App version for which the welcome dialog was last shown ('' = never). */
+  onboardingShownVersion: string;
+  /** The one-time Linux Wayland notice has been shown. */
+  waylandNoticeShown: boolean;
+  /** Last position and size of the stats overlay (absent until moved/resized). */
+  overlayBounds?: OverlayBounds;
 }
+
+export interface OverlayBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export const OVERLAY_MIN_WIDTH = 360;
+export const OVERLAY_MIN_HEIGHT = 520;
+export const OVERLAY_DEFAULT_WIDTH = 400;
+export const OVERLAY_DEFAULT_HEIGHT = 560;
 
 export const DEFAULT_SETTINGS: Settings = {
   pollIntervalMs: 4000,
@@ -46,7 +90,33 @@ export const DEFAULT_SETTINGS: Settings = {
   restoreLastMode: false,
   lastMode: 'idle',
   installUpdatesWithHomebrew: true,
+  autoCheckUpdates: true,
+  launchAtLogin: false,
+  windowCaptureOnWindows: false,
+  toggleShortcut: '',
+  focusCursorBeforeClick: true,
+  pauseWhileTyping: true,
+  overlayAlwaysOnTop: true,
+  onboardingShownVersion: '',
+  waylandNoticeShown: false,
 };
+
+/** Accelerators offered in the tray menu ('' = off). Anything else is rejected. */
+export const SHORTCUT_CHOICES = [
+  '',
+  'CommandOrControl+Alt+R',
+  'CommandOrControl+Alt+Shift+A',
+  'CommandOrControl+Alt+Shift+R',
+] as const;
+
+/**
+ * Mode the global shortcut switches to: idle -> the last non-idle mode
+ * (default 'run'), any running mode -> idle.
+ */
+export function nextToggleMode(current: Mode, lastActive: Mode): Mode {
+  if (current !== 'idle') return 'idle';
+  return lastActive === 'idle' ? 'run' : lastActive;
+}
 
 export const IPC = {
   SET_MODE: 'set-mode',
@@ -56,6 +126,15 @@ export const IPC = {
   DETECTION_STATE: 'detection-state',
   CLOSE_OVERLAY: 'close-overlay',
   SET_POLL_INTERVAL: 'set-poll-interval',
+  CAPTURE_TEMPLATE: 'capture-template',
+} as const;
+
+/** IPC channels of the template-capture window (capture.ts <-> capture-preload.ts). */
+export const CAPTURE_IPC = {
+  REGION: 'capture-region',
+  CANCEL: 'capture-cancel',
+  SAVED: 'capture-saved',
+  REJECTED: 'capture-rejected',
 } as const;
 
 /** Adjustable detection refresh interval, ms. Faster = checks more often. */
@@ -66,5 +145,9 @@ export function stepPoll(current: number, dir: -1 | 1): number | null {
   const idx = POLL_LADDER_MS.indexOf(current);
   if (idx !== -1) return POLL_LADDER_MS[idx + dir] ?? null;
   const candidates = POLL_LADDER_MS.filter((v) => (dir === -1 ? v < current : v > current));
-  return candidates.length ? (dir === -1 ? candidates[candidates.length - 1] : candidates[0]) : null;
+  return candidates.length
+    ? dir === -1
+      ? candidates[candidates.length - 1]
+      : candidates[0]
+    : null;
 }

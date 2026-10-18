@@ -12,11 +12,14 @@ import { startCapture } from '../src/main/capture';
 const name = process.argv.find((a) => a === 'run' || a === 'always-run' || a === 'allow') ?? 'run';
 const theme = process.argv.find((a) => a === 'dark' || a === 'light') ?? 'dark';
 
-app.whenReady().then(async () => {
-  await startCapture(name, theme, {
-    onDone: () => app.exit(0),
+app
+  .whenReady()
+  .then(async () => {
+    await startCapture(name, theme, {
+      onDone: () => app.exit(0),
+    });
+  })
+  .catch((err) => {
+    console.error(err);
+    app.exit(1);
   });
-}).catch((err) => {
-  console.error(err);
-  app.exit(1);
-});

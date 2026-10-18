@@ -19,8 +19,8 @@
   <a href="https://cursor-auto-runner-linux.web.app"><img src="https://img.shields.io/badge/download-Firebase_landing-red" alt="download" /></a>
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="license" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
-  <img src="https://img.shields.io/badge/electron-33-47848f?logo=electron&logoColor=white" alt="electron" />
-  <img src="https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white" alt="node" />
+  <img src="https://img.shields.io/badge/electron-44-47848f?logo=electron&logoColor=white" alt="electron" />
+  <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="node" />
   <a href="https://github.com/KurtStevenK/cursor-auto-runner"><img src="https://img.shields.io/badge/source-open_on_GitHub-181717?logo=github" alt="source" /></a>
 </p>
 
@@ -55,8 +55,17 @@
 - **Allow / Approve buttons** — permission and tool-call approvals are clicked too, at any position, in both modes. Cursor has used different labels for this button over time (*Allow*, *Approve*); matching is image-based, so captured variants cover them.
 - **Repeat clicks** — if a button stays visible after clicking (first click only focused the window, or Cursor asks again), the app clicks it again automatically.
 - **Adjustable refresh interval** — set how often the screen is checked from the tray menu (*Faster* / *Slower*); the current value is shown right in the menu.
+- **Updates** — Windows and macOS installs update in place (download, then *Restart now*); Homebrew installs upgrade the cask; Linux shows a notification with the release page. *Settings → Check for updates automatically* turns the launch-time check off.
+- **Settings submenu** — *Start at login*, *Restore last mode on launch*, match *Confidence* (0.80–0.95) and *Click cooldown* (0.5–5 s) are changeable from the tray menu and apply immediately.
+- **Global shortcut** — optionally toggle auto-run on and off from anywhere (*Settings → Keyboard shortcut*: Ctrl/Cmd+Alt+R, Ctrl/Cmd+Alt+Shift+A or Ctrl/Cmd+Alt+Shift+R). It switches between *Stop* and the last mode you used.
+- **Focus and typing guards** — *Pause while I am typing* skips a click (and retries on the next check) while you are using the mouse or keyboard; *Focus Cursor before clicking* can be turned off to stop the app bringing Cursor to the front.
+- **Adaptive polling** — the refresh interval you set is the baseline; the app checks less often while no Cursor window is visible (at most every 2 s) or you have been away for 5 minutes (every 5 s), and briefly checks faster right after a click. The overlay says when this is in effect.
+- **Lock-screen and sleep pause** — auto-run pauses while the screen is locked or the computer sleeps and resumes in the same mode afterwards.
+- **Detection health** — the stats overlay shows when the last click happened and how many templates are loaded, and warns when the matcher is failing (the tray tooltip adds *matcher retrying* and a notification appears after repeated failures) or when nothing has matched for 10+ minutes, with a *Capture Run template…* shortcut.
+- **First-run welcome** — a short dialog explains what the app does, the macOS permissions and how to start, with a *Start at login* checkbox. It is shown once; reopen it from *Settings → Show welcome…*. The macOS permission dialog now says plainly what is missing and what to click, with diagnostics at the end.
 - **System tray** with a state-colored icon: a **left click toggles the stats overlay**, right click opens the menu: *Start Auto Run*, *Start Auto Always Run*, *Stop*, *Capture templates…*, *Open templates folder*, *Stats…*, *Quit*.
 - **Stats overlay** — a live, frameless mini-window showing clicks for the **session**, **day**, **week**, **month** and **total**, plus a 7-day bar chart. Also shows the current **refresh interval** with *Faster* / *Slower* buttons to change it right there.
+- **Overlay window** — the stats window is resizable, remembers its size and position (and falls back to the screen centre if its display is gone), uses a normal always-on-top level that can be turned off (*Settings → Keep stats window on top*), and follows the system light/dark theme.
 - **Multi-monitor** — the Cursor window is located on whatever display it is on; coordinates are resolved across the whole virtual desktop.
 - **IDE + Agent windows** — all Cursor windows are searched (the main IDE and the agent/chat window place their buttons differently — both are handled).
 - **Multi-theme, multi-scale** — dark/light button reference images, several scale variants to absorb per-display DPI scaling. Duplicate, oversized and excess captures are ignored so matching stays bounded.
@@ -89,7 +98,7 @@ This repository is **public and auditable** (MIT). Installers are built in [GitH
 |---|------------|
 | 1 | **VirusTotal on every release** (when `VIRUSTOTAL_API_KEY` is set in CI) — `Setup.exe`, `.dmg`, `.deb`, and `.AppImage` scanned (~70 engines); detection counts and **report links** (`virustotal.com/gui/file/{sha256}`) in GitHub Release notes |
 | 2 | **Quota-safe VT API use** — Free tier **4 req/min, 500/day**; script paces uploads (~16 s between files); large installers use VT’s `upload_url` path for files **> 32 MB** |
-| 3 | **Electron hardening (stats UI)** — Context isolation, `nodeIntegration: false`, minimal `contextBridge` preload ([`preload.ts`](src/main/preload.ts)); see [SECURITY.md](SECURITY.md) |
+| 3 | **Electron hardening (stats UI)** — Context isolation, `nodeIntegration: false`, minimal `contextBridge` preload ([`preload.ts`](src/main/preload.ts)); see [SECURITY.md](SECURITY.md); release builds also flip Electron fuses (no `ELECTRON_RUN_AS_NODE`, no `NODE_OPTIONS`/`--inspect`, app loads only from a hash-validated ASAR) |
 | 4 | **No arbitrary browsing** — No embedded portal; `shell.openExternal` is used for macOS **System Settings** permission links only |
 | 5 | **Sensitive OS access (by design)** — Screen capture and synthetic clicks need **Screen Recording** (macOS) and normal desktop automation permissions; stats stay in local SQLite under your profile |
 | 6 | **Single-instance lock** — One tray process only |
@@ -106,11 +115,23 @@ This repository is **public and auditable** (MIT). Installers are built in [GitH
 
 > **Note:** macOS DMGs are **Developer ID signed and notarized** when Apple secrets in [packaging/mac/README.md](packaging/mac/README.md) are set on GitHub Actions. Without those secrets the macOS job still publishes an unsigned DMG. Windows Authenticode is not configured. Some AV engines flag new Electron apps heuristically — read the **full** VirusTotal report. Local scans: `npm run scan:virustotal` after `npm run dist` (key in `.env.local`; see [.env.example](.env.example)).
 
+## Privacy
+
+- **Screen captures stay in memory.** Frames of the Cursor window are processed in RAM to find buttons and are never written to disk.
+- **Only deliberate template captures are saved.** Button templates you create via tray → **Capture templates…** are PNG files in the app's user-data folder.
+- **Nothing is uploaded.** Screen content never leaves your computer.
+- **Click statistics are local.** They live in a SQLite database (`stats.db`), or a JSON fallback (`clicks-fallback.json`), in the user-data folder.
+- **Only two kinds of network calls.** The optional update check against GitHub Releases (toggle **Check for updates automatically** in the tray Settings submenu), and `brew upgrade` on macOS Homebrew installs when an update is installed that way.
+- **No analytics or telemetry.** The app does not report usage anywhere.
+- **Logs stay local.** Tray → **Open log folder** opens a local log file that contains no screen content.
+
+Screen Recording is needed to see the Cursor window, and Accessibility is needed to send the clicks; the app cannot work without them on macOS.
+
 ## Getting started
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org) 18+ and npm
+- [Node.js](https://nodejs.org) 22+ and npm
 - The Cursor IDE ([cursor.com](https://cursor.com))
 
 ### Download a release (recommended)
@@ -194,7 +215,8 @@ The app appears in your system tray. Right-click the tray icon:
 | **Open templates folder** | Opens the folder where captured templates are stored |
 | **Stats…** | Opens the live stats overlay |
 | **Test buttons…** | Opens a window with the Run, Always Run, and Allow images so you can confirm clicks without waiting for a Cursor prompt |
-| **Check for updates…** | Compares this install with the latest GitHub Release |
+| **Check for updates…** | Windows and macOS (not Homebrew): downloads the signed update in the app and offers *Restart now / Later*. Homebrew installs and Linux compare against the latest GitHub Release |
+| **Settings → Check for updates automatically** | On by default: one check a few seconds after launch. Turn it off to contact GitHub only when you choose *Check for updates…* |
 | **Install updates with Homebrew** | When checked, a newer release upgrades the cask in the background (`brew upgrade --cask cursor-auto-runner`). The app quits when the new version is ready |
 | **Quit** | Exits the app |
 
@@ -218,18 +240,30 @@ Static landing pages: `landing/` on GitHub Pages (`.github/workflows/pages.yml`)
 
 ## Platform notes
 
-- **Windows** — works out of the box.
+- **Windows** — works out of the box. *Settings → Experimental: per-window capture (Windows)* captures each Cursor window at full size instead of a downscaled display image; it is off by default and untested on 4K displays until someone reports back (use the bug-report form).
 - **macOS** — grant two permissions on first use: *Screen Recording* and *Accessibility* (System Settings → Privacy & Security). The app shows a hint dialog with a direct link when needed.
-- **Linux** — works out of the box (X11; Wayland may restrict synthetic clicks depending on compositor).
+- **Linux** — works out of the box on X11. Under Wayland see the Linux paragraph below.
+
+### Linux (Wayland)
+
+Wayland compositors restrict synthetic input and screen capture (you may get portal prompts, or clicks and screenshots may be blocked entirely, depending on the compositor). An X11 or XWayland session is recommended: choose "… on Xorg" on the login screen, or run `cursor-auto-runner` and Cursor under XWayland. Check which session you are in with:
+
+```bash
+echo $XDG_SESSION_TYPE   # x11 or wayland
+```
+
+When the app detects Wayland (`XDG_SESSION_TYPE=wayland`, or `WAYLAND_DISPLAY` set without `DISPLAY`) it logs a warning and shows a one-time notification.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
 | Nothing is clicked | Capture templates for your theme (`npm run capture-templates`) |
+| **Update did not install** | Windows and macOS installs update themselves through the tray menu (*Download update*, then *Restart to install*); a Homebrew install uses `brew upgrade --cask cursor-auto-runner` instead. Linux shows the release page. The update feeds (`latest.yml`, `latest-mac.yml`) are attached to each GitHub Release; if one is missing, the update check fails. Details are in the log folder. |
 | **„Damaged“ / can’t be opened** after Homebrew (macOS) | The DMG was signed but not notarized, or CI stopped on `notarytool` HTTP 401. Regenerate the app-specific password and ship a new tag — [packaging/mac/README.md](packaging/mac/README.md). |
 | **Permissions dialog every time** you start Auto Run (toggles already ON) | Upgrade to **v1.2.25+**. If it persists: quit the app, **remove** Cursor Auto Runner from Screen Recording and Accessibility, reopen from `/Applications`, enable both again, then use **Try again** in the dialog. Common after Homebrew upgrades while the DMG is ad-hoc signed. |
 | Watching the Cursor window but **0 clicks** on macOS | Grant Screen Recording and Accessibility to **Cursor Auto Runner** (not Cursor IDE). Upgrade to the latest build, then re-capture dark-theme Run / Always Run if the UI changed. Run `CURSOR_AUTO_RUNNER_DEBUG_DETECT=1` from Terminal to see match diagnostics. |
+| Need diagnostics from the packaged app | Logs go to `cursor-auto-runner.log` (macOS: `~/Library/Logs/Cursor Auto Runner/`, Windows: `%APPDATA%\Cursor Auto Runner\logs`, Linux: `~/.config/Cursor Auto Runner/logs`); use **Open log folder** in the tray menu. The previous file is kept as `cursor-auto-runner.1.log`. |
 | Clicks stopped after a Cursor update | Cursor's UI changed — re-capture the templates |
 | "Cursor window not found" in the overlay | Cursor is minimized, or the RustDesk session is not visible — unminimize Cursor or open the remote desktop fullscreen. On macOS the document title (for example FeatherShot) is enough; the app is identified by the Cursor process. Use **Test buttons…** in the tray menu to confirm clicking |
 | Wrong clicks on a scaled monitor | Re-capture templates on that display (multi-scale matching covers common cases) |

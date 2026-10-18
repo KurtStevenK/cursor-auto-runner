@@ -597,3 +597,37 @@
 .footer a:hover {
   text-decoration: underline;
 }
+
+.scene-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 45% at 70% 25%, rgba(139, 123, 255, 0.22), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 25% 70%, rgba(94, 255, 200, 0.14), transparent 70%),
+    var(--void);
+}
+
+.scene-root {
+  z-index: 0;
+}
+
+/* Reveal transitions (replaces framer-motion fades) */
+.reveal {
+  opacity: 0;
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
+}
+.reveal-up { transform: translateY(28px); }
+.reveal-left { transform: translateX(-20px); }
+.reveal-right { transform: translateX(20px); }
+.reveal-scale { transform: scale(0.8); }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+.dl-card.is-visible:hover { transform: translateY(-6px); transition-delay: 0s; transition-duration: 0.2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}

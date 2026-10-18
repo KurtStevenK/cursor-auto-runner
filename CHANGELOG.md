@@ -7,6 +7,309 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.112] - 2026-10-18
+
+### Changed
+- **Landing pages:** the Firebase page is the canonical download page; the GitHub Pages landing links to it and declares it canonical.
+
+## [1.2.111] - 2026-10-18
+
+### Added
+- **Windows code signing (ready to enable):** the release workflow signs the installer with Azure Trusted Signing as soon as the Azure secrets exist, verifies the signature, and refreshes the update-feed hashes afterwards. Unsigned builds are unchanged until then; see `packaging/windows/README.md` for the two signing options.
+
+## [1.2.110] - 2026-10-18
+
+### Added
+- **Experimental (Windows):** a Settings toggle "per-window capture" captures each Cursor window at its native resolution instead of a 1080p-capped display thumbnail, which should help small buttons on 4K displays. Off by default and untested on real 4K hardware; please report results via the bug form.
+
+## [1.2.109] - 2026-10-18
+
+### Changed
+- **Docs:** the improvement plan status records the local validation of the update feed (signed `dist:mac` build), the quit-guard tests, the icon fix and the exact list of items that still need a real release or another machine.
+
+## [1.2.108] - 2026-10-18
+
+### Changed
+- **Tests:** the matcher's full-window timing assertions allow twice the previous time so they no longer fail on a busy machine; `npm run bench:matcher` remains the performance gate.
+
+## [1.2.107] - 2026-10-18
+
+### Changed
+- **Stability:** the quit handler is a small tested guard. The first quit request runs cleanup (with a 5 s cap on native disposal) and then quits; re-entrant quit requests, such as the one `quitAndInstall()` issues after downloading an update, pass straight through so an update can never be blocked by cleanup.
+
+## [1.2.106] - 2026-10-18
+
+### Fixed
+- **macOS app icon:** System Settings → Login Items showed the app as a square of colourful noise. electron-builder's PNG-to-icns conversion produces image streams that the Login Items renderer cannot decode; the app now ships a prebuilt `icon.icns` made with Apple's `sips` and `iconutil` (`scripts/make-mac-icns.sh`), which renders correctly. Finder and Dock were unaffected.
+
+## [1.2.105] - 2026-10-18
+
+### Fixed
+- **CI:** the coverage job no longer fails on slow runners; timing assertions run with a 20× budget under coverage instrumentation, which made the matcher several times slower there. Plain `npm test` budgets are unchanged.
+
+## [1.2.104] - 2026-10-18
+
+### Changed
+- **Docs:** the improvement plan's status table now covers the final-review fixes (1.2.93–1.2.103) and corrects the coverage and bundling notes.
+
+## [1.2.103] - 2026-10-18
+
+### Changed
+
+- Internal: the two sandboxed preloads and the overlay renderer are now bundled with esbuild after `tsc`, so they import the IPC channel names, poll ladder and types from `src/shared/` instead of keeping copies in sync by hand. No behaviour change.
+
+## [1.2.102] - 2026-10-18
+
+### Fixed
+- **Updater:** `latest.yml` and `latest-mac.yml` listed electron-builder's dashed file names, but the published assets use dotted names (`Cursor.Auto.Runner.Setup.<v>.exe`, `Cursor.Auto.Runner-<v>-mac.zip`, ...), so in-app updates would have failed with a 404. A new `scripts/fix-update-feeds.js` step rewrites the `url:` and `path:` entries after each build; checksums and sizes are untouched.
+- **Release:** only `latest*.yml` feed files are uploaded, so `builder-debug.yml` is no longer attached to the public release.
+
+## [1.2.101] - 2026-10-18
+
+### Changed
+- **Packaging:** the cookie-encryption fuse is left off. The app stores no cookies, and enabling it caused keychain or keyring prompts on some systems.
+
+## [1.2.100] - 2026-10-18
+
+### Fixed
+- **CI:** a `.gitattributes` file forces LF line endings on checkout so the Biome format check passes on Windows runners, which default to CRLF.
+
+## [1.2.99] - 2026-10-18
+
+### Fixed
+- **Logging:** a late error from a rotated log stream no longer discards the active stream.
+
+## [1.2.98] - 2026-10-18
+
+### Fixed
+- **Detection:** the unchanged-screen skip re-checks every window at least every 5 s and hashes every pixel of a quarter-scale downsample, so a button appearing in place of a similar element can no longer be skipped indefinitely. Stale entries are pruned.
+
+## [1.2.97] - 2026-10-18
+
+### Fixed
+- **Clicks:** the typing guard no longer treats the app's own click as user activity, so the built-in repeat click works again with "Pause while typing" on. Detection and click failures are counted separately, so a clicker that keeps failing now backs off and raises the health warning.
+
+## [1.2.96] - 2026-10-18
+
+### Changed
+- The overlay's "Capture Run template" button captures the current theme (dark or light) and says which in its label.
+- The keyboard shortcut choice Ctrl/Cmd+Shift+R (which collides with hard-reload and VS Code Refactor) is replaced by Ctrl/Cmd+Alt+Shift+A. Anyone who had picked the old one now has the shortcut off.
+
+### Fixed
+- When the global shortcut cannot be registered, the setting is reset to Off so the menu does not stay checked and the notice does not repeat on every launch.
+- `brew uninstall --zap` also removes the updater caches.
+
+## [1.2.95] - 2026-10-18
+
+### Fixed
+- A Stop, screen lock or suspend that arrives while the macOS permission check is still pending is no longer overridden when the check finishes.
+
+## [1.2.94] - 2026-10-18
+
+### Fixed
+- The first-run welcome dialog only enables "Start at login" when you confirm with "Got it" and the box is checked; dismissing or quitting while it is open changes nothing and no longer registers a login item.
+- The welcome is recorded as shown only after the dialog resolved normally.
+- Users upgrading from versions before the welcome dialog existed no longer see it.
+- "Start at login" is hidden on Linux (login items are not supported there), and the login-item reconcile is skipped.
+
+## [1.2.93] - 2026-10-18
+
+### Fixed
+- Template capture now always restores the previous mode: the pause is released when the capture window closes for any reason (ESC, Cmd+W / Alt+F4, replaced by a second capture, or a setup failure), exactly once.
+
+## [1.2.92] - 2026-10-18
+
+### Changed
+- **Docs:** `IMPROVEMENT-PLAN.md` records the review findings, the roadmap, and which version shipped each item.
+
+## [1.2.91] - 2026-10-18
+
+### Added
+- **Privacy:** README and both landing pages state what the app does with screen captures, statistics, logs and network access (local only, no telemetry; the update check is optional).
+
+## [1.2.90] - 2026-10-18
+
+### Changed
+- **Tooling:** Biome lints and formats `src/`, `tests/` and `scripts/` (`npm run lint`, `npm run format`), enforced in CI; `engines.node >= 22`, `.nvmrc` and `.editorconfig` added. Sources are formatted once; no behaviour change.
+
+## [1.2.89] - 2026-10-18
+
+### Added
+- In-app updates on Windows and macOS (non-Homebrew installs) through electron-updater: "Download update", live "Downloading NN%" in the tray menu, then "Restart now / Later". Release builds now publish `latest.yml` and `latest-mac.yml`. Homebrew installs keep the cask upgrade; Linux keeps the release-page notification.
+- Settings checkbox "Check for updates automatically" (on by default) to switch off the check after launch.
+
+### Changed
+- The GitHub API fallback sends `If-None-Match` and treats a 304 as "no change".
+
+## [1.2.88] - 2026-10-18
+
+### Changed
+- **Internal:** the detection orchestrator is split into `src/main/detection/` (template loader, window finder, screen capture) with injectable providers, and a fixture-driven end-to-end test runs the real matcher worker under plain Node. No behaviour change.
+
+## [1.2.87] - 2026-10-18
+
+### Added
+
+- **Wayland notice (Linux)** — when a Wayland session is detected the app logs a warning and shows a one-time notification that synthetic clicks and screen capture may be restricted and that an X11/XWayland session is recommended. The README's platform notes document the same guidance and how to check `XDG_SESSION_TYPE`.
+
+## [1.2.86] - 2026-10-18
+
+### Added
+
+- **First-run welcome** — a one-time dialog explains what the app does, the macOS permissions it needs and how to start, with a *Start at login* checkbox. Reopen it from *Settings → Show welcome…*.
+
+### Changed
+
+- The macOS permission dialog now states in plain language what is missing and the one thing to do; the Electron/system status lines moved to a final "Technical details" line.
+
+### Fixed
+
+- Pausing for the lock screen or sleep no longer overwrites the saved last mode, and quitting no longer resets it, so *Restore last mode on launch* keeps working.
+- Waking from sleep while the screen is still locked no longer resumes auto-run early; it resumes on unlock.
+
+## [1.2.85] - 2026-10-18
+
+### Changed
+
+- **Stats overlay window** — it is now resizable (minimum 360×520), remembers its size and position between sessions (and re-centres if its display was disconnected), and uses a regular always-on-top level instead of the screen-saver level. *Settings → Keep stats window on top* turns always-on-top off.
+- The overlay follows the system light/dark appearance.
+
+## [1.2.84] - 2026-10-18
+
+### Added
+
+- **Detection health in the overlay and tray** — the stats overlay now shows the last click time and the number of loaded templates, warns when the matcher is failing ("retrying with backoff"), and after 10 minutes without a match while Cursor is visible suggests capturing new templates with a one-click *Capture Run template…* button. The tray tooltip adds "matcher retrying" and a notification appears once when the matcher fails three times in a row.
+
+## [1.2.83] - 2026-10-18
+
+### Changed
+- **Security:** SECURITY.md documents the `npm audit` advisory reported through `@nut-tree-fork/nut-js` (a `file-type` parser loop), why the app does not reach that code path, and why no dependency override is applied.
+
+## [1.2.82] - 2026-10-18
+
+### Added
+- **Research:** a macOS Accessibility-API detection spike (`scripts/spike-ax-buttons.js`, `docs/ax-detection-spike.md`) that walks Cursor's accessibility tree for Run / Always Run / Allow buttons. Documentation only; runtime behaviour is unchanged.
+
+## [1.2.81] - 2026-10-18
+
+### Changed
+- **Landing page:** the three.js hero loads lazily (desktop, motion allowed) over a static gradient and framer-motion is replaced by CSS reveals, cutting the initial JavaScript from 1.28 MB to about 245 KB.
+
+## [1.2.80] - 2026-10-18
+
+### Added
+- **Contributing:** `CONTRIBUTING.md`, GitHub bug-report and feature-request issue forms (blank issues disabled, private security advisory link), and a pull request checklist.
+
+## [1.2.79] - 2026-10-18
+
+### Added
+- **Adaptive polling:** the refresh interval you choose stays the baseline, but the app now polls at most every 2 s while no Cursor window is visible, every 5 s after 5 minutes of system inactivity, and at 500 ms for the three checks after a click. The stats overlay shows the interval in use when it differs from your setting.
+- **Lock-screen and sleep pause:** auto-run pauses while the screen is locked or the computer is suspended and resumes in the previous mode on unlock or wake.
+
+### Fixed
+- Stats are flushed to disk when the system shuts down.
+
+## [1.2.78] - 2026-10-18
+
+### Added
+- **Typing guard:** *Settings → Pause while I am typing* (on by default) skips a click while you are actively using the mouse or keyboard and retries on the next check, so the app no longer interrupts what you are typing.
+- **Focus control:** *Settings → Focus Cursor before clicking* (on by default, the previous behavior) can be turned off to stop the app from bringing the Cursor window to the front before each click.
+
+## [1.2.77] - 2026-10-18
+
+### Added
+- **Global shortcut:** *Settings → Keyboard shortcut* in the tray menu can register `Ctrl/Cmd+Alt+R`, `Ctrl/Cmd+Shift+R` or `Ctrl/Cmd+Alt+Shift+R` (off by default) to toggle between *Stop* and the last mode you used. If the shortcut is already taken by another app, a notification tells you.
+
+## [1.2.76] - 2026-10-18
+
+### Added
+- **Settings submenu:** the tray menu has a new *Settings* submenu with *Start at login*, *Restore last mode on launch*, *Confidence* (0.80 / 0.84 / 0.88 / 0.92 / 0.95) and *Click cooldown* (0.5 s / 1 s / 2 s / 5 s). Changes are saved and apply immediately without restarting.
+- **Start at login:** the app can now launch automatically when you sign in (off by default).
+
+## [1.2.75] - 2026-10-18
+
+### Changed
+- **Tests:** `npm run test:coverage` reports unit-test coverage of the testable modules and fails below 80 % lines / 70 % branches; CI runs it on the macOS and Linux test jobs. Timing assertions scale with `TEST_TIMING_SCALE` so instrumented runs stay green.
+
+## [1.2.74] - 2026-10-18
+
+### Changed
+- **CI:** the packaged-worker smoke test runs on the Linux and macOS builds as well as Windows.
+
+## [1.2.73] - 2026-10-18
+
+### Changed
+- **Security:** the template-capture window runs with context isolation, a sandboxed preload and a Content Security Policy; the renderer no longer has Node access, region payloads are validated, and no files are left in the OS temp folder.
+
+## [1.2.72] - 2026-10-18
+
+### Fixed
+- **Settings:** values read from `settings.json` are validated and clamped (refresh interval 150–60000 ms, confidence 0.5–0.99, cooldown 0–60 s, known modes), and the file is written atomically. Corrupt files fall back to defaults.
+
+### Changed
+- **Tests:** settings and stats stores run under plain Node and have unit tests.
+
+## [1.2.71] - 2026-10-18
+
+### Changed
+- **Tests:** the mode controller is now unit-tested (click, cooldown, repeat-click, stop, error backoff); its detector, clicker and stats dependencies are injectable.
+
+## [1.2.70] - 2026-10-18
+
+### Fixed
+- **Stability:** repeated detection errors (for example while the matcher worker restarts) back off exponentially up to 30 s instead of retrying at full speed. The controller exposes a health summary for the UI.
+
+## [1.2.69] - 2026-10-18
+
+### Changed
+- **CPU usage:** when a watched window's pixels have not changed since the last miss, the matcher pass is skipped. Idle polling at short intervals now costs almost nothing.
+
+## [1.2.68] - 2026-10-18
+
+### Added
+- **Diagnostics:** the app writes a rotating log file (`cursor-auto-runner.log` in the OS log folder, for example `~/Library/Logs/Cursor Auto Runner` on macOS). The tray menu gains **Open log folder**, and uncaught errors are logged.
+
+## [1.2.67] - 2026-10-18
+
+### Added
+- **Security:** packaged builds flip Electron fuses: the binary can no longer run as plain Node, ignores `NODE_OPTIONS` and `--inspect`, loads the app only from the integrity-checked `app.asar`, and leaves cookie encryption off (the app stores no cookies).
+
+## [1.2.66] - 2026-10-18
+
+### Added
+- **Homebrew:** `brew uninstall --zap cursor-auto-runner` now removes the app's settings, stats and logs under `~/Library`.
+
+## [1.2.65] - 2026-10-18
+
+### Changed
+- **Dependencies:** Dependabot updates arrive grouped (production, development, GitHub Actions). Dependency-only merges no longer need their own release; they ride along with the next user-facing one (see AGENTS.md).
+
+## [1.2.64] - 2026-10-18
+
+### Changed
+- **CI:** unit tests now also run on macOS and Ubuntu runners, so macOS-only code paths are exercised in CI; the matcher benchmark summary is uploaded as a workflow artifact.
+
+## [1.2.63] - 2026-10-18
+
+### Fixed
+- **Docs:** README badges and prerequisites now state the shipped Electron 44 and Node 22 instead of Electron 33 / Node 18.
+
+## [1.2.62] - 2026-10-18
+
+### Fixed
+- **IPC hardening:** the overlay's set-mode message is validated against the known modes before it is applied.
+- **Template capture:** resuming the previous mode after a capture session goes through the same macOS permission check as starting it from the tray.
+
+## [1.2.61] - 2026-10-18
+
+### Changed
+- **Installer size:** button templates are decoded with Electron's built-in image support instead of the `jimp` library, which is no longer shipped in the app (about 30 MB less inside `app.asar`). Detection behaviour is unchanged.
+
+## [1.2.60] - 2026-10-18
+
+### Changed
+- **Installer size:** compiled tests and helper scripts (`dist/tests`, `dist/scripts`) are no longer packaged into the app; only `dist/src` ships.
+
 ## [1.2.59] - 2026-10-13
 
 ### Fixed

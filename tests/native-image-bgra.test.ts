@@ -1,9 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  expectedBgraByteLength,
-  repackBgraRows,
-} from '../src/main/native-image-bgra';
+import { expectedBgraByteLength, repackBgraRows } from '../src/main/native-image-bgra';
 
 test('expectedBgraByteLength is width * height * 4', () => {
   assert.equal(expectedBgraByteLength(10, 20), 800);

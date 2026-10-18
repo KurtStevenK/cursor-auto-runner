@@ -23,6 +23,10 @@
 
 Agents must **not** push to `origin master`. Use `gh pr create` and merge, or ask the user to merge.
 
+### Dependency bumps
+
+Dependabot PRs are grouped: npm production and development updates arrive as one PR per directory, and GitHub Actions updates arrive as one PR. Merging a dependency-only PR does not require a release or a CHANGELOG entry on its own. Fold dependency changes into the next release that has user-facing changes, listing them under `### Changed` there.
+
 ## Releasing installers (v* tags)
 
 Releases are **not** tied to pushing `master`; they run on **tag push** `v*` ([Build releases](.github/workflows/build.yml)).

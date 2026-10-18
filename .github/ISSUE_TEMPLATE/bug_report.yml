@@ -1,0 +1,105 @@
+name: Bug report
+description: Something does not work as expected
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill in as much as you can. Do **not** paste secrets or personal file paths you do not want public.
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and version
+      description: For example "macOS 15.4", "Windows 11 23H2", "Ubuntu 24.04"
+      placeholder: macOS 15.4
+    validations:
+      required: true
+  - type: textarea
+    id: displays
+    attributes:
+      label: Display scale factor(s) and number of monitors
+      description: 'For example "1 monitor, 2x Retina" or "2 monitors - 1920x1080 at 100 %, 2560x1440 at 150 %".'
+      placeholder: 1 monitor, 2x Retina
+    validations:
+      required: true
+  - type: input
+    id: cursor_version
+    attributes:
+      label: Cursor version
+      description: Cursor → About Cursor (or Help → About on Linux/Windows).
+      placeholder: "2.x.x"
+    validations:
+      required: true
+  - type: dropdown
+    id: cursor_theme
+    attributes:
+      label: Cursor theme
+      options:
+        - Dark
+        - Light
+    validations:
+      required: true
+  - type: input
+    id: app_version
+    attributes:
+      label: Cursor Auto Runner version
+      description: Shown in the tray menu header.
+      placeholder: "1.2.75"
+    validations:
+      required: true
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: How did you install the app?
+      options:
+        - GitHub Release (.dmg / Setup.exe / .deb / .AppImage)
+        - Homebrew
+        - APT
+        - Chocolatey
+        - AppImage
+        - Built from source
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start Cursor Auto Runner
+        2. Open a Cursor agent that asks to run a command
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log file excerpt
+      description: |
+        Open the log file from the tray menu with **Open log folder**, then paste the lines around the problem (roughly the last few minutes). Remove anything private.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: test_buttons
+    attributes:
+      label: Did you click "Test buttons…" from the tray menu?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: checkboxes
+    id: fresh_templates
+    attributes:
+      label: Checklist
+      options:
+        - label: I captured fresh templates after the last Cursor update
+          required: true

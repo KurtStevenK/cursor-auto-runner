@@ -1,15 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as path from 'node:path';
-import { loadTemplate } from '../src/main/matcher';
+import { loadTemplate } from './helpers/load-template';
 import {
   evaluatePreparedMatch,
   findBestPreparedMatch,
-  GrayImage,
+  type GrayImage,
   orderTemplatesForMode,
   prepareHaystack,
   prepareTemplateVariants,
-  TemplateInput,
+  type TemplateInput,
 } from '../src/worker/matcher-core';
 
 function patterned(width: number, height: number, offset = 0): GrayImage {
@@ -52,7 +52,10 @@ test('run mode excludes always-run variants instead of ranking them first', () =
   ]);
   const ordered = orderTemplatesForMode(variants, 'run');
 
-  assert.equal(ordered.some((template) => template.mode === 'always-run'), false);
+  assert.equal(
+    ordered.some((template) => template.mode === 'always-run'),
+    false
+  );
   assert.equal(ordered[0].mode, 'run');
   assert.equal(ordered.filter((template) => template.mode === 'run').length, 7);
   assert.equal(ordered.filter((template) => template.mode === 'allow').length, 7);
@@ -97,13 +100,19 @@ test('prepared matcher locates an exact synthetic template', () => {
 
 test('prepared matcher observes cancellation', () => {
   const template = prepareTemplateVariants([input('run', 2)])[0];
-  const match = findBestPreparedMatch(prepareHaystack(patterned(64, 64, 10)), template, 0.88, () => true);
+  const match = findBestPreparedMatch(
+    prepareHaystack(patterned(64, 64, 10)),
+    template,
+    0.88,
+    () => true
+  );
   assert.equal(match, null);
 });
 
 test('NCC remains invariant to a legitimate brightness shift', () => {
   const templateImage = patterned(10, 8, 3);
-  for (let i = 0; i < templateImage.data.length; i++) templateImage.data[i] = 20 + (templateImage.data[i] % 100);
+  for (let i = 0; i < templateImage.data.length; i++)
+    templateImage.data[i] = 20 + (templateImage.data[i] % 100);
   const haystack: GrayImage = { width: 60, height: 40, data: new Float32Array(60 * 40).fill(12) };
   const expected = { x: 23, y: 17 };
   for (let y = 0; y < templateImage.height; y++) {
@@ -172,8 +181,9 @@ test('multiple coarse candidates recover a real match behind an aligned distract
     for (let x = 0; x < templateImage.width; x++) {
       const sampled = [1, 2].includes(x % 4) && [1, 2].includes(y % 4);
       const value = templateImage.data[y * templateImage.width + x];
-      haystack.data[(distractor.y + y) * haystack.width + distractor.x + x] =
-        sampled ? value : 255 - value;
+      haystack.data[(distractor.y + y) * haystack.width + distractor.x + x] = sampled
+        ? value
+        : 255 - value;
     }
   }
 
@@ -245,12 +255,14 @@ for (const fixture of realTemplateCases) {
     const cappedHaystack = noisyHaystack(1024, 576);
     paste(cappedHaystack, cappedImage, fixture.expected.x, fixture.expected.y);
     const cappedTemplate = prepareTemplateVariants(
-      [{
-        file: fixture.template,
-        mode: fixture.mode,
-        theme: 'dark',
-        ...templateImage,
-      }],
+      [
+        {
+          file: fixture.template,
+          mode: fixture.mode,
+          theme: 'dark',
+          ...templateImage,
+        },
+      ],
       0.75,
       0.75
     ).find((template) => template.scale === 1);

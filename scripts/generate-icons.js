@@ -16,28 +16,45 @@ const TRAY_OUT = path.join(OUT, 'tray');
 function sdRoundRect(px, py, cx, cy, hw, hh, r) {
   const qx = Math.abs(px - cx) - (hw - r);
   const qy = Math.abs(py - cy) - (hh - r);
-  const outX = Math.max(qx, 0), outY = Math.max(qy, 0);
+  const outX = Math.max(qx, 0),
+    outY = Math.max(qy, 0);
   return Math.min(Math.max(qx, qy), 0) + Math.hypot(outX, outY) - r;
 }
 
 function pointInPolygon(px, py, poly) {
   let inside = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i], [xj, yj] = poly[j];
-    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+    const [xi, yi] = poly[i],
+      [xj, yj] = poly[j];
+    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
   }
   return inside;
 }
 
 // ---------- logo definition (256x256 viewBox) ----------
-const TRIANGLE = [[96, 76], [176, 128], [96, 180]];
-const BOLT = [[212, 34], [174, 98], [200, 98], [164, 168], [212, 94], [184, 94]];
+const TRIANGLE = [
+  [96, 76],
+  [176, 128],
+  [96, 180],
+];
+const BOLT = [
+  [212, 34],
+  [174, 98],
+  [200, 98],
+  [164, 168],
+  [212, 94],
+  [184, 94],
+];
 
 /**
  * Returns [r,g,b,a] for a point in the 256x256 viewBox.
  * accent/bg may be null (-> transparent) e.g. for monochrome template icons.
  */
-function sampleLogo(x, y, { accent = [34, 197, 94], bg = [15, 23, 42], fg = [248, 250, 252], monochrome = false } = {}) {
+function sampleLogo(
+  x,
+  y,
+  { accent = [34, 197, 94], bg = [15, 23, 42], fg = [248, 250, 252], monochrome = false } = {}
+) {
   const withAlpha = (c) => [c[0], c[1], c[2], 255];
   const borderSd = sdRoundRect(x, y, 128, 128, 120, 120, 56);
   if (borderSd > 0) return [0, 0, 0, 0]; // outside
@@ -80,13 +97,19 @@ function encodePng(width, height, rgba) {
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; ihdr[9] = 6; // 8-bit RGBA
+  ihdr[8] = 8;
+  ihdr[9] = 6; // 8-bit RGBA
   const raw = Buffer.alloc((width * 4 + 1) * height);
   for (let y = 0; y < height; y++) {
     raw[y * (width * 4 + 1)] = 0; // filter none
     rgba.copy(raw, y * (width * 4 + 1) + 1, y * width * 4, (y + 1) * width * 4);
   }
-  return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+  return Buffer.concat([
+    sig,
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
 }
 
 function rasterizeRaw(size, opts) {
@@ -95,13 +118,19 @@ function rasterizeRaw(size, opts) {
   const scale = 256 / size;
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      let r = 0, g = 0, b = 0, a = 0;
+      let r = 0,
+        g = 0,
+        b = 0,
+        a = 0;
       for (let sy = 0; sy < SS; sy++) {
         for (let sx = 0; sx < SS; sx++) {
           const px = (x + (sx + 0.5) / SS) * scale;
           const py = (y + (sy + 0.5) / SS) * scale;
           const [pr, pg, pb, pa] = sampleLogo(px, py, opts);
-          r += pr * pa; g += pg * pa; b += pb * pa; a += pa;
+          r += pr * pa;
+          g += pg * pa;
+          b += pb * pa;
+          a += pa;
         }
       }
       const n = SS * SS;
@@ -156,7 +185,8 @@ function bmpEntry(size, rgba) {
 function packIco(entries) {
   const count = entries.length;
   let offset = 6 + 16 * count; // directory table comes first, contiguous
-  const heads = [], datas = [];
+  const heads = [],
+    datas = [];
   for (const { size, data } of entries) {
     const head = Buffer.alloc(16);
     head.writeUInt8(size >= 256 ? 0 : size, 0);
@@ -175,7 +205,11 @@ function packIco(entries) {
 }
 
 // ---------- main ----------
-const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const hex = (h) => [
+  parseInt(h.slice(1, 3), 16),
+  parseInt(h.slice(3, 5), 16),
+  parseInt(h.slice(5, 7), 16),
+];
 
 function main() {
   fs.mkdirSync(TRAY_OUT, { recursive: true });
@@ -186,15 +220,23 @@ function main() {
   const raw256 = rasterizeRaw(256, appOpts);
   const png256 = encodePng(256, 256, raw256.rgba);
   for (const size of [16, 24, 32, 48, 64, 128, 256]) {
-    fs.writeFileSync(path.join(OUT, `icon-${size}.png`), size === 256 ? png256 : rasterize(size, appOpts));
+    fs.writeFileSync(
+      path.join(OUT, `icon-${size}.png`),
+      size === 256 ? png256 : rasterize(size, appOpts)
+    );
     console.log(`icon-${size}.png written`);
   }
   fs.writeFileSync(
     path.join(OUT, 'icon.ico'),
-    packIco([16, 32, 48, 64, 256].map((size) => ({
-      size,
-      data: size === 256 ? bmpEntry(256, raw256.rgba) : fs.readFileSync(path.join(OUT, `icon-${size}.png`)),
-    })))
+    packIco(
+      [16, 32, 48, 64, 256].map((size) => ({
+        size,
+        data:
+          size === 256
+            ? bmpEntry(256, raw256.rgba)
+            : fs.readFileSync(path.join(OUT, `icon-${size}.png`)),
+      }))
+    )
   );
   fs.writeFileSync(path.join(OUT, 'icon-1024.png'), rasterize(1024, appOpts));
   fs.writeFileSync(path.join(OUT, 'icon.png'), fs.readFileSync(path.join(OUT, 'icon-1024.png')));
@@ -208,7 +250,10 @@ function main() {
   };
   for (const [name, opts] of Object.entries(states)) {
     for (const size of [16, 32]) {
-      fs.writeFileSync(path.join(TRAY_OUT, `${size === 32 ? '@2x' : ''}${name}.png`), rasterize(size, opts));
+      fs.writeFileSync(
+        path.join(TRAY_OUT, `${size === 32 ? '@2x' : ''}${name}.png`),
+        rasterize(size, opts)
+      );
     }
     console.log(`${name} written`);
   }

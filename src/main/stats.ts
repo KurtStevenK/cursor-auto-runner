@@ -6,13 +6,18 @@
  * cannot be loaded, a JSON-lines fallback in userData is used so the
  * app keeps working everywhere.
  */
-import { app } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { DayCount, ClickMode, Mode, StatsSnapshot } from '../shared/types';
+import type { DayCount, ClickMode, Mode, StatsSnapshot } from '../shared/types';
 import { perfNow, reportStatsDuration } from './perf';
 
 export type { Mode };
+
+function defaultUserDataDir(): string {
+  // Lazy so this module can be loaded under plain Node (tests).
+
+  return require('electron').app.getPath('userData');
+}
 
 interface ClickEvent {
   ts: number;
@@ -39,17 +44,18 @@ export class StatsStore {
   private dirty = false;
   private snapshotCache: { at: number; snapshot: StatsSnapshot } | null = null;
 
-  constructor(private readonly userDataDir = app.getPath('userData')) {
+  constructor(private readonly userDataDir: string = defaultUserDataDir()) {
     this.jsonPath = path.join(userDataDir, 'clicks-fallback.json');
     this.init();
   }
 
   private init(): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const Database = require('better-sqlite3');
       const db = new Database(path.join(this.userDataDir, 'stats.db'));
-      db.exec('CREATE TABLE IF NOT EXISTS clicks (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, mode TEXT NOT NULL)');
+      db.exec(
+        'CREATE TABLE IF NOT EXISTS clicks (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, mode TEXT NOT NULL)'
+      );
       db.exec('CREATE INDEX IF NOT EXISTS idx_clicks_ts ON clicks (ts)');
       this.db = db;
       this.insertStatement = db.prepare('INSERT INTO clicks (ts, mode) VALUES (?, ?)');
@@ -206,6 +212,15 @@ export class StatsStore {
       windowFound: false, // filled in by main from detector state
       watchedKind: null,
       pollIntervalMs: 4000, // filled in by main from the controller
+      effectivePollIntervalMs: 4000, // filled in by main from the controller
+      health: {
+        lastMatchAt: null,
+        lastDetectAt: null,
+        consecutiveErrors: 0,
+        lastError: null,
+        templateCount: 0,
+        missStreakMinutes: null,
+      }, // filled in by main from the controller
     };
     this.snapshotCache = { at: now, snapshot };
     reportStatsDuration(perfNow() - startedAt);

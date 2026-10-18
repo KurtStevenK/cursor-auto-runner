@@ -1,6 +1,4 @@
 /** Template loading and validation. Runtime NCC matching lives in the worker. */
-import { Jimp } from 'jimp';
-
 export interface GrayImage {
   width: number;
   height: number;
@@ -12,17 +10,22 @@ export interface TemplateValidation {
   reason?: string;
 }
 
-/** Load a PNG template as grayscale. Templates are small and loaded once. */
-export async function loadTemplate(file: string): Promise<GrayImage> {
-  const image = await Jimp.read(file);
-  const { width, height } = image.bitmap;
+/** Grayscale from tightly packed RGBA pixels (0.299 R + 0.587 G + 0.114 B). */
+export function grayFromRgba(rgba: ArrayLike<number>, width: number, height: number): GrayImage {
   const data = new Float32Array(width * height);
   for (let i = 0; i < data.length; i++) {
-    const offset = i * 4;
-    data[i] =
-      0.299 * image.bitmap.data[offset] +
-      0.587 * image.bitmap.data[offset + 1] +
-      0.114 * image.bitmap.data[offset + 2];
+    const o = i * 4;
+    data[i] = 0.299 * rgba[o] + 0.587 * rgba[o + 1] + 0.114 * rgba[o + 2];
+  }
+  return { width, height, data };
+}
+
+/** Grayscale from tightly packed BGRA pixels (Electron NativeImage byte order). */
+export function grayFromBgra(bgra: ArrayLike<number>, width: number, height: number): GrayImage {
+  const data = new Float32Array(width * height);
+  for (let i = 0; i < data.length; i++) {
+    const o = i * 4;
+    data[i] = 0.299 * bgra[o + 2] + 0.587 * bgra[o + 1] + 0.114 * bgra[o];
   }
   return { width, height, data };
 }

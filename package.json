@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.59",
+  "version": "1.2.112",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -12,7 +12,7 @@
   },
   "homepage": "https://github.com/KurtStevenK/cursor-auto-runner#readme",
   "scripts": {
-    "compile": "tsc -p tsconfig.json && tsc -p tsconfig.overlay.json && node scripts/copy-overlay-assets.js",
+    "compile": "tsc -p tsconfig.json && tsc -p tsconfig.renderer.json && node scripts/bundle-renderer.js && node scripts/copy-overlay-assets.js",
     "start": "npm run compile && electron .",
     "generate:icons": "node scripts/generate-icons.js",
     "capture-templates": "npm run compile && electron dist/scripts/capture-templates.js",
@@ -20,12 +20,13 @@
     "predist": "npm run compile",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish never",
-    "dist:win": "npm run compile && electron-builder --win --publish never",
-    "dist:mac": "npm run compile && electron-builder --mac --publish never && node scripts/rename-mac-dmg-artifacts.js",
+    "dist:win": "npm run compile && electron-builder --win --publish never && node scripts/fix-update-feeds.js",
+    "dist:mac": "npm run compile && electron-builder --mac --publish never && node scripts/rename-mac-dmg-artifacts.js && node scripts/fix-update-feeds.js",
     "dist:mac:signed": "bash scripts/mac-signed-dist.sh",
     "dist:linux": "npm run compile && electron-builder --linux --publish never",
     "rebuild:dev": "electron-rebuild -f -w better-sqlite3 -a x64",
     "test": "npm run compile && node --test dist/tests/*.test.js",
+    "test:coverage": "npm run compile && TEST_TIMING_SCALE=20 node --test --experimental-test-coverage --test-coverage-include='dist/src/**' --test-coverage-exclude='dist/src/main/main.js' --test-coverage-exclude='dist/src/main/detector.js' --test-coverage-exclude='dist/src/main/tray.js' --test-coverage-exclude='dist/src/main/updates.js' --test-coverage-exclude='dist/src/main/capture.js' --test-coverage-exclude='dist/src/main/button-test.js' --test-coverage-exclude='dist/src/main/permissions.js' --test-coverage-exclude='dist/src/main/mac-*.js' --test-coverage-exclude='dist/src/main/*preload.js' --test-coverage-exclude='dist/src/main/clicker.js' --test-coverage-exclude='dist/src/main/match-worker-client.js' --test-coverage-exclude='dist/src/main/native-image-bgra.js' --test-coverage-exclude='dist/src/main/template-loader.js' --test-coverage-exclude='dist/src/main/perf.js' --test-coverage-exclude='dist/src/overlay/**' --test-coverage-lines=80 --test-coverage-branches=70 dist/tests/*.test.js",
     "test:stats": "npm run compile && electron scripts/test-stats.js",
     "test:overlay": "npm run compile && electron scripts/test-overlay.js",
     "test:packaged-worker": "node scripts/check-packaged-worker.js",
@@ -34,7 +35,12 @@
     "sync:firebase-release-data": "node scripts/sync-firebase-release-data.js",
     "build:firebase-landing": "node scripts/sync-firebase-release-data.js && npm run build --prefix firebase-landing",
     "deploy:firebase": "npm run build:firebase-landing && firebase deploy --only hosting,storage --project cursor-auto-runner-linux",
-    "scan:virustotal": "node scripts/virustotal-scan.js --artifacts-dir release"
+    "scan:virustotal": "node scripts/virustotal-scan.js --artifacts-dir release",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check ."
   },
   "build": {
     "appId": "com.kurtstevenk.cursor-auto-runner",
@@ -43,7 +49,7 @@
       "output": "release"
     },
     "files": [
-      "dist/**",
+      "dist/src/**",
       "assets/icons/**",
       "assets/templates/dark/allow.png",
       "assets/templates/dark/always-run.png",
@@ -53,6 +59,15 @@
       "assets/templates/dark/run-3.png",
       "package.json"
     ],
+    "electronFuses": {
+      "runAsNode": false,
+      "enableCookieEncryption": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true,
+      "resetAdHocDarwinSignature": true
+    },
     "asarUnpack": [
       "**/node_modules/better-sqlite3/**",
       "**/node_modules/@nut-tree-fork/**",
@@ -91,7 +106,7 @@
           ]
         }
       ],
-      "icon": "assets/icons/icon.png",
+      "icon": "assets/icons/icon.icns",
       "category": "public.app-category.utilities",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -110,20 +125,33 @@
       ],
       "icon": "assets/icons",
       "category": "Utility"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "KurtStevenK",
+        "repo": "cursor-auto-runner"
+      }
+    ]
   },
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
     "better-sqlite3": "^13.0.3",
-    "jimp": "^1.6.1"
+    "electron-updater": "^6.8.9"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
     "@types/node": "^26.6.4",
     "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
+    "jimp": "^1.6.1",
     "typescript": "^7.0.2"
   },
   "overrides": {
     "node-gyp": "13.0.2"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

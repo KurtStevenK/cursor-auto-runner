@@ -10,6 +10,7 @@ import { app, BrowserWindow, desktopCapturer, ipcMain, screen } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { validateTemplateDimensions } from './matcher';
+import { CAPTURE_IPC } from '../shared/types';
 
 export type CaptureName = 'run' | 'always-run' | 'allow';
 export type CaptureTheme = 'dark' | 'light';
@@ -41,9 +42,13 @@ let shot: { image: Electron.NativeImage; scaleFactor: number } | null = null;
 let target: { name: CaptureName; theme: CaptureTheme } | null = null;
 let callbacks: CaptureCallbacks = {};
 let handlersRegistered = false;
+// Set by stopCapture (app quit): do not resume the previous mode.
+let stopping = false;
 
 const html = (buttonName: string) => `<!DOCTYPE html>
-<html><head><style>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:">
+<style>
   html,body{margin:0;overflow:hidden;cursor:crosshair;background:transparent;user-select:none;-webkit-user-select:none}
   #shot{position:absolute;inset:0;width:100vw;height:100vh;pointer-events:none}
   #rect{position:absolute;border:2px solid #22c55e;background:rgba(34,197,94,0.15);display:none;pointer-events:none}
@@ -55,7 +60,6 @@ const html = (buttonName: string) => `<!DOCTYPE html>
   <div id="rect"></div>
   <div id="hint" role="status" aria-live="polite">Select only the stable "${buttonName}" label; exclude changing command text. ESC = finish.</div>
   <script>
-    const { ipcRenderer } = require('electron');
     let sx=0, sy=0, dragging=false, saved=0;
     const rect = document.getElementById('rect');
     const hint = document.getElementById('hint');
@@ -73,40 +77,62 @@ const html = (buttonName: string) => `<!DOCTYPE html>
       if (!dragging) return; dragging=false;
       const x=Math.min(sx,e.clientX), y=Math.min(sy,e.clientY);
       const w=Math.abs(e.clientX-sx), h=Math.abs(e.clientY-sy);
-      if (w > 4 && h > 4) ipcRenderer.send('capture-region', { x, y, w, h });
+      if (w > 4 && h > 4) window.capture.sendRegion({ x, y, w, h });
       else rect.style.display='none';
     });
-    ipcRenderer.on('capture-saved', (_e, file) => {
+    window.capture.onSaved((file) => {
       saved++;
       rect.style.display='none';
       hint.textContent = 'Saved #' + saved + ': ' + file + ' — drag the next one, or press ESC to finish.';
     });
-    ipcRenderer.on('capture-rejected', (_e, reason) => {
+    window.capture.onRejected((reason) => {
       rect.style.display='none';
       hint.textContent = 'Not saved: ' + reason + '. Select only the stable button label and try again.';
     });
-    document.addEventListener('keydown', e => { if (e.key==='Escape') ipcRenderer.send('capture-cancel'); });
+    document.addEventListener('keydown', e => { if (e.key==='Escape') window.capture.cancel(); });
   </script>
 </body></html>`;
+
+/** Validate an untrusted region (CSS px) against the shot size; null if invalid. */
+function validateRegion(
+  r: unknown,
+  size: { width: number; height: number },
+  scale: number
+): { x: number; y: number; w: number; h: number } | null {
+  if (!r || typeof r !== 'object') return null;
+  const { x, y, w, h } = r as Record<string, unknown>;
+  if (![x, y, w, h].every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0))
+    return null;
+  const [rx, ry, rw, rh] = [x, y, w, h] as number[];
+  if (rw <= 0 || rh <= 0) return null;
+  const maxW = size.width / scale;
+  const maxH = size.height / scale;
+  // Small tolerance for rounding of fractional scale factors.
+  if (rx + rw > maxW + 1 || ry + rh > maxH + 1) return null;
+  return { x: rx, y: ry, w: rw, h: rh };
+}
 
 function registerHandlers(): void {
   if (handlersRegistered) return;
   handlersRegistered = true;
-  ipcMain.on('capture-region', (_e, r: { x: number; y: number; w: number; h: number }) => {
+  ipcMain.on(CAPTURE_IPC.REGION, (e, r: unknown) => {
     if (!shot || !target) return;
+    if (!activeWin || e.sender !== activeWin.webContents) return;
+    const region = validateRegion(r, shot.image.getSize(), shot.scaleFactor);
+    if (!region) return;
     const scale = shot.scaleFactor;
     const out = shot.image.crop({
-      x: Math.round(r.x * scale),
-      y: Math.round(r.y * scale),
-      width: Math.round(r.w * scale),
-      height: Math.round(r.h * scale),
+      x: Math.round(region.x * scale),
+      y: Math.round(region.y * scale),
+      width: Math.max(1, Math.round(region.w * scale)),
+      height: Math.max(1, Math.round(region.h * scale)),
     });
     const size = out.getSize();
     const validation = validateTemplateDimensions(size.width, size.height);
     if (!validation.valid) {
       const reason = validation.reason ?? 'invalid selection';
       callbacks.onRejected?.(reason);
-      activeWin?.webContents.send('capture-rejected', reason);
+      activeWin?.webContents.send(CAPTURE_IPC.REJECTED, reason);
       return;
     }
     const dir = path.join(templatesBaseDir(), 'assets', 'templates', target.theme);
@@ -122,7 +148,7 @@ function registerHandlers(): void {
     if (existing.some((name) => fs.readFileSync(path.join(dir, name)).equals(png))) {
       const reason = 'an identical template already exists';
       callbacks.onRejected?.(reason);
-      activeWin?.webContents.send('capture-rejected', reason);
+      activeWin?.webContents.send(CAPTURE_IPC.REJECTED, reason);
       return;
     }
     // Numbered variants instead of overwriting: run.png, run-2.png, …
@@ -133,11 +159,12 @@ function registerHandlers(): void {
     fs.writeFileSync(file, png);
     console.log(`template saved: ${file} (${size.width}x${size.height})`);
     callbacks.onSaved?.(file);
-    activeWin?.webContents.send('capture-saved', path.basename(file));
+    activeWin?.webContents.send(CAPTURE_IPC.SAVED, path.basename(file));
   });
-  ipcMain.on('capture-cancel', () => {
-    callbacks.onDone?.();
-    activeWin?.close();
+  ipcMain.on(CAPTURE_IPC.CANCEL, (e) => {
+    if (!activeWin || e.sender !== activeWin.webContents) return;
+    // onDone fires from the window's 'closed' event (see startCapture).
+    activeWin.close();
   });
 }
 
@@ -163,11 +190,37 @@ export async function startCapture(
   cb: CaptureCallbacks = {}
 ): Promise<void> {
   registerHandlers();
+  stopping = false;
   callbacks = cb;
   target = { name, theme };
-  await captureScreen();
-  if (!shot) throw new Error('screen capture failed');
+  // onDone fires exactly once per session, whichever way it ends: ESC,
+  // Cmd+W / Alt+F4, being replaced by a newer capture, or a setup failure.
+  let done = false;
+  const finish = (): void => {
+    if (done) return;
+    done = true;
+    // A newer session may already own `callbacks`; only clear our own.
+    if (callbacks === cb) callbacks = {};
+    if (!stopping) cb.onDone?.();
+  };
+  let win: BrowserWindow | null = null;
+  try {
+    await captureScreen();
+    if (!shot) throw new Error('screen capture failed');
+    win = await openCaptureWindow(name, finish);
+  } catch (err) {
+    try {
+      if (win && !win.isDestroyed()) win.close();
+    } catch {
+      /* already gone */
+    }
+    finish();
+    throw err;
+  }
+}
 
+async function openCaptureWindow(name: CaptureName, finish: () => void): Promise<BrowserWindow> {
+  if (!shot) throw new Error('screen capture failed');
   const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
   activeWin?.close();
   activeWin = new BrowserWindow({
@@ -181,26 +234,34 @@ export async function startCapture(
     fullscreen: true,
     alwaysOnTop: true,
     enableLargerThanScreen: true,
-    webPreferences: { nodeIntegration: true, contextIsolation: false },
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      preload: path.join(__dirname, 'capture-preload.js'),
+    },
   });
-  activeWin.on('closed', () => {
-    activeWin = null;
+  const win = activeWin;
+  win.on('closed', () => {
+    if (activeWin === win) activeWin = null;
+    finish();
   });
-  // Freeze the screen behind the selection UI. The screenshot is written
-  // as a file next to the temp HTML because data: URLs fail to load.
-  const tmpDir = app.getPath('temp');
-  fs.writeFileSync(path.join(tmpDir, 'cursor-auto-runner-shot.png'), shot.image.toPNG());
-  const tmpFile = path.join(tmpDir, 'cursor-auto-runner-capture.html');
-  fs.writeFileSync(tmpFile, html(name).replace(
-    '<img id="shot" draggable="false" />',
-    '<img id="shot" draggable="false" src="cursor-auto-runner-shot.png" />'
-  ));
-  await activeWin.loadFile(tmpFile);
-  activeWin.show();
+  // Freeze the screen behind the selection UI. The page is loaded from a
+  // small data: URL (no temp files); the screenshot is injected afterwards as
+  // a data: URL, since a multi-MB data URL exceeds Chromium's navigation limit.
+  await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html(name)));
+  const dataUrl = 'data:image/png;base64,' + shot.image.toPNG().toString('base64');
+  await win.webContents.executeJavaScript(
+    `document.getElementById('shot').src = ${JSON.stringify(dataUrl)};`
+  );
+  if (win.isDestroyed()) throw new Error('capture window closed during setup');
+  win.show();
+  return win;
 }
 
 /** Finish any running capture session (used by tray Quit). */
 export function stopCapture(): void {
+  stopping = true;
   activeWin?.close();
   activeWin = null;
 }

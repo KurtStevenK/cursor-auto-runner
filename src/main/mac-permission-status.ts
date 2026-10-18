@@ -32,7 +32,9 @@ export async function macScreenRecordingGranted(): Promise<boolean> {
 
   try {
     // Electron typings omit screen; macOS supports it for Screen Recording prompts.
-    await (systemPreferences.askForMediaAccess as (mediaType: string) => Promise<boolean>)('screen');
+    await (systemPreferences.askForMediaAccess as (mediaType: string) => Promise<boolean>)(
+      'screen'
+    );
   } catch {
     /* unsupported on older macOS */
   }

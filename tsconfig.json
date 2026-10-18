@@ -12,5 +12,5 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["src/overlay"]
+  "exclude": ["src/overlay", "src/main/preload.ts", "src/main/capture-preload.ts"]
 }

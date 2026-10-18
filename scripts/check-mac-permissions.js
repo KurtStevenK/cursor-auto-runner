@@ -22,7 +22,7 @@ async function probeScreen() {
 app.whenReady().then(async () => {
   const screenStatus = systemPreferences.getMediaAccessStatus('screen');
   const accessApi = systemPreferences.isTrustedAccessibilityClient(false);
-  let probe = { ok: false, error: 'skipped' };
+  let probe;
   try {
     probe = await probeScreen();
   } catch (err) {

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Cursor Auto Runner — automatic Run-button clicking for Cursor</title>
 <meta name="description" content="A free, cross-platform system-tray app that automatically clicks the Run / Always Run / Approve buttons in the Cursor IDE and tracks click statistics." />
+<link rel="canonical" href="https://cursor-auto-runner-linux.web.app/" />
 <style>
   :root {
     --bg: #0b1220;
@@ -102,6 +103,10 @@
 </head>
 <body>
   <div class="wrap">
+    <p class="install-cmd-note">
+      The full download page with all platforms and release data lives at
+      <a href="https://cursor-auto-runner-linux.web.app/">cursor-auto-runner-linux.web.app</a>.
+    </p>
     <header>
       <img src="assets/icons/icon-256.png" alt="Cursor Auto Runner logo" />
       <h1>Cursor <span>Auto Runner</span></h1>
@@ -181,6 +186,11 @@
       <div class="feature"><b>⚡ Adjustable refresh interval</b><span>Set how often the screen is checked — from the tray menu or the stats window; applied live.</span></div>
       <div class="feature"><b>🖥️ Multi-monitor &amp; multi-theme</b><span>Finds Cursor windows on any display, dark and light themes, per-display DPI scaling absorbed.</span></div>
       <div class="feature"><b>🖱️ Cursor-safe clicking</b><span>The mouse pointer is restored after every click; cooldown and match verification prevent double clicks.</span></div>
+    </div>
+
+    <h2>Privacy</h2>
+    <div class="how">
+      <p>Screen captures are processed in memory and never uploaded. Only button templates you capture on purpose are saved to disk, alongside local click statistics. The only network calls are the optional update check against GitHub (toggle in the tray Settings) and Homebrew upgrades. No analytics or telemetry; logs stay local and contain no screen content.</p>
     </div>
 
     <h2>Getting started</h2>

@@ -6,7 +6,6 @@
  * Usage:
  *   node scripts/virustotal-scan.js [--artifacts-dir artifacts] [--report virustotal-report.md]
  */
-'use strict';
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -28,10 +27,7 @@ function parseEnvFile(envPath) {
     if (eq <= 0) continue;
     const key = trimmed.slice(0, eq).trim();
     let val = trimmed.slice(eq + 1).trim();
-    if (
-      (val.startsWith('"') && val.endsWith('"')) ||
-      (val.startsWith("'") && val.endsWith("'"))
-    ) {
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
       val = val.slice(1, -1);
     }
     vars[key] = val;
@@ -127,12 +123,11 @@ async function uploadFile(filePath, apiKey) {
     headers: { 'x-apikey': apiKey },
   });
   const urlBody = await vtJson(urlRes, `upload_url for ${name}`);
-  const uploadUrl =
-    typeof urlBody?.data === 'string'
-      ? urlBody.data
-      : urlBody?.data?.upload_url;
+  const uploadUrl = typeof urlBody?.data === 'string' ? urlBody.data : urlBody?.data?.upload_url;
   if (!uploadUrl) {
-    throw new Error(`No upload_url for ${name} (response: ${JSON.stringify(urlBody).slice(0, 200)})`);
+    throw new Error(
+      `No upload_url for ${name} (response: ${JSON.stringify(urlBody).slice(0, 200)})`
+    );
   }
 
   const form = new FormData();
@@ -214,7 +209,7 @@ async function main() {
     });
 
     console.log(
-      `[virustotal] ${base}: malicious=${malicious} suspicious=${suspicious} undetected=${undetected}`,
+      `[virustotal] ${base}: malicious=${malicious} suspicious=${suspicious} undetected=${undetected}`
     );
     if (sha256) console.log(`[virustotal] ${guiLink(sha256)}`);
 
@@ -233,7 +228,9 @@ async function main() {
   ];
   for (const r of rows) {
     const linkCell = r.link ? `[view](${r.link})` : '—';
-    lines.push(`| \`${r.file}\` | ${r.malicious} | ${r.suspicious} | ${r.undetected} | ${linkCell} |`);
+    lines.push(
+      `| \`${r.file}\` | ${r.malicious} | ${r.suspicious} | ${r.undetected} | ${linkCell} |`
+    );
   }
   lines.push('');
 

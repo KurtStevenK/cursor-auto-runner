@@ -1,46 +1,72 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' file: data:; script-src 'self'" />
-  <title>Cursor Auto Runner — Stats</title>
-  <link rel="stylesheet" href="overlay.css" />
-</head>
-<body>
-  <div class="card">
-    <header>
-      <div class="brand">
-        <img src="../../../assets/icons/icon-32.png" alt="" />
-        <span>Cursor Auto Runner</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' file: data:; script-src 'self'"
+    />
+    <title>Cursor Auto Runner — Stats</title>
+    <link rel="stylesheet" href="overlay.css" />
+  </head>
+  <body>
+    <div class="card">
+      <header>
+        <div class="brand">
+          <img src="../../../assets/icons/icon-32.png" alt="" />
+          <span>Cursor Auto Runner</span>
+        </div>
+        <button type="button" id="close" title="Close">✕</button>
+      </header>
+
+      <div id="modeBadge" class="badge idle">Idle</div>
+
+      <div class="grid">
+        <div class="stat">
+          <span class="value" id="session">0</span><span class="label">This session</span>
+        </div>
+        <div class="stat">
+          <span class="value" id="day">0</span><span class="label">Today</span>
+        </div>
+        <div class="stat">
+          <span class="value" id="week">0</span><span class="label">This week</span>
+        </div>
+        <div class="stat">
+          <span class="value" id="month">0</span><span class="label">This month</span>
+        </div>
       </div>
-      <button id="close" title="Close">✕</button>
-    </header>
 
-    <div id="modeBadge" class="badge idle">Idle</div>
+      <div class="stat total">
+        <span class="value" id="total">0</span><span class="label">Total clicks</span>
+      </div>
 
-    <div class="grid">
-      <div class="stat"><span class="value" id="session">0</span><span class="label">This session</span></div>
-      <div class="stat"><span class="value" id="day">0</span><span class="label">Today</span></div>
-      <div class="stat"><span class="value" id="week">0</span><span class="label">This week</span></div>
-      <div class="stat"><span class="value" id="month">0</span><span class="label">This month</span></div>
+      <div class="spark">
+        <span class="label">Last 7 days</span>
+        <svg id="sparkSvg" viewBox="0 0 340 90" preserveAspectRatio="none" role="img" aria-label="Recent check activity"><title>Recent check activity</title></svg>
+        <div id="sparkLabels" class="spark-labels"></div>
+      </div>
+
+      <div class="interval-row">
+        <span class="interval-label">Refresh interval: <b id="intervalValue">4000 ms</b></span>
+        <button type="button" id="fasterBtn" class="interval-btn" title="Check the screen more often">
+          Faster
+        </button>
+        <button type="button" id="slowerBtn" class="interval-btn" title="Check the screen less often">
+          Slower
+        </button>
+      </div>
+
+      <div id="status" class="status">Watching for the Cursor window…</div>
+
+      <div id="detection" class="detection" hidden>
+        <div class="detection-row">
+          <span>Last click: <b id="lastClick">never this session</b></span>
+          <span>Templates: <b id="templateCount">0</b></span>
+        </div>
+        <div id="detectionWarn" class="status warn" hidden></div>
+        <button type="button" id="captureBtn" class="interval-btn" hidden>Capture Run template…</button>
+      </div>
     </div>
-
-    <div class="stat total"><span class="value" id="total">0</span><span class="label">Total clicks</span></div>
-
-    <div class="spark">
-      <span class="label">Last 7 days</span>
-      <svg id="sparkSvg" viewBox="0 0 340 90" preserveAspectRatio="none"></svg>
-      <div id="sparkLabels" class="spark-labels"></div>
-    </div>
-
-    <div class="interval-row">
-      <span class="interval-label">Refresh interval: <b id="intervalValue">4000 ms</b></span>
-      <button id="fasterBtn" class="interval-btn" title="Check the screen more often">Faster</button>
-      <button id="slowerBtn" class="interval-btn" title="Check the screen less often">Slower</button>
-    </div>
-
-    <div id="status" class="status">Watching for the Cursor window…</div>
-  </div>
-  <script type="module" src="overlay.js"></script>
-</body>
+    <script type="module" src="overlay.js"></script>
+  </body>
 </html>

@@ -19,6 +19,12 @@ describe('formatMacPermissionDialogDetail', () => {
     assert.match(detail, /Screen Recording/);
     assert.match(detail, /Accessibility/);
     assert.match(detail, /Remove it from both permission lists/);
+    assert.match(detail, /What to do: click the matching "Open" button/);
+    // Diagnostics come last, behind a single labelled line.
+    const tech = detail.indexOf('Technical details:');
+    assert.ok(tech > detail.indexOf('Remove it from both permission lists'));
+    assert.match(detail.slice(tech), /Electron: denied, system: authorized/);
+    assert.doesNotMatch(detail.slice(0, tech), /Electron:/);
   });
 
   it('omits missing list when both checks pass', () => {
@@ -31,6 +37,6 @@ describe('formatMacPermissionDialogDetail', () => {
       electronAccessibility: true,
     };
     const detail = formatMacPermissionDialogDetail(snapshot);
-    assert.doesNotMatch(detail, /Still missing/);
+    assert.doesNotMatch(detail, /Missing:/);
   });
 });

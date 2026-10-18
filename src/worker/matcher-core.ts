@@ -107,8 +107,10 @@ export function resizeGrayXY(src: GrayImage, scaleX: number, scaleY: number): Gr
       const x0 = Math.max(0, Math.floor(sourceX));
       const x1 = Math.min(src.width - 1, x0 + 1);
       const fractionX = sourceX - x0;
-      const top = src.data[y0 * src.width + x0] * (1 - fractionX) + src.data[y0 * src.width + x1] * fractionX;
-      const bottom = src.data[y1 * src.width + x0] * (1 - fractionX) + src.data[y1 * src.width + x1] * fractionX;
+      const top =
+        src.data[y0 * src.width + x0] * (1 - fractionX) + src.data[y0 * src.width + x1] * fractionX;
+      const bottom =
+        src.data[y1 * src.width + x0] * (1 - fractionX) + src.data[y1 * src.width + x1] * fractionX;
       data[y * width + x] = top * (1 - fractionY) + bottom * fractionY;
     }
   }
@@ -255,7 +257,8 @@ function dotProduct(haystack: GrayImage, template: GrayImage, x: number, y: numb
     const haystackOffset = (y + templateY) * haystack.width + x;
     const templateOffset = templateY * template.width;
     for (let templateX = 0; templateX < template.width; templateX++) {
-      result += haystack.data[haystackOffset + templateX] * template.data[templateOffset + templateX];
+      result +=
+        haystack.data[haystackOffset + templateX] * template.data[templateOffset + templateX];
     }
   }
   return result;
@@ -389,20 +392,17 @@ export function findBestExactMatchInBounds(
   preference: 'score' | 'rightmost' = 'score',
   step = 1
 ): MatchCandidate | null {
-  if (template.image.width > haystack.image.width || template.image.height > haystack.image.height) {
+  if (
+    template.image.width > haystack.image.width ||
+    template.image.height > haystack.image.height
+  ) {
     return null;
   }
   if (!haystack.fullIntegral) haystack.fullIntegral = new Integral(haystack.image);
   const x0 = Math.max(0, Math.floor(bounds.x0));
   const y0 = Math.max(0, Math.floor(bounds.y0));
-  const x1 = Math.min(
-    haystack.image.width - template.image.width,
-    Math.ceil(bounds.x1)
-  );
-  const y1 = Math.min(
-    haystack.image.height - template.image.height,
-    Math.ceil(bounds.y1)
-  );
+  const x1 = Math.min(haystack.image.width - template.image.width, Math.ceil(bounds.x1));
+  const y1 = Math.min(haystack.image.height - template.image.height, Math.ceil(bounds.y1));
   if (x1 < x0 || y1 < y0) return null;
   const stride = Math.max(1, Math.floor(step));
 
@@ -421,8 +421,7 @@ export function findBestExactMatchInBounds(
       );
       if (
         preference === 'rightmost'
-          ? score >= minConfidence &&
-            (!best || x > best.x || (x === best.x && score > best.score))
+          ? score >= minConfidence && (!best || x > best.x || (x === best.x && score > best.score))
           : !best || score > best.score
       ) {
         best = { x, y, score };
@@ -513,7 +512,12 @@ export function evaluatePreparedMatch(
     searchFactor = 2;
     pyramid = 'half';
     // Four interleaved stride-two passes cover every half-resolution phase.
-    phases = [[0, 0], [1, 0], [0, 1], [1, 1]];
+    phases = [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ];
   } else {
     searchImage = haystack.coarse;
     searchIntegral = haystack.coarseIntegral;
@@ -632,14 +636,8 @@ export function evaluatePreparedMatch(
     let localBest: MatchCandidate | null = null;
     const centerX = Math.round((coarseCandidate.x + searchTemplate.width / 2) / coarseScale);
     const centerY = Math.round((coarseCandidate.y + searchTemplate.height / 2) / coarseScale);
-    const x0 = Math.max(
-      0,
-      Math.floor(centerX - template.image.width / 2 - radiusX)
-    );
-    const y0 = Math.max(
-      0,
-      Math.floor(centerY - template.image.height / 2 - radiusY)
-    );
+    const x0 = Math.max(0, Math.floor(centerX - template.image.width / 2 - radiusX));
+    const y0 = Math.max(0, Math.floor(centerY - template.image.height / 2 - radiusY));
     const x1 = Math.min(
       haystack.image.width - template.image.width,
       Math.ceil(centerX - template.image.width / 2 + radiusX)
@@ -690,10 +688,7 @@ export function evaluatePreparedMatch(
     }
   }
   return {
-    match:
-      bestCandidate && bestCandidate.score >= minConfidence
-        ? bestCandidate
-        : null,
+    match: bestCandidate && bestCandidate.score >= minConfidence ? bestCandidate : null,
     bestCandidate,
     bestCoarseScore,
     pyramid,
@@ -711,10 +706,5 @@ export function findBestPreparedMatch(
   minConfidence: number,
   cancelled: () => boolean = () => false
 ): MatchCandidate | null {
-  return evaluatePreparedMatch(
-    haystack,
-    template,
-    minConfidence,
-    cancelled
-  ).match;
+  return evaluatePreparedMatch(haystack, template, minConfidence, cancelled).match;
 }
