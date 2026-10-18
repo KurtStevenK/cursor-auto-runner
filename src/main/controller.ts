@@ -17,12 +17,20 @@ export interface ControllerHealth {
 
 type DetectorLike = Pick<Detector, 'detect' | 'cancelPending' | 'windowFound' | 'watchedKind'>;
 type ClickFn = (x: number, y: number) => Promise<void>;
+type IdleFn = () => number;
+
+/** The user counts as "actively typing/moving" below this many idle seconds. */
+export const TYPING_IDLE_THRESHOLD_S = 1;
 
 const MAX_BACKOFF_MS = 30_000;
 
 // Lazy so unit tests under plain Node never load the nut-js native addon.
 const defaultClicker: ClickFn = (x, y) =>
   (require('./clicker') as typeof import('./clicker')).clickAt(x, y);
+
+// Lazy for the same reason; the controller itself never imports electron.
+const defaultIdleSeconds: IdleFn = () =>
+  (require('electron') as typeof import('electron')).powerMonitor.getSystemIdleTime();
 
 export class ModeController {
   private consecutiveErrors = 0;
@@ -38,12 +46,16 @@ export class ModeController {
   constructor(
     private detector: DetectorLike,
     private stats: Pick<StatsStore, 'record'>,
-    private opts: { pollIntervalMs: number; confidence: number; cooldownMs: number; retryDelayMs?: number },
+    private opts: { pollIntervalMs: number; confidence: number; cooldownMs: number; retryDelayMs?: number;
+      focusBeforeClick?: boolean;
+      pauseWhileTyping?: boolean;
+    },
     private onModeChange?: (mode: Mode) => void,
     private onDetectionState?: (windowFound: boolean, watchedKind: 'cursor' | 'rustdesk' | null) => void,
     private onClick?: () => void,
     private onHealthChange?: () => void,
-    private clicker: ClickFn = defaultClicker
+    private clicker: ClickFn = defaultClicker,
+    private idleSeconds: IdleFn = defaultIdleSeconds
   ) {}
 
   get health(): ControllerHealth {
@@ -73,6 +85,35 @@ export class ModeController {
   /** Apply a new click cooldown live. */
   setCooldown(ms: number): void {
     this.opts.cooldownMs = Math.max(0, Math.min(60000, ms));
+  }
+
+  /** Toggle bringing the Cursor window to the front before each click. */
+  setFocusBeforeClick(v: boolean): void {
+    this.opts.focusBeforeClick = v;
+  }
+
+  /** Toggle skipping clicks while the user is actively using mouse/keyboard. */
+  setPauseWhileTyping(v: boolean): void {
+    this.opts.pauseWhileTyping = v;
+  }
+
+  /** True when a click should be deferred because the user is active right now. */
+  private userIsActive(): boolean {
+    if (this.opts.pauseWhileTyping === false) return false;
+    try {
+      return this.idleSeconds() < TYPING_IDLE_THRESHOLD_S;
+    } catch {
+      return false; // never block clicking on an unreadable idle time
+    }
+  }
+
+  private async focusIfWanted(hit: { focus: () => Promise<unknown> }): Promise<void> {
+    if (this.opts.focusBeforeClick === false) return;
+    try {
+      await hit.focus(); // best-effort: bring Cursor to foreground
+    } catch {
+      /* focus is optional */
+    }
   }
 
   /** Current poll interval (for display in the overlay). */
@@ -118,12 +159,8 @@ export class ModeController {
 
         if (result) {
           const sinceClick = Date.now() - this.lastClickAt;
-          if (sinceClick >= this.opts.cooldownMs) {
-            try {
-              await result.focus(); // best-effort: bring Cursor to foreground
-            } catch {
-              /* focus is optional */
-            }
+          if (sinceClick >= this.opts.cooldownMs && !this.userIsActive()) {
+            await this.focusIfWanted(result);
             await this.clicker(result.x, result.y);
             this.lastClickAt = Date.now();
             this.lastMatchAt = this.lastClickAt;
@@ -143,11 +180,8 @@ export class ModeController {
               if (!again) break; // button gone -> approval went through
               const near = Math.hypot(again.x - last.x, again.y - last.y) < 80;
               if (!near) break; // different button -> let the next poll handle it
-              try {
-                await again.focus();
-              } catch {
-                /* focus is optional */
-              }
+              if (this.userIsActive()) break; // retry on the next poll
+              await this.focusIfWanted(again);
               await this.clicker(again.x, again.y);
               this.lastClickAt = Date.now();
               this.lastMatchAt = this.lastClickAt;

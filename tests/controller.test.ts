@@ -8,7 +8,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function setup(
   script: Array<Hit | null | Error>,
-  opts: { pollIntervalMs?: number; cooldownMs?: number } = {}
+  opts: { pollIntervalMs?: number; cooldownMs?: number; focusBeforeClick?: boolean; pauseWhileTyping?: boolean } = {},
+  idleSeconds?: () => number
 ) {
   const detectTimes: number[] = [];
   const clicks: Array<[number, number]> = [];
@@ -35,7 +36,8 @@ function setup(
     undefined,
     undefined,
     () => void healthEvents++,
-    async (x, y) => void clicks.push([x, y])
+    async (x, y) => void clicks.push([x, y]),
+    idleSeconds
   );
   return { c, detectTimes, clicks, recorded, events: () => healthEvents };
 }
@@ -126,4 +128,45 @@ test('setConfidence and setCooldown apply live and are clamped', () => {
   t.c.setCooldown(-1);
   assert.equal((t.c as never as { opts: { confidence: number } }).opts.confidence, 0.99);
   assert.equal((t.c as never as { opts: { cooldownMs: number } }).opts.cooldownMs, 0);
+});
+
+test('focus runs before the click by default and is skipped when disabled', async () => {
+  let focuses = 0;
+  const h: Hit = { x: 5, y: 5, mode: 'run', focus: async () => (focuses++, true) };
+  const on = setup([h, null], {}, () => 60);
+  on.c.set('run');
+  await sleep(120);
+  on.c.set('idle');
+  assert.equal(on.clicks.length, 1);
+  assert.equal(focuses, 1);
+
+  focuses = 0;
+  const off = setup([h, null], { focusBeforeClick: false }, () => 60);
+  off.c.set('run');
+  await sleep(120);
+  off.c.set('idle');
+  assert.equal(off.clicks.length, 1);
+  assert.equal(focuses, 0);
+});
+
+test('pauseWhileTyping defers the click until the user is idle, without counting an error', async () => {
+  let idle = 0.2;
+  const t = setup([hit(10, 10)], { cooldownMs: 0 }, () => idle);
+  t.c.set('run');
+  await sleep(120);
+  assert.equal(t.clicks.length, 0);
+  assert.equal(t.recorded.length, 0);
+  assert.equal(t.c.health.consecutiveErrors, 0);
+  idle = 5;
+  await sleep(120);
+  t.c.set('idle');
+  assert.ok(t.clicks.length >= 1);
+});
+
+test('pauseWhileTyping=false clicks even while the user is active', async () => {
+  const t = setup([hit(10, 10), null], { pauseWhileTyping: false }, () => 0);
+  t.c.set('run');
+  await sleep(120);
+  t.c.set('idle');
+  assert.equal(t.clicks.length, 1);
 });

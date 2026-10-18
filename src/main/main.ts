@@ -141,6 +141,8 @@ function applySettings(patch: Partial<Settings>): void {
   const s = settings.get();
   if (patch.confidence !== undefined) controller.setConfidence(s.confidence);
   if (patch.cooldownMs !== undefined) controller.setCooldown(s.cooldownMs);
+  if (patch.focusCursorBeforeClick !== undefined) controller.setFocusBeforeClick(s.focusCursorBeforeClick);
+  if (patch.pauseWhileTyping !== undefined) controller.setPauseWhileTyping(s.pauseWhileTyping);
   if (patch.launchAtLogin !== undefined) applyLoginItem(s.launchAtLogin);
   if (patch.toggleShortcut !== undefined) registerToggleShortcut(s.toggleShortcut);
   tray?.rebuild();
@@ -197,6 +199,8 @@ app.whenReady().then(() => {
       pollIntervalMs: settings.get().pollIntervalMs,
       confidence: settings.get().confidence,
       cooldownMs: settings.get().cooldownMs,
+      focusBeforeClick: settings.get().focusCursorBeforeClick,
+      pauseWhileTyping: settings.get().pauseWhileTyping,
     },
     (mode) => {
       if (mode !== 'idle') lastActiveMode = mode;

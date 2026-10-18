@@ -33,6 +33,9 @@ export function sanitizeSettings(raw: unknown): Settings {
     toggleShortcut: (SHORTCUT_CHOICES as readonly unknown[]).includes(r.toggleShortcut)
       ? (r.toggleShortcut as string)
       : d.toggleShortcut,
+    focusCursorBeforeClick:
+      typeof r.focusCursorBeforeClick === 'boolean' ? r.focusCursorBeforeClick : d.focusCursorBeforeClick,
+    pauseWhileTyping: typeof r.pauseWhileTyping === 'boolean' ? r.pauseWhileTyping : d.pauseWhileTyping,
   };
 }
 

@@ -57,6 +57,7 @@
 - **Adjustable refresh interval** — set how often the screen is checked from the tray menu (*Faster* / *Slower*); the current value is shown right in the menu.
 - **Settings submenu** — *Start at login*, *Restore last mode on launch*, match *Confidence* (0.80–0.95) and *Click cooldown* (0.5–5 s) are changeable from the tray menu and apply immediately.
 - **Global shortcut** — optionally toggle auto-run on and off from anywhere (*Settings → Keyboard shortcut*: Ctrl/Cmd+Alt+R, Ctrl/Cmd+Shift+R or Ctrl/Cmd+Alt+Shift+R). It switches between *Stop* and the last mode you used.
+- **Focus and typing guards** — *Pause while I am typing* skips a click (and retries on the next check) while you are using the mouse or keyboard; *Focus Cursor before clicking* can be turned off to stop the app bringing Cursor to the front.
 - **System tray** with a state-colored icon: a **left click toggles the stats overlay**, right click opens the menu: *Start Auto Run*, *Start Auto Always Run*, *Stop*, *Capture templates…*, *Open templates folder*, *Stats…*, *Quit*.
 - **Stats overlay** — a live, frameless mini-window showing clicks for the **session**, **day**, **week**, **month** and **total**, plus a 7-day bar chart. Also shows the current **refresh interval** with *Faster* / *Slower* buttons to change it right there.
 - **Multi-monitor** — the Cursor window is located on whatever display it is on; coordinates are resolved across the whole virtual desktop.

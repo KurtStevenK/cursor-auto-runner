@@ -41,6 +41,10 @@ export interface Settings {
   launchAtLogin: boolean;
   /** Electron accelerator for the global start/stop shortcut; '' = disabled. */
   toggleShortcut: string;
+  /** Bring the Cursor window to the front before each click. */
+  focusCursorBeforeClick: boolean;
+  /** Skip clicks while the user is actively using the mouse or keyboard. */
+  pauseWhileTyping: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -52,6 +56,8 @@ export const DEFAULT_SETTINGS: Settings = {
   installUpdatesWithHomebrew: true,
   launchAtLogin: false,
   toggleShortcut: '',
+  focusCursorBeforeClick: true,
+  pauseWhileTyping: true,
 };
 
 /** Accelerators offered in the tray menu ('' = off). Anything else is rejected. */

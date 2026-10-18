@@ -7,6 +7,12 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.78] - 2026-10-18
+
+### Added
+- **Typing guard:** *Settings → Pause while I am typing* (on by default) skips a click while you are actively using the mouse or keyboard and retries on the next check, so the app no longer interrupts what you are typing.
+- **Focus control:** *Settings → Focus Cursor before clicking* (on by default, the previous behavior) can be turned off to stop the app from bringing the Cursor window to the front before each click.
+
 ## [1.2.77] - 2026-10-18
 
 ### Added

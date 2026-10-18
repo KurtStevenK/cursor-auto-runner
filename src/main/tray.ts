@@ -162,6 +162,18 @@ export class TrayUI {
           click: (item) => this.cb.updateSettings({ restoreLastMode: Boolean(item.checked) }),
         },
         {
+          label: 'Focus Cursor before clicking',
+          type: 'checkbox',
+          checked: s.focusCursorBeforeClick,
+          click: (item) => this.cb.updateSettings({ focusCursorBeforeClick: Boolean(item.checked) }),
+        },
+        {
+          label: 'Pause while I am typing',
+          type: 'checkbox',
+          checked: s.pauseWhileTyping,
+          click: (item) => this.cb.updateSettings({ pauseWhileTyping: Boolean(item.checked) }),
+        },
+        {
           label: 'Confidence',
           submenu: CONFIDENCE_CHOICES.map((v) => ({
             label: v.toFixed(2),
