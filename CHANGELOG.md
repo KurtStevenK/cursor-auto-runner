@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.67] - 2026-10-18
+
+### Added
+- **Security:** packaged builds flip Electron fuses: the binary can no longer run as plain Node, ignores `NODE_OPTIONS` and `--inspect`, loads the app only from the integrity-checked `app.asar`, and encrypts cookies.
+
 ## [1.2.66] - 2026-10-18
 
 ### Added

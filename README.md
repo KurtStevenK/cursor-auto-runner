@@ -89,7 +89,7 @@ This repository is **public and auditable** (MIT). Installers are built in [GitH
 |---|------------|
 | 1 | **VirusTotal on every release** (when `VIRUSTOTAL_API_KEY` is set in CI) — `Setup.exe`, `.dmg`, `.deb`, and `.AppImage` scanned (~70 engines); detection counts and **report links** (`virustotal.com/gui/file/{sha256}`) in GitHub Release notes |
 | 2 | **Quota-safe VT API use** — Free tier **4 req/min, 500/day**; script paces uploads (~16 s between files); large installers use VT’s `upload_url` path for files **> 32 MB** |
-| 3 | **Electron hardening (stats UI)** — Context isolation, `nodeIntegration: false`, minimal `contextBridge` preload ([`preload.ts`](src/main/preload.ts)); see [SECURITY.md](SECURITY.md) |
+| 3 | **Electron hardening (stats UI)** — Context isolation, `nodeIntegration: false`, minimal `contextBridge` preload ([`preload.ts`](src/main/preload.ts)); see [SECURITY.md](SECURITY.md); release builds also flip Electron fuses (no `ELECTRON_RUN_AS_NODE`, no `NODE_OPTIONS`/`--inspect`, app loads only from a hash-validated ASAR) |
 | 4 | **No arbitrary browsing** — No embedded portal; `shell.openExternal` is used for macOS **System Settings** permission links only |
 | 5 | **Sensitive OS access (by design)** — Screen capture and synthetic clicks need **Screen Recording** (macOS) and normal desktop automation permissions; stats stay in local SQLite under your profile |
 | 6 | **Single-instance lock** — One tray process only |
