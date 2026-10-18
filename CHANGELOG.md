@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.98] - 2026-10-18
+
+### Fixed
+- **Detection:** the unchanged-screen skip re-checks every window at least every 5 s and hashes every pixel of a quarter-scale downsample, so a button appearing in place of a similar element can no longer be skipped indefinitely. Stale entries are pruned.
+
 ## [1.2.97] - 2026-10-18
 
 ### Fixed

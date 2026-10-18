@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as path from 'node:path';
-import { Detector, type Matcher } from '../src/main/detector';
+import { Detector, UNCHANGED_SKIP_TTL_MS, type Matcher } from '../src/main/detector';
 import { MatchWorkerClient } from '../src/main/match-worker-client';
 import type {
   CaptureProvider,
@@ -29,7 +29,10 @@ const DISPLAY: DisplayInfo = {
   scaleFactor: 1,
 };
 
-async function setup(getBgra: () => Promise<{ width: number; height: number; bgra: Uint8Array }>) {
+async function setup(
+  getBgra: () => Promise<{ width: number; height: number; bgra: Uint8Array }>,
+  now?: () => number
+) {
   const windows: WindowProvider = { list: async () => [WINDOW] };
   const capture: CaptureProvider = {
     async captureCrops() {
@@ -81,6 +84,7 @@ async function setup(getBgra: () => Promise<{ width: number; height: number; bgr
     displays: () => [DISPLAY],
     templateDirs: () => [path.join(ROOT, 'assets', 'templates')],
     loadImage: loadTemplate,
+    now,
   });
   return { detector, matchCalls: () => matchCalls };
 }
@@ -138,6 +142,38 @@ test('detector skips matching when a missed crop is unchanged', async () => {
     assert.equal(await detector.detect('run', 0.88), null);
     assert.equal(matchCalls(), 1, 'matcher must not run on an unchanged crop');
     assert.ok(detector.lastMetrics.skippedUnchanged >= 1);
+  } finally {
+    await detector.dispose();
+  }
+});
+
+test('detector re-matches an unchanged missed crop after the skip TTL', async () => {
+  const gray = {
+    width: 400,
+    height: 300,
+    bgra: new Uint8Array(400 * 300 * 4).fill(128),
+  };
+  let clock = 1_000_000;
+  const { detector, matchCalls } = await setup(
+    async () => gray,
+    () => clock
+  );
+  try {
+    assert.equal(await detector.detect('run', 0.88), null);
+    assert.equal(matchCalls(), 1);
+
+    clock += UNCHANGED_SKIP_TTL_MS - 1;
+    assert.equal(await detector.detect('run', 0.88), null);
+    assert.equal(matchCalls(), 1, 'still skipped inside the TTL');
+    assert.ok(detector.lastMetrics.skippedUnchanged >= 1);
+
+    clock += 2;
+    assert.equal(await detector.detect('run', 0.88), null);
+    assert.equal(matchCalls(), 2, 'matcher must run again past the TTL');
+    assert.equal(detector.lastMetrics.skippedUnchanged, 0);
+
+    assert.equal(await detector.detect('run', 0.88), null);
+    assert.equal(matchCalls(), 2, 'TTL restarts after the re-match');
   } finally {
     await detector.dispose();
   }

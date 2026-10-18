@@ -42,7 +42,14 @@ export interface DetectorOptions {
   /** Bundled templates dir first, then user capture dirs. */
   templateDirs?: () => string[];
   loadImage?: (file: string) => Promise<GrayImage>;
+  /** Clock, injectable for tests. Defaults to Date.now. */
+  now?: () => number;
 }
+
+/** A cached miss is re-checked by the matcher once it is older than this. */
+export const UNCHANGED_SKIP_TTL_MS = 5000;
+/** Cached misses older than this are dropped at the start of each detect. */
+const MISS_HASH_PRUNE_MS = 60_000;
 
 const EMPTY_METRICS: DetectionMetrics = {
   totalMs: 0,
@@ -125,6 +132,7 @@ export class Detector {
   private missLogStreak = 0;
   private lastMissLogAt = 0;
   private disposing = false;
+  private readonly nowFn: () => number;
 
   windowFound = false;
   /** Per-crop hash of the last pass that produced a miss (unchanged-screen skip). */
@@ -134,6 +142,7 @@ export class Detector {
   lastMetrics: DetectionMetrics = { ...EMPTY_METRICS };
 
   constructor(options: DetectorOptions = {}) {
+    this.nowFn = options.now ?? Date.now;
     this.matcher = options.matcher ?? new MatchWorkerClient();
     this.windowProvider = options.windows ?? null;
     this.captureProvider = options.capture ?? null;
@@ -356,6 +365,10 @@ export class Detector {
         this.missHashes.clear();
         this.lastDetectParams = { mode, confidence };
       }
+      const detectNow = this.nowFn();
+      for (const [key, entry] of this.missHashes) {
+        if (detectNow - entry.lastMissAt > MISS_HASH_PRUNE_MS) this.missHashes.delete(key);
+      }
       // Hash before the buffers are transferred (and detached) to the worker.
       const hashes = new Map<number, { key: string; hash: number }>();
       const toMatch: CropContext[] = [];
@@ -369,7 +382,11 @@ export class Detector {
         );
         hashes.set(crop.id, { key, hash });
         const previous = this.missHashes.get(key);
-        if (previous && previous.hash === hash) {
+        if (
+          previous &&
+          previous.hash === hash &&
+          detectNow - previous.lastMissAt <= UNCHANGED_SKIP_TTL_MS
+        ) {
           cropsDropped++;
         } else {
           toMatch.push(crop);
@@ -394,10 +411,10 @@ export class Detector {
         }
         for (const crop of crops) this.missHashes.delete(hashes.get(crop.id)!.key);
       } else {
-        const now = Date.now();
+        const missAt = this.nowFn();
         for (const crop of crops) {
           const entry = hashes.get(crop.id)!;
-          this.missHashes.set(entry.key, { hash: entry.hash, lastMissAt: now });
+          this.missHashes.set(entry.key, { hash: entry.hash, lastMissAt: missAt });
         }
       }
       metrics.matchMs = response.matchMs;

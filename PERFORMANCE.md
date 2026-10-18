@@ -128,4 +128,6 @@ npm start
 
 ## Unchanged-screen skip
 
-Before matching, each captured crop is hashed (sampled FNV-1a); a crop whose hash equals that of the previous pass, which was a miss, is not sent to the matcher worker, and the count is reported as `skippedUnchanged` in the perf metrics.
+Before matching, each captured crop is hashed with a full-coverage FNV-1a: the crop is downsampled 4x per axis (B+G+R summed per 4x4 block) and every block value is hashed, so any button-sized change alters the hash (about 4 ms for 1920x1080; a sparse pixel stride could miss a small Run button). A crop whose hash equals that of the previous pass, which was a miss, is not sent to the matcher worker, and the count is reported as `skippedUnchanged` in the perf metrics.
+
+The skip is time-limited: a cached miss older than `UNCHANGED_SKIP_TTL_MS` (5 s) forces a full match, and the entry's timestamp is refreshed only when the matcher actually ran and missed. Entries older than 60 s are pruned at the start of each detect, so the cache cannot grow without bound or stall detection on a static screen.
