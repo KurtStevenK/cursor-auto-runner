@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.116] - 2026-10-18
+
+### Fixed
+- **Landing page deploy:** the Firebase deploy job synced the release manifest for the package version, which is bumped per task and rarely matches a published release, so it skipped deploying and the live page stayed on 1.2.59. It now syncs the newest published GitHub Release.
+
 ## [1.2.115] - 2026-10-18
 
 ### Fixed
