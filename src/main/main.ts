@@ -274,24 +274,35 @@ async function showWelcome(): Promise<void> {
       ? 'On macOS it needs two permissions: Screen Recording (to see Cursor) and Accessibility (to click). You will be asked when you first start it.\n\n'
       : '') +
     'How to start: right-click the tray icon and choose Start Auto Run (or Start Auto Always Run). Left-click the tray icon to see your stats.';
+  const loginSupported = process.platform !== 'linux';
+  const wasLaunchAtLogin = settings.get().launchAtLogin;
   try {
-    const { checkboxChecked } = await dialog.showMessageBox({
+    const { response, checkboxChecked = false } = await dialog.showMessageBox({
       type: 'info',
       title: 'Welcome to Cursor Auto Runner',
       message: 'Welcome to Cursor Auto Runner',
       detail,
-      buttons: ['Got it'],
+      // Two buttons so that dismissing the dialog (Esc / close) is
+      // distinguishable from pressing the primary button.
+      buttons: ['Got it', 'Close'],
       defaultId: 0,
-      checkboxLabel: 'Start at login',
-      checkboxChecked: settings.get().launchAtLogin,
+      cancelId: 1,
+      // Login items are a no-op on Linux: do not offer the checkbox there.
+      ...(loginSupported
+        ? { checkboxLabel: 'Start at login', checkboxChecked: wasLaunchAtLogin }
+        : {}),
     });
-    applySettings({
-      launchAtLogin: Boolean(checkboxChecked),
-      onboardingShownVersion: app.getVersion(),
-    });
+    const patch: Partial<Settings> = { onboardingShownVersion: app.getVersion() };
+    // Only an explicit confirmation changes start-at-login; a dismissed
+    // dialog must change nothing.
+    if (loginSupported && response === 0) {
+      if (checkboxChecked === true) patch.launchAtLogin = true;
+      else if (wasLaunchAtLogin) patch.launchAtLogin = false;
+    }
+    applySettings(patch);
   } catch (err) {
+    // Not recorded as shown: the dialog never resolved normally.
     console.error('[welcome] dialog failed:', err);
-    settings.set({ onboardingShownVersion: app.getVersion() });
   }
 }
 
@@ -350,6 +361,7 @@ function registerToggleShortcut(accelerator: string): void {
 }
 
 function applyLoginItem(openAtLogin: boolean): void {
+  if (process.platform === 'linux') return; // no-op there
   try {
     app.setLoginItemSettings({ openAtLogin });
   } catch (err) {
@@ -363,7 +375,7 @@ app.whenReady().then(() => {
     `Cursor Auto Runner ${app.getVersion()} starting (${process.platform}, Electron ${process.versions.electron})`
   );
   startPerformanceMonitor();
-  settings = new SettingsStore();
+  settings = new SettingsStore(undefined, app.getVersion());
   stats = new StatsStore();
   detector = new Detector();
   controller = new ModeController(
@@ -452,10 +464,13 @@ app.whenReady().then(() => {
   // Reconcile the OS login item with the stored setting (the user may have
   // changed it in system settings; the stored value wins only if it differs).
   const s = settings.get();
-  try {
-    if (app.getLoginItemSettings().openAtLogin !== s.launchAtLogin) applyLoginItem(s.launchAtLogin);
-  } catch (err) {
-    console.error('[settings] getLoginItemSettings failed:', err);
+  if (process.platform !== 'linux') {
+    try {
+      if (app.getLoginItemSettings().openAtLogin !== s.launchAtLogin)
+        applyLoginItem(s.launchAtLogin);
+    } catch (err) {
+      console.error('[settings] getLoginItemSettings failed:', err);
+    }
   }
 
   registerToggleShortcut(s.toggleShortcut);

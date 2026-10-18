@@ -7,6 +7,14 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.94] - 2026-10-18
+
+### Fixed
+- The first-run welcome dialog only enables "Start at login" when you confirm with "Got it" and the box is checked; dismissing or quitting while it is open changes nothing and no longer registers a login item.
+- The welcome is recorded as shown only after the dialog resolved normally.
+- Users upgrading from versions before the welcome dialog existed no longer see it.
+- "Start at login" is hidden on Linux (login items are not supported there), and the login-item reconcile is skipped.
+
 ## [1.2.93] - 2026-10-18
 
 ### Fixed

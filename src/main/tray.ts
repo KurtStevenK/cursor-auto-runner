@@ -165,12 +165,17 @@ export class TrayUI {
     return {
       label: 'Settings',
       submenu: [
-        {
-          label: 'Start at login',
-          type: 'checkbox',
-          checked: s.launchAtLogin,
-          click: (item) => this.cb.updateSettings({ launchAtLogin: Boolean(item.checked) }),
-        },
+        // Login items are a no-op on Linux.
+        ...(process.platform === 'linux'
+          ? []
+          : ([
+              {
+                label: 'Start at login',
+                type: 'checkbox',
+                checked: s.launchAtLogin,
+                click: (item) => this.cb.updateSettings({ launchAtLogin: Boolean(item.checked) }),
+              },
+            ] as MenuItemConstructorOptions[])),
         {
           label: 'Restore last mode on launch',
           type: 'checkbox',

@@ -99,13 +99,21 @@ export function sanitizeSettings(raw: unknown): Settings {
 export class SettingsStore {
   private file: string;
   private data: Settings;
+  /** True when no settings file existed before this launch (first run). */
+  readonly wasFreshInstall: boolean;
 
-  constructor(dir?: string) {
+  constructor(dir?: string, currentVersion = 'legacy') {
     this.file = path.join(dir ?? defaultUserDataDir(), 'settings.json');
     this.data = sanitizeSettings(undefined);
+    this.wasFreshInstall = !fs.existsSync(this.file);
     try {
-      if (fs.existsSync(this.file)) {
+      if (!this.wasFreshInstall) {
         this.data = sanitizeSettings(JSON.parse(fs.readFileSync(this.file, 'utf8')));
+        // Upgrading from a version without the welcome dialog: the user is
+        // not new, so do not show it (persisted on the first save).
+        if (this.data.onboardingShownVersion === '') {
+          this.data.onboardingShownVersion = currentVersion;
+        }
       }
     } catch (err) {
       console.error('[settings] failed to read, using defaults:', err);

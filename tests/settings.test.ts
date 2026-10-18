@@ -156,3 +156,19 @@ test('waylandNoticeShown defaults to false and only accepts booleans', () => {
   assert.equal(sanitizeSettings({ waylandNoticeShown: true }).waylandNoticeShown, true);
   assert.equal(sanitizeSettings({ waylandNoticeShown: 1 }).waylandNoticeShown, false);
 });
+
+test('fresh install is detected and still shows onboarding', () => {
+  const store = new SettingsStore(tmp(), '1.2.94');
+  assert.equal(store.wasFreshInstall, true);
+  assert.equal(store.get().onboardingShownVersion, '');
+});
+
+test('existing settings without onboardingShownVersion count as already onboarded', () => {
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify({ pollIntervalMs: 500 }));
+  const store = new SettingsStore(dir, '1.2.94');
+  assert.equal(store.wasFreshInstall, false);
+  assert.equal(store.get().onboardingShownVersion, '1.2.94');
+  store.set({ confidence: 0.9 });
+  assert.equal(new SettingsStore(dir, '9.9.9').get().onboardingShownVersion, '1.2.94');
+});
