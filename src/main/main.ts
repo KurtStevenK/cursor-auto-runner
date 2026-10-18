@@ -2,19 +2,30 @@
  * Cursor Auto Runner — main process entry point.
  * Wires tray, mode controller, detector, stats store and overlay window.
  */
-import { app, BrowserWindow, globalShortcut, ipcMain, Notification, powerMonitor, shell } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme, Notification, powerMonitor, screen, shell } from 'electron';
 import * as path from 'path';
 import { Detector } from './detector';
 import { ModeController } from './controller';
 import { StatsStore } from './stats';
-import { SettingsStore } from './settings';
+import { SettingsStore, boundsIntersectDisplays } from './settings';
 import { TrayUI } from './tray';
 import { ensureMacPermissions } from './permissions';
 import { setButtonTestListener, showButtonTest } from './button-test';
 import { UpdateController } from './updates';
 import { startCapture, stopCapture, templatesBaseDir } from './capture';
 import * as fs from 'fs';
-import { IPC, Mode, Settings, StatsSnapshot, DEFAULT_SETTINGS, nextToggleMode } from '../shared/types';
+import {
+  IPC,
+  Mode,
+  Settings,
+  StatsSnapshot,
+  DEFAULT_SETTINGS,
+  nextToggleMode,
+  OVERLAY_MIN_WIDTH,
+  OVERLAY_MIN_HEIGHT,
+  OVERLAY_DEFAULT_WIDTH,
+  OVERLAY_DEFAULT_HEIGHT,
+} from '../shared/types';
 import { installFileLogger, logDirectory } from './log';
 import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
 
@@ -105,16 +116,24 @@ function openOverlay(): void {
     overlay = null;
     return;
   }
+  const s = settings.get();
+  // Restore the saved position only if it is still on a connected display.
+  const saved = s.overlayBounds;
+  const restore =
+    saved && boundsIntersectDisplays(saved, screen.getAllDisplays().map((d) => d.workArea)) ? saved : null;
   overlay = new BrowserWindow({
-    width: 400,
-    height: 560,
+    width: restore?.width ?? OVERLAY_DEFAULT_WIDTH,
+    height: restore?.height ?? OVERLAY_DEFAULT_HEIGHT,
+    ...(restore ? { x: restore.x, y: restore.y } : { center: true }),
+    minWidth: OVERLAY_MIN_WIDTH,
+    minHeight: OVERLAY_MIN_HEIGHT,
     show: false,
     frame: false,
-    resizable: false,
-    alwaysOnTop: true,
+    resizable: true,
+    alwaysOnTop: s.overlayAlwaysOnTop,
     skipTaskbar: true,
     transparent: false,
-    backgroundColor: '#0b1220',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0b1220' : '#eef2f7',
     title: 'Cursor Auto Runner — Stats',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -122,7 +141,24 @@ function openOverlay(): void {
       nodeIntegration: false,
     },
   });
-  overlay.setAlwaysOnTop(true, 'screen-saver');
+  if (s.overlayAlwaysOnTop) overlay.setAlwaysOnTop(true, 'floating');
+  const win = overlay;
+  let boundsTimer: NodeJS.Timeout | null = null;
+  const saveBounds = (): void => {
+    if (win.isDestroyed()) return;
+    const b = win.getBounds();
+    settings.set({ overlayBounds: b });
+  };
+  const saveBoundsSoon = (): void => {
+    if (boundsTimer) clearTimeout(boundsTimer);
+    boundsTimer = setTimeout(saveBounds, 400);
+  };
+  win.on('resize', saveBoundsSoon);
+  win.on('move', saveBoundsSoon);
+  win.on('close', () => {
+    if (boundsTimer) clearTimeout(boundsTimer);
+    saveBounds();
+  });
   overlay.loadFile(path.join(__dirname, '..', 'overlay', 'index.html'));
   // Surface renderer errors in the main log — overlay bugs used to be silent.
   overlay.webContents.on('console-message', (_e, level, message, line, sourceId) => {
@@ -161,6 +197,10 @@ function applySettings(patch: Partial<Settings>): void {
   if (patch.pauseWhileTyping !== undefined) controller.setPauseWhileTyping(s.pauseWhileTyping);
   if (patch.launchAtLogin !== undefined) applyLoginItem(s.launchAtLogin);
   if (patch.toggleShortcut !== undefined) registerToggleShortcut(s.toggleShortcut);
+  if (patch.overlayAlwaysOnTop !== undefined && overlay && !overlay.isDestroyed()) {
+    if (s.overlayAlwaysOnTop) overlay.setAlwaysOnTop(true, 'floating');
+    else overlay.setAlwaysOnTop(false);
+  }
   tray?.rebuild();
 }
 

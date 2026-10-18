@@ -57,7 +57,23 @@ export interface Settings {
   focusCursorBeforeClick: boolean;
   /** Skip clicks while the user is actively using the mouse or keyboard. */
   pauseWhileTyping: boolean;
+  /** Keep the stats overlay above other windows. */
+  overlayAlwaysOnTop: boolean;
+  /** Last position and size of the stats overlay (absent until moved/resized). */
+  overlayBounds?: OverlayBounds;
 }
+
+export interface OverlayBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export const OVERLAY_MIN_WIDTH = 360;
+export const OVERLAY_MIN_HEIGHT = 520;
+export const OVERLAY_DEFAULT_WIDTH = 400;
+export const OVERLAY_DEFAULT_HEIGHT = 560;
 
 export const DEFAULT_SETTINGS: Settings = {
   pollIntervalMs: 4000,
@@ -70,6 +86,7 @@ export const DEFAULT_SETTINGS: Settings = {
   toggleShortcut: '',
   focusCursorBeforeClick: true,
   pauseWhileTyping: true,
+  overlayAlwaysOnTop: true,
 };
 
 /** Accelerators offered in the tray menu ('' = off). Anything else is rejected. */

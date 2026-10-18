@@ -176,6 +176,12 @@ export class TrayUI {
           click: (item) => this.cb.updateSettings({ pauseWhileTyping: Boolean(item.checked) }),
         },
         {
+          label: 'Keep stats window on top',
+          type: 'checkbox',
+          checked: s.overlayAlwaysOnTop,
+          click: (item) => this.cb.updateSettings({ overlayAlwaysOnTop: Boolean(item.checked) }),
+        },
+        {
           label: 'Confidence',
           submenu: CONFIDENCE_CHOICES.map((v) => ({
             label: v.toFixed(2),

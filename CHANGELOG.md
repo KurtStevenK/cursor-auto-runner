@@ -7,6 +7,13 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.85] - 2026-10-18
+
+### Changed
+
+- **Stats overlay window** — it is now resizable (minimum 360×520), remembers its size and position between sessions (and re-centres if its display was disconnected), and uses a regular always-on-top level instead of the screen-saver level. *Settings → Keep stats window on top* turns always-on-top off.
+- The overlay follows the system light/dark appearance.
+
 ## [1.2.84] - 2026-10-18
 
 ### Added

@@ -84,7 +84,7 @@ function renderSpark(byDay: { date: string; count: number }[]): void {
       return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(
         d.count > 0 ? 3 : 0,
         h
-      ).toFixed(1)}" rx="3" fill="${d.count > 0 ? 'var(--green)' : 'rgba(255,255,255,0.08)'}"><title>${
+      ).toFixed(1)}" rx="3" fill="${d.count > 0 ? 'var(--green)' : 'var(--spark-empty)'}"><title>${
         d.date
       }: ${d.count} clicks</title></rect>
       <text x="${mid}" y="${(y - 3).toFixed(1)}" fill="#7c8ba1" font-size="9" text-anchor="middle">${
