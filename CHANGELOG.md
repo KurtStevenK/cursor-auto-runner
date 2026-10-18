@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.117] - 2026-10-18
+
+### Fixed
+- **Dependencies:** `http-cache-semantics` is overridden to 4.3.0 for electron-builder's download tooling (Dependabot high alert; dev-only). SECURITY.md documents the remaining build-only `sprintf-js` advisory, and the plan lists the items that need the maintainer (light-theme captures, Azure signing account).
+
 ## [1.2.116] - 2026-10-18
 
 ### Fixed
