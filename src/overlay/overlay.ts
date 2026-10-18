@@ -17,6 +17,7 @@ export interface StatsSnapshot {
   windowFound: boolean;
   watchedKind: 'cursor' | 'rustdesk' | null;
   pollIntervalMs: number;
+  effectivePollIntervalMs?: number;
 }
 
 // Duplicated from shared/types.ts (page must stay self-contained).
@@ -105,17 +106,29 @@ function renderInterval(ms: number): void {
   s.dataset.ms = slower !== null ? String(slower) : '';
 }
 
+function adaptiveNote(snap: StatsSnapshot): string {
+  const eff = snap.effectivePollIntervalMs;
+  if (snap.mode === 'idle' || !eff || eff === snap.pollIntervalMs) return '';
+  const why = !snap.windowFound
+    ? 'while no Cursor window is visible'
+    : eff > snap.pollIntervalMs
+      ? 'while you are away'
+      : 'right after a click';
+  return ` Checking every ${eff} ms ${why}.`;
+}
+
 function renderStatus(snap: StatsSnapshot): void {
   const status = $('status');
   if (!snap.windowFound && snap.mode !== 'idle') {
     status.textContent =
-      'Cursor or RustDesk window not found — make sure Cursor, or a fullscreen RustDesk session, is visible on screen.';
+      'Cursor or RustDesk window not found — make sure Cursor, or a fullscreen RustDesk session, is visible on screen.' +
+      adaptiveNote(snap);
     status.className = 'status warn';
   } else if (snap.mode !== 'idle' && snap.watchedKind === 'rustdesk') {
-    status.textContent = `Watching the RustDesk session… (since ${new Date(snap.since).toLocaleTimeString()})`;
+    status.textContent = `Watching the RustDesk session… (since ${new Date(snap.since).toLocaleTimeString()})${adaptiveNote(snap)}`;
     status.className = 'status';
   } else if (snap.mode !== 'idle') {
-    status.textContent = `Watching the Cursor window… (since ${new Date(snap.since).toLocaleTimeString()})`;
+    status.textContent = `Watching the Cursor window… (since ${new Date(snap.since).toLocaleTimeString()})${adaptiveNote(snap)}`;
     status.className = 'status';
   } else {
     status.textContent = 'Start Auto Run from the tray menu to begin.';

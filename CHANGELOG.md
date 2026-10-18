@@ -7,6 +7,15 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.79] - 2026-10-18
+
+### Added
+- **Adaptive polling:** the refresh interval you choose stays the baseline, but the app now polls at most every 2 s while no Cursor window is visible, every 5 s after 5 minutes of system inactivity, and at 500 ms for the three checks after a click. The stats overlay shows the interval in use when it differs from your setting.
+- **Lock-screen and sleep pause:** auto-run pauses while the screen is locked or the computer is suspended and resumes in the previous mode on unlock or wake.
+
+### Fixed
+- Stats are flushed to disk when the system shuts down.
+
 ## [1.2.78] - 2026-10-18
 
 ### Added

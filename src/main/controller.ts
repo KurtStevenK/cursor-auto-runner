@@ -24,6 +24,32 @@ export const TYPING_IDLE_THRESHOLD_S = 1;
 
 const MAX_BACKOFF_MS = 30_000;
 
+/** Polls after a click that run at the fast interval. */
+export const FAST_POLLS_AFTER_CLICK = 3;
+export const NO_WINDOW_MIN_INTERVAL_MS = 2000;
+export const AWAY_MIN_INTERVAL_MS = 5000;
+export const AWAY_IDLE_THRESHOLD_S = 5 * 60;
+export const AFTER_CLICK_INTERVAL_MS = 500;
+
+export interface PollState {
+  /** The user-set interval. */
+  baseMs: number;
+  windowFound: boolean;
+  /** System idle time in seconds (0 when unknown). */
+  idleSeconds: number;
+  /** Remaining fast polls after a recent click. */
+  fastPollsLeft: number;
+}
+
+/** Pure interval selection for the next poll (see B2 in IMPROVEMENT-PLAN.md). */
+export function nextPollIntervalMs(s: PollState): number {
+  if (s.fastPollsLeft > 0) return Math.min(s.baseMs, AFTER_CLICK_INTERVAL_MS);
+  let ms = s.baseMs;
+  if (!s.windowFound) ms = Math.max(ms, NO_WINDOW_MIN_INTERVAL_MS);
+  if (s.idleSeconds > AWAY_IDLE_THRESHOLD_S) ms = Math.max(ms, AWAY_MIN_INTERVAL_MS);
+  return ms;
+}
+
 // Lazy so unit tests under plain Node never load the nut-js native addon.
 const defaultClicker: ClickFn = (x, y) =>
   (require('./clicker') as typeof import('./clicker')).clickAt(x, y);
@@ -42,6 +68,8 @@ export class ModeController {
   private running = false;
   private loopToken = 0;
   private lastClickAt = 0;
+  private fastPollsLeft = 0;
+  private lastIdleSeconds = 0;
 
   constructor(
     private detector: DetectorLike,
@@ -116,6 +144,16 @@ export class ModeController {
     }
   }
 
+  /** Interval the loop is actually using right now (adaptive; read-only). */
+  get effectivePollIntervalMs(): number {
+    return nextPollIntervalMs({
+      baseMs: this.opts.pollIntervalMs,
+      windowFound: this.detector.windowFound,
+      idleSeconds: this.lastIdleSeconds,
+      fastPollsLeft: this.fastPollsLeft,
+    });
+  }
+
   /** Current poll interval (for display in the overlay). */
   get pollIntervalMs(): number {
     return this.opts.pollIntervalMs;
@@ -164,6 +202,7 @@ export class ModeController {
             await this.clicker(result.x, result.y);
             this.lastClickAt = Date.now();
             this.lastMatchAt = this.lastClickAt;
+            this.fastPollsLeft = FAST_POLLS_AFTER_CLICK;
             this.stats.record(result.mode);
             this.onClick?.();
             this.onHealthChange?.();
@@ -185,6 +224,7 @@ export class ModeController {
               await this.clicker(again.x, again.y);
               this.lastClickAt = Date.now();
               this.lastMatchAt = this.lastClickAt;
+              this.fastPollsLeft = FAST_POLLS_AFTER_CLICK;
               this.stats.record(again.mode);
               this.onClick?.();
               this.onHealthChange?.();
@@ -200,10 +240,17 @@ export class ModeController {
         this.onHealthChange?.();
       }
       // Sleep in small slices so Stop reacts quickly; back off after errors.
+      try {
+        this.lastIdleSeconds = this.idleSeconds();
+      } catch {
+        this.lastIdleSeconds = 0;
+      }
+      const interval = this.effectivePollIntervalMs;
+      if (this.fastPollsLeft > 0) this.fastPollsLeft--;
       const wait =
         this.consecutiveErrors > 0
-          ? Math.min(MAX_BACKOFF_MS, this.opts.pollIntervalMs * 2 ** this.consecutiveErrors)
-          : this.opts.pollIntervalMs;
+          ? Math.min(MAX_BACKOFF_MS, interval * 2 ** this.consecutiveErrors)
+          : interval;
       const deadline = Date.now() + wait;
       while (Date.now() < deadline && this.running && token === this.loopToken) {
         await new Promise((r) => setTimeout(r, Math.min(50, Math.max(1, deadline - Date.now()))));

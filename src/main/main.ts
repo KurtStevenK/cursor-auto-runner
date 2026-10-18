@@ -2,7 +2,7 @@
  * Cursor Auto Runner — main process entry point.
  * Wires tray, mode controller, detector, stats store and overlay window.
  */
-import { app, BrowserWindow, globalShortcut, ipcMain, Notification, shell } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, Notification, powerMonitor, shell } from 'electron';
 import * as path from 'path';
 import { Detector } from './detector';
 import { ModeController } from './controller';
@@ -44,12 +44,14 @@ let lastWatchedKind: string | null = null;
 let quitCleanupStarted = false;
 let lastActiveMode: Mode = 'run';
 let registeredShortcut = '';
+let modeBeforeSleep: Mode | null = null;
 
 function currentSnapshot(): StatsSnapshot {
   const snap = stats.snapshot(controller.current);
   snap.windowFound = detector.windowFound;
   snap.watchedKind = detector.watchedKind;
   snap.pollIntervalMs = controller.pollIntervalMs;
+  snap.effectivePollIntervalMs = controller.effectivePollIntervalMs;
   return snap;
 }
 
@@ -292,6 +294,24 @@ app.whenReady().then(() => {
   }
 
   registerToggleShortcut(s.toggleShortcut);
+
+  // Pause while the screen is locked or the machine sleeps; resume afterwards.
+  const pauseForPower = (): void => {
+    if (modeBeforeSleep === null && controller.current !== 'idle') {
+      modeBeforeSleep = controller.current;
+      controller.set('idle');
+    }
+  };
+  const resumeFromPower = (): void => {
+    const mode = modeBeforeSleep;
+    modeBeforeSleep = null;
+    if (mode) void applyMode(mode);
+  };
+  powerMonitor.on('lock-screen', pauseForPower);
+  powerMonitor.on('suspend', pauseForPower);
+  powerMonitor.on('unlock-screen', resumeFromPower);
+  powerMonitor.on('resume', resumeFromPower);
+  powerMonitor.on('shutdown', () => stats?.dispose());
 
   // Optionally restore the last used mode on launch.
   if (s.restoreLastMode && s.lastMode !== 'idle') {

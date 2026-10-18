@@ -211,6 +211,7 @@ export class StatsStore {
       windowFound: false, // filled in by main from detector state
       watchedKind: null,
       pollIntervalMs: 4000, // filled in by main from the controller
+      effectivePollIntervalMs: 4000, // filled in by main from the controller
     };
     this.snapshotCache = { at: now, snapshot };
     reportStatsDuration(perfNow() - startedAt);

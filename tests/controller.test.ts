@@ -170,3 +170,40 @@ test('pauseWhileTyping=false clicks even while the user is active', async () => 
   t.c.set('idle');
   assert.equal(t.clicks.length, 1);
 });
+
+import { nextPollIntervalMs, FAST_POLLS_AFTER_CLICK } from '../src/main/controller';
+
+const ps = (o: Partial<Parameters<typeof nextPollIntervalMs>[0]> = {}) => ({
+  baseMs: 1000,
+  windowFound: true,
+  idleSeconds: 0,
+  fastPollsLeft: 0,
+  ...o,
+});
+
+test('nextPollIntervalMs keeps the user interval in the normal case', () => {
+  assert.equal(nextPollIntervalMs(ps()), 1000);
+});
+
+test('nextPollIntervalMs slows down without a window and when the user is away', () => {
+  assert.equal(nextPollIntervalMs(ps({ windowFound: false })), 2000);
+  assert.equal(nextPollIntervalMs(ps({ windowFound: false, baseMs: 4000 })), 4000);
+  assert.equal(nextPollIntervalMs(ps({ idleSeconds: 301 })), 5000);
+  assert.equal(nextPollIntervalMs(ps({ idleSeconds: 300 })), 1000);
+  assert.equal(nextPollIntervalMs(ps({ idleSeconds: 600, baseMs: 6000 })), 6000);
+  assert.equal(nextPollIntervalMs(ps({ idleSeconds: 600, windowFound: false })), 5000);
+});
+
+test('nextPollIntervalMs speeds up right after a click, never slower than the setting', () => {
+  assert.equal(nextPollIntervalMs(ps({ baseMs: 4000, fastPollsLeft: 2 })), 500);
+  assert.equal(nextPollIntervalMs(ps({ baseMs: 300, fastPollsLeft: 1 })), 300);
+  assert.equal(nextPollIntervalMs(ps({ baseMs: 4000, fastPollsLeft: 1, windowFound: false })), 500);
+  assert.equal(FAST_POLLS_AFTER_CLICK, 3);
+});
+
+test('effectivePollIntervalMs reflects adaptive state while the setting is unchanged', () => {
+  const t = setup([null], { pollIntervalMs: 20 }, () => 0);
+  assert.equal(t.c.effectivePollIntervalMs, 20);
+  (t.c as never as { fastPollsLeft: number }).fastPollsLeft = 0;
+  assert.equal(t.c.pollIntervalMs, 20);
+});

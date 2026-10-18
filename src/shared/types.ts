@@ -21,7 +21,8 @@ export interface StatsSnapshot {
   since: string; // session start ISO timestamp
   windowFound: boolean; // was a Cursor or RustDesk window detected on the last poll?
   watchedKind: WatchKind | null;
-  pollIntervalMs: number; // current detection refresh interval
+  pollIntervalMs: number; // current detection refresh interval (user setting)
+  effectivePollIntervalMs: number; // interval actually used right now (adaptive)
 }
 
 export interface DetectionState {
