@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.111] - 2026-10-18
+
+### Added
+- **Windows code signing (ready to enable):** the release workflow signs the installer with Azure Trusted Signing as soon as the Azure secrets exist, verifies the signature, and refreshes the update-feed hashes afterwards. Unsigned builds are unchanged until then; see `packaging/windows/README.md` for the two signing options.
+
 ## [1.2.110] - 2026-10-18
 
 ### Added

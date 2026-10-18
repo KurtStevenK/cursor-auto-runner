@@ -21,6 +21,7 @@ See [`.gitignore`](.gitignore) for the full ignore list.
 | `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | macOS Developer ID sign + notarize | [packaging/mac/README.md](packaging/mac/README.md) |
 | `APT_GPG_PRIVATE_KEY`, `APT_GPG_PASSPHRASE`, `TAP_TOKEN` | APT repo + tap push | [packaging/apt/README.md](packaging/apt/README.md) |
 | `FIREBASE_SERVICE_ACCOUNT_LINUX`, `FIREBASE_STORAGE_BUCKET` | Linux release mirror | [packaging/linux/firebase/README.md](packaging/linux/firebase/README.md) |
+| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TRUSTED_SIGNING_ENDPOINT`, `AZURE_TRUSTED_SIGNING_ACCOUNT`, `AZURE_CERTIFICATE_PROFILE` | Optional Windows code signing (Azure Trusted Signing) | [packaging/windows/README.md](packaging/windows/README.md) |
 | `CHOCOLATEY_API_KEY` | Chocolatey publish | [packaging/chocolatey/README.md](packaging/chocolatey/README.md) |
 | `VIRUSTOTAL_API_KEY` | Optional release artifact scan in CI | [.env.example](.env.example), GitHub Actions secret |
 
