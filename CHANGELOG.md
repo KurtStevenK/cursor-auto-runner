@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.74] - 2026-10-18
+
+### Changed
+- **CI:** the packaged-worker smoke test runs on the Linux and macOS builds as well as Windows.
+
 ## [1.2.73] - 2026-10-18
 
 ### Changed
