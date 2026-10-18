@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.114] - 2026-10-18
+
+### Changed
+- **Docs and landing:** the improvement plan records the completed v1.2.112 release (all jobs green after the Apple credential was renewed), the verified update feed and the real electron-updater download; the Firebase landing page gets the 1.2.112 release manifest.
+
 ## [1.2.113] - 2026-10-18
 
 ### Changed

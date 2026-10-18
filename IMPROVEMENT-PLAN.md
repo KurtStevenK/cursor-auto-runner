@@ -187,6 +187,11 @@ All items that can be done from this machine were implemented, each as its own r
 | Review #10: quit guard extracted and tested | 1.2.107 | `before-quit` re-entry from `quitAndInstall` covered by unit tests, with a 5 s cleanup timeout |
 | Matcher timing test stabilised | 1.2.108 | Budgets doubled; the 2 s regression gate stays in `bench:matcher` |
 | Status update | 1.2.109 | |
+| A4 experimental per-window capture (Windows) | 1.2.110 | opt-in |
+| F3 Windows signing wired, gated on secrets | 1.2.111 | |
+| H1 canonical landing page | 1.2.112 | released as `v1.2.112` |
+| Release-state docs | 1.2.113 | |
+| Release verification record and Firebase manifest | 1.2.114 | |
 
 Not done, and why:
 
@@ -201,4 +206,6 @@ Not done, and why:
 - PR #47 merged into `master` (merge commit `435b5a8`) after all seven CI checks passed; tag `v1.2.112` pushed.
 - Release workflow run 39145521558: `quality`, `linux` and `windows` succeeded; `macos` failed before building, at `xcrun notarytool history` with HTTP 401 ("Invalid credentials"). The step is unchanged since `v1.2.59` passed on 2026-10-12, so the stored `APPLE_APP_SPECIFIC_PASSWORD` has been revoked or expired. Fix: generate a new app-specific password at appleid.apple.com, update the secret (`scripts/refresh-csc-github-secrets.sh` / `scripts/push-apple-signing-to-github.sh`), then re-run the failed jobs of that run; the `release` and `chocolatey` jobs follow automatically.
 - Windows update feed validated from the CI artifact: `latest.yml` lists `Cursor.Auto.Runner.Setup.1.2.112.exe` with sha512 and size, which is the name GitHub serves for the uploaded installer. Together with the local signed `dist:mac` check this covers both feed rewrites end to end up to the upload step.
-- Still pending the re-run: the GitHub Release itself, the Homebrew/APT/Chocolatey publishes, the Firebase release manifest (`npm run sync:firebase-release-data`), and the in-app update download against the published feed.
+- After the Apple app-specific password was regenerated and the secret updated, the failed jobs were re-run and every job succeeded (`macos`, `release`, `chocolatey`). The GitHub Release `v1.2.112` is published with the Windows installer, four macOS DMG/ZIP files, blockmaps, `latest.yml` and `latest-mac.yml`; the Homebrew cask is at 1.2.112; Chocolatey accepted the push (moderation pending as usual); Linux packages are on Firebase Storage.
+- Update feed verified against the published release: every `url`/`path` in both feed files answers HTTP 200, and electron-updater (dev-mode harness pointed at the GitHub provider, current version forced to 1.2.59) read the feed, selected `Cursor.Auto.Runner-1.2.112-arm64-mac.zip` and downloaded it with checksum verification (143,618,738 bytes). The only unexercised step is `quitAndInstall()` itself, whose re-entry logic is unit-tested (1.2.107); the first real in-app update will be 1.2.112 → the next release.
+- Firebase release manifest for 1.2.112 added for the landing page (`npm run sync:firebase-release-data 1.2.112`).
