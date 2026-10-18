@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.81] - 2026-10-18
+
+### Changed
+- **Landing page:** the three.js hero loads lazily (desktop, motion allowed) over a static gradient and framer-motion is replaced by CSS reveals, cutting the initial JavaScript from 1.28 MB to about 245 KB.
+
 ## [1.2.80] - 2026-10-18
 
 ### Added

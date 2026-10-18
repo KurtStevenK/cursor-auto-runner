@@ -1,6 +1,6 @@
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { Reveal } from './components/Reveal';
 import { InstallCommands } from './components/InstallCommands';
-import { Scene } from './components/Scene';
+import { HeroBackdrop } from './components/HeroBackdrop';
 import {
   MIRROR_VERSION,
   VERSION,
@@ -12,19 +12,9 @@ import {
 import { releaseData } from './release-data';
 import './App.css';
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.65, ease: [0.22, 1, 0.36, 1] as const },
-  }),
-};
-
 const mirrorV = MIRROR_VERSION;
 
 export default function App() {
-  const reduceMotion = useReducedMotion();
   const linuxMirror = linuxFiles(mirrorV);
 
   const macArmDmg = releaseMirrorUrl(mirrorV, `Cursor.Auto.Runner-${mirrorV}-arm64.dmg`);
@@ -99,61 +89,38 @@ export default function App() {
 
   return (
     <div className="page">
-      <Scene />
+      <HeroBackdrop />
       <div className="grain" aria-hidden="true" />
 
       <header className="top">
-        <motion.div
-          className="logo-mark"
-          initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        >
+        <Reveal className="logo-mark" variant="scale">
           <span className="logo-core" />
-        </motion.div>
-        <motion.span
-          className="version-pill"
-          custom={0}
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
-        >
+        </Reveal>
+        <Reveal as="span" className="version-pill">
           v{VERSION}
-        </motion.span>
+        </Reveal>
       </header>
 
       <main className="content">
-        <motion.section
-          className="hero"
-          initial={reduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-        >
-          <motion.h1 custom={1} variants={fadeUp} initial="hidden" animate="show">
+        <section className="hero">
+          <Reveal as="h1" delay={0.08}>
             Cursor Auto
             <span className="hero-accent"> Runner</span>
-          </motion.h1>
-          <motion.p className="hero-lead" custom={2} variants={fadeUp} initial="hidden" animate="show">
+          </Reveal>
+          <Reveal as="p" className="hero-lead" delay={0.16}>
             A system-tray companion that clicks <em>Run</em>, <em>Always Run</em>, and permission
             buttons in Cursor — so you stay in flow while agents work.
-          </motion.p>
-          <motion.div className="hero-cta" custom={3} variants={fadeUp} initial="hidden" animate="show">
+          </Reveal>
+          <Reveal as="div" className="hero-cta" delay={0.24}>
             <a className="btn btn-primary" href="#downloads">Get builds</a>
             <a className="btn btn-ghost" href="#install">Install commands</a>
             <a className="btn btn-ghost" href={links.github} target="_blank" rel="noreferrer">
               Source on GitHub
             </a>
-          </motion.div>
-        </motion.section>
+          </Reveal>
+        </section>
 
-        <motion.section
-          id="downloads"
-          className="section"
-          initial={reduceMotion ? false : { opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7 }}
-        >
+        <Reveal as="section" id="downloads" inView className="section">
           <h2>Downloads</h2>
           <p className="section-sub">
             Public mirrors on Firebase Storage (<code>releases/{mirrorV}/</code>). Fallback:{' '}
@@ -164,15 +131,7 @@ export default function App() {
           </p>
           <div className="dl-grid">
             {downloads.map((card, i) => (
-              <motion.article
-                key={card.os}
-                className="dl-card"
-                initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.55 }}
-                whileHover={reduceMotion ? undefined : { y: -6, transition: { duration: 0.2 } }}
-              >
+              <Reveal as="article" key={card.os} inView className="dl-card" delay={i * 0.1}>
                 <div className="dl-head">
                   <span className="dl-icon">{card.icon}</span>
                   <h3>{card.os}</h3>
@@ -194,7 +153,7 @@ export default function App() {
                   ))}
                 </div>
                 <span className="dl-note">{card.note}</span>
-              </motion.article>
+              </Reveal>
             ))}
           </div>
           <p className="legacy-linux">
@@ -203,34 +162,21 @@ export default function App() {
               linux/{mirrorV}/…
             </a>
           </p>
-        </motion.section>
+        </Reveal>
 
         <InstallCommands mirrorV={mirrorV} />
 
-        <motion.section
-          className="section"
-          initial={reduceMotion ? false : { opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
+        <Reveal as="section" inView className="section" variant="fade">
           <h2>What it does</h2>
           <div className="feat-grid">
             {features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                className="feat-card"
-                initial={reduceMotion ? false : { opacity: 0, x: i % 2 ? 20 : -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06, duration: 0.5 }}
-              >
+              <Reveal key={f.title} inView className="feat-card" variant={i % 2 ? 'right' : 'left'} delay={i * 0.06}>
                 <h3>{f.title}</h3>
                 <p>{f.text}</p>
-              </motion.div>
+              </Reveal>
             ))}
           </div>
-        </motion.section>
+        </Reveal>
       </main>
 
       <footer className="footer">
