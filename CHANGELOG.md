@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.70] - 2026-10-18
+
+### Fixed
+- **Stability:** repeated detection errors (for example while the matcher worker restarts) back off exponentially up to 30 s instead of retrying at full speed. The controller exposes a health summary for the UI.
+
 ## [1.2.69] - 2026-10-18
 
 ### Changed
