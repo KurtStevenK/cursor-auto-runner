@@ -105,3 +105,19 @@ test('boundsIntersectDisplays rejects windows left on a disconnected display', (
   assert.equal(boundsIntersectDisplays({ x: 2500, y: 100, width: 400, height: 560 }, displays), false);
   assert.equal(boundsIntersectDisplays({ x: 1900, y: 100, width: 400, height: 560 }, displays), false);
 });
+
+test('focusCursorBeforeClick and pauseWhileTyping default to true and only accept booleans', () => {
+  assert.equal(DEFAULT_SETTINGS.focusCursorBeforeClick, true);
+  assert.equal(DEFAULT_SETTINGS.pauseWhileTyping, true);
+  assert.equal(sanitizeSettings({ focusCursorBeforeClick: false }).focusCursorBeforeClick, false);
+  assert.equal(sanitizeSettings({ pauseWhileTyping: false }).pauseWhileTyping, false);
+  assert.equal(sanitizeSettings({ focusCursorBeforeClick: 'no' }).focusCursorBeforeClick, true);
+  assert.equal(sanitizeSettings({ pauseWhileTyping: 0 }).pauseWhileTyping, true);
+  assert.equal(sanitizeSettings({ focusCursorBeforeClick: null }).focusCursorBeforeClick, true);
+});
+
+test('onboardingShownVersion defaults to empty and only accepts short strings', () => {
+  assert.equal(DEFAULT_SETTINGS.onboardingShownVersion, '');
+  assert.equal(sanitizeSettings({ onboardingShownVersion: '1.2.86' }).onboardingShownVersion, '1.2.86');
+  assert.equal(sanitizeSettings({ onboardingShownVersion: 5 }).onboardingShownVersion, '');
+});

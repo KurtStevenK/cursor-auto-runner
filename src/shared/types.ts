@@ -59,6 +59,8 @@ export interface Settings {
   pauseWhileTyping: boolean;
   /** Keep the stats overlay above other windows. */
   overlayAlwaysOnTop: boolean;
+  /** App version for which the welcome dialog was last shown ('' = never). */
+  onboardingShownVersion: string;
   /** Last position and size of the stats overlay (absent until moved/resized). */
   overlayBounds?: OverlayBounds;
 }
@@ -87,6 +89,7 @@ export const DEFAULT_SETTINGS: Settings = {
   focusCursorBeforeClick: true,
   pauseWhileTyping: true,
   overlayAlwaysOnTop: true,
+  onboardingShownVersion: '',
 };
 
 /** Accelerators offered in the tray menu ('' = off). Anything else is rejected. */

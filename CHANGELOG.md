@@ -7,6 +7,21 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.86] - 2026-10-18
+
+### Added
+
+- **First-run welcome** — a one-time dialog explains what the app does, the macOS permissions it needs and how to start, with a *Start at login* checkbox. Reopen it from *Settings → Show welcome…*.
+
+### Changed
+
+- The macOS permission dialog now states in plain language what is missing and the one thing to do; the Electron/system status lines moved to a final "Technical details" line.
+
+### Fixed
+
+- Pausing for the lock screen or sleep no longer overwrites the saved last mode, and quitting no longer resets it, so *Restore last mode on launch* keeps working.
+- Waking from sleep while the screen is still locked no longer resumes auto-run early; it resumes on unlock.
+
 ## [1.2.85] - 2026-10-18
 
 ### Changed

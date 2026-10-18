@@ -2,7 +2,7 @@
  * Cursor Auto Runner — main process entry point.
  * Wires tray, mode controller, detector, stats store and overlay window.
  */
-import { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme, Notification, powerMonitor, screen, shell } from 'electron';
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeTheme, Notification, powerMonitor, screen, shell } from 'electron';
 import * as path from 'path';
 import { Detector } from './detector';
 import { ModeController } from './controller';
@@ -58,6 +58,9 @@ let registeredShortcut = '';
 let modeBeforeSleep: Mode | null = null;
 let modeStartedAt: number | null = null;
 let matcherRetrying = false;
+let screenLocked = false;
+/** True while the app itself sets idle (power pause, capture, quit): lastMode must not change. */
+let suppressModePersist = false;
 let errorNotified = false;
 
 function currentSnapshot(): StatsSnapshot {
@@ -229,10 +232,45 @@ function onHealthChange(): void {
 }
 
 /** Start the template capture flow (tray menu and overlay button). */
+/** Switch to idle without recording it as the user's last mode. */
+function setIdleTransient(): void {
+  suppressModePersist = true;
+  try {
+    controller.set('idle');
+  } finally {
+    suppressModePersist = false;
+  }
+}
+
+/** Welcome dialog (first run, or from Settings → Show welcome…). */
+async function showWelcome(): Promise<void> {
+  const mac = process.platform === 'darwin';
+  const detail =
+    'Cursor Auto Runner watches the Cursor IDE and clicks Run, Always Run and Allow for you, so your agent never stalls waiting for approval.\n\n' +
+    (mac ? 'On macOS it needs two permissions: Screen Recording (to see Cursor) and Accessibility (to click). You will be asked when you first start it.\n\n' : '') +
+    'How to start: right-click the tray icon and choose Start Auto Run (or Start Auto Always Run). Left-click the tray icon to see your stats.';
+  try {
+    const { checkboxChecked } = await dialog.showMessageBox({
+      type: 'info',
+      title: 'Welcome to Cursor Auto Runner',
+      message: 'Welcome to Cursor Auto Runner',
+      detail,
+      buttons: ['Got it'],
+      defaultId: 0,
+      checkboxLabel: 'Start at login',
+      checkboxChecked: settings.get().launchAtLogin,
+    });
+    applySettings({ launchAtLogin: Boolean(checkboxChecked), onboardingShownVersion: app.getVersion() });
+  } catch (err) {
+    console.error('[welcome] dialog failed:', err);
+    settings.set({ onboardingShownVersion: app.getVersion() });
+  }
+}
+
 function startTemplateCapture(name: 'run' | 'always-run' | 'allow', theme: 'dark' | 'light'): void {
   // Pause the auto-clicker while the screen is frozen for capture.
   const prevMode = controller.current;
-  controller.set('idle');
+  setIdleTransient();
   void startCapture(name, theme, {
     onSaved: () => detector.resetTemplates(),
     onDone: () => {
@@ -301,7 +339,7 @@ app.whenReady().then(() => {
     (mode) => {
       if (mode !== 'idle') lastActiveMode = mode;
       modeStartedAt = mode === 'idle' ? null : Date.now();
-      settings.set({ lastMode: mode });
+      if (!suppressModePersist) settings.set({ lastMode: mode });
       tray?.rebuild();
       sendStats(true);
     },
@@ -327,6 +365,7 @@ app.whenReady().then(() => {
     updateSettings: (patch) => applySettings(patch),
     capture: (name, theme) => startTemplateCapture(name, theme),
     isMatcherRetrying: () => matcherRetrying,
+    showWelcome: () => void showWelcome(),
     showButtonTest: () => showButtonTest(),
     checkForUpdates: () => updates.checkFromMenu(),
     updateMenu: () => updates.menuState(),
@@ -384,17 +423,24 @@ app.whenReady().then(() => {
   const pauseForPower = (): void => {
     if (modeBeforeSleep === null && controller.current !== 'idle') {
       modeBeforeSleep = controller.current;
-      controller.set('idle');
+      setIdleTransient();
     }
   };
   const resumeFromPower = (): void => {
+    if (screenLocked) return; // stay paused until the screen is unlocked
     const mode = modeBeforeSleep;
     modeBeforeSleep = null;
     if (mode) void applyMode(mode);
   };
-  powerMonitor.on('lock-screen', pauseForPower);
+  powerMonitor.on('lock-screen', () => {
+    screenLocked = true;
+    pauseForPower();
+  });
   powerMonitor.on('suspend', pauseForPower);
-  powerMonitor.on('unlock-screen', resumeFromPower);
+  powerMonitor.on('unlock-screen', () => {
+    screenLocked = false;
+    resumeFromPower();
+  });
   powerMonitor.on('resume', resumeFromPower);
   powerMonitor.on('shutdown', () => stats?.dispose());
 
@@ -402,6 +448,9 @@ app.whenReady().then(() => {
   if (s.restoreLastMode && s.lastMode !== 'idle') {
     void applyMode(s.lastMode);
   }
+
+  // First run: short welcome (never shown again; reopen from Settings).
+  if (s.onboardingShownVersion === '') void showWelcome();
 });
 
 app.on('second-instance', openOverlay);
@@ -417,7 +466,10 @@ app.on('before-quit', (event) => {
   statsTimer = null;
   stopPerformanceMonitor();
   stopCapture();
-  controller?.set('idle');
+  if (controller) {
+    suppressModePersist = true; // keep lastMode so "restore last mode" works after quit
+    controller.set('idle');
+  }
   stats?.dispose();
   tray?.destroy();
   void Promise.resolve(detector?.dispose()).finally(() => app.quit());

@@ -27,6 +27,7 @@ export type TrayCallbacks = {
   setPollInterval: (ms: number) => void;
   getSettings: () => Settings;
   isMatcherRetrying?: () => boolean;
+  showWelcome?: () => void;
   updateSettings: (patch: Partial<Settings>) => void;
 };
 
@@ -175,6 +176,7 @@ export class TrayUI {
           checked: s.pauseWhileTyping,
           click: (item) => this.cb.updateSettings({ pauseWhileTyping: Boolean(item.checked) }),
         },
+        { label: 'Show welcome…', click: () => this.cb.showWelcome?.() },
         {
           label: 'Keep stats window on top',
           type: 'checkbox',

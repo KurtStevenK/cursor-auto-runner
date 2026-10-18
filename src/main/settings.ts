@@ -66,6 +66,10 @@ export function sanitizeSettings(raw: unknown): Settings {
       typeof r.focusCursorBeforeClick === 'boolean' ? r.focusCursorBeforeClick : d.focusCursorBeforeClick,
     pauseWhileTyping: typeof r.pauseWhileTyping === 'boolean' ? r.pauseWhileTyping : d.pauseWhileTyping,
     overlayAlwaysOnTop: typeof r.overlayAlwaysOnTop === 'boolean' ? r.overlayAlwaysOnTop : d.overlayAlwaysOnTop,
+    onboardingShownVersion:
+      typeof r.onboardingShownVersion === 'string' && r.onboardingShownVersion.length <= 32
+        ? r.onboardingShownVersion
+        : d.onboardingShownVersion,
     ...(sanitizeOverlayBounds(r.overlayBounds) ? { overlayBounds: sanitizeOverlayBounds(r.overlayBounds) } : {}),
   };
 }
