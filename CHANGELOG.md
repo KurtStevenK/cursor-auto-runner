@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.113] - 2026-10-18
+
+### Changed
+- **Docs:** AGENTS.md states that the `quality` check is required on `master`; the improvement plan records the merged PR, the v1.2.112 tag, the Windows feed validation from CI, and the notarization credential failure that blocks the macOS job.
+
 ## [1.2.112] - 2026-10-18
 
 ### Changed

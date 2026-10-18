@@ -10,7 +10,7 @@
 4. Wait for the **CI** workflow (`quality` job) to pass.
 5. Merge the PR (squash or merge commit — either is fine).
 
-**Optional (recommended after the first CI run on a PR):** in GitHub **Settings → Branches → master → Edit**, enable **Require status checks** and select the **`quality`** check from the **CI** workflow so merges cannot skip tests.
+**Branch protection:** `master` requires the **`quality`** check from the **CI** workflow (strict, branch must be up to date) before a merge; this is already enabled in GitHub **Settings → Branches → master**.
 
 **What runs on merge to `master` (path-filtered):**
 
