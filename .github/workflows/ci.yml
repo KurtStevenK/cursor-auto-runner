@@ -22,7 +22,32 @@ jobs:
       - run: npm test
       - run: npx electron-builder install-app-deps
       - run: npm run test:stats
-      - run: npm run bench:matcher
+      - name: Run matcher benchmark
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run bench:matcher 2>&1 | tee bench-matcher.log
+      - name: Upload matcher benchmark log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench-matcher
+          path: bench-matcher.log
+
+  unit-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
 
   firebase-landing:
     runs-on: ubuntu-latest

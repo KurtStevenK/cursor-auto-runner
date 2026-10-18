@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.64] - 2026-10-18
+
+### Changed
+- **CI:** unit tests now also run on macOS and Ubuntu runners, so macOS-only code paths are exercised in CI; the matcher benchmark summary is uploaded as a workflow artifact.
+
 ## [1.2.63] - 2026-10-18
 
 ### Fixed
