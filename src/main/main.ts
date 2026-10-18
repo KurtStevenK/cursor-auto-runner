@@ -26,6 +26,7 @@ import {
   OVERLAY_DEFAULT_WIDTH,
   OVERLAY_DEFAULT_HEIGHT,
 } from '../shared/types';
+import { isWaylandSession, WAYLAND_NOTICE } from './platform-notes';
 import { installFileLogger, logDirectory } from './log';
 import { startPerformanceMonitor, stopPerformanceMonitor } from './perf';
 
@@ -447,6 +448,19 @@ app.whenReady().then(() => {
   // Optionally restore the last used mode on launch.
   if (s.restoreLastMode && s.lastMode !== 'idle') {
     void applyMode(s.lastMode);
+  }
+
+  // Linux/Wayland: synthetic clicks and capture may be restricted; tell the user once.
+  if (process.platform === 'linux' && isWaylandSession()) {
+    console.warn(`[platform] ${WAYLAND_NOTICE}`);
+    if (!s.waylandNoticeShown) {
+      try {
+        new Notification({ title: 'Cursor Auto Runner', body: WAYLAND_NOTICE }).show();
+      } catch {
+        /* notifications are best effort */
+      }
+      settings.set({ waylandNoticeShown: true });
+    }
   }
 
   // First run: short welcome (never shown again; reopen from Settings).

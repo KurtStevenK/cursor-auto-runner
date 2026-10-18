@@ -61,6 +61,8 @@ export interface Settings {
   overlayAlwaysOnTop: boolean;
   /** App version for which the welcome dialog was last shown ('' = never). */
   onboardingShownVersion: string;
+  /** The one-time Linux Wayland notice has been shown. */
+  waylandNoticeShown: boolean;
   /** Last position and size of the stats overlay (absent until moved/resized). */
   overlayBounds?: OverlayBounds;
 }
@@ -90,6 +92,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pauseWhileTyping: true,
   overlayAlwaysOnTop: true,
   onboardingShownVersion: '',
+  waylandNoticeShown: false,
 };
 
 /** Accelerators offered in the tray menu ('' = off). Anything else is rejected. */

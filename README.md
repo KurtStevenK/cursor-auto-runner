@@ -228,7 +228,17 @@ Static landing pages: `landing/` on GitHub Pages (`.github/workflows/pages.yml`)
 
 - **Windows** — works out of the box.
 - **macOS** — grant two permissions on first use: *Screen Recording* and *Accessibility* (System Settings → Privacy & Security). The app shows a hint dialog with a direct link when needed.
-- **Linux** — works out of the box (X11; Wayland may restrict synthetic clicks depending on compositor).
+- **Linux** — works out of the box on X11. Under Wayland see the Linux paragraph below.
+
+### Linux (Wayland)
+
+Wayland compositors restrict synthetic input and screen capture (you may get portal prompts, or clicks and screenshots may be blocked entirely, depending on the compositor). An X11 or XWayland session is recommended: choose "… on Xorg" on the login screen, or run `cursor-auto-runner` and Cursor under XWayland. Check which session you are in with:
+
+```bash
+echo $XDG_SESSION_TYPE   # x11 or wayland
+```
+
+When the app detects Wayland (`XDG_SESSION_TYPE=wayland`, or `WAYLAND_DISPLAY` set without `DISPLAY`) it logs a warning and shows a one-time notification.
 
 ## Troubleshooting
 

@@ -70,6 +70,7 @@ export function sanitizeSettings(raw: unknown): Settings {
       typeof r.onboardingShownVersion === 'string' && r.onboardingShownVersion.length <= 32
         ? r.onboardingShownVersion
         : d.onboardingShownVersion,
+    waylandNoticeShown: typeof r.waylandNoticeShown === 'boolean' ? r.waylandNoticeShown : d.waylandNoticeShown,
     ...(sanitizeOverlayBounds(r.overlayBounds) ? { overlayBounds: sanitizeOverlayBounds(r.overlayBounds) } : {}),
   };
 }

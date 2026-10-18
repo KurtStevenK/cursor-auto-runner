@@ -7,6 +7,12 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.87] - 2026-10-18
+
+### Added
+
+- **Wayland notice (Linux)** — when a Wayland session is detected the app logs a warning and shows a one-time notification that synthetic clicks and screen capture may be restricted and that an X11/XWayland session is recommended. The README's platform notes document the same guidance and how to check `XDG_SESSION_TYPE`.
+
 ## [1.2.86] - 2026-10-18
 
 ### Added

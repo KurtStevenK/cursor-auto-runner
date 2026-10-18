@@ -121,3 +121,9 @@ test('onboardingShownVersion defaults to empty and only accepts short strings', 
   assert.equal(sanitizeSettings({ onboardingShownVersion: '1.2.86' }).onboardingShownVersion, '1.2.86');
   assert.equal(sanitizeSettings({ onboardingShownVersion: 5 }).onboardingShownVersion, '');
 });
+
+test('waylandNoticeShown defaults to false and only accepts booleans', () => {
+  assert.equal(DEFAULT_SETTINGS.waylandNoticeShown, false);
+  assert.equal(sanitizeSettings({ waylandNoticeShown: true }).waylandNoticeShown, true);
+  assert.equal(sanitizeSettings({ waylandNoticeShown: 1 }).waylandNoticeShown, false);
+});
