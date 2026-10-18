@@ -134,7 +134,7 @@ A1 accessibility-API prototype on macOS and Windows · A4 native-resolution wind
 
 ## Status (2026-10-18, branch `improvements/plan-2026-10`)
 
-Every item was implemented as its own release commit (version bump + changelog section), 1.2.60 through 1.2.104, on this branch. An Opus review of the branch produced 13 findings; all are fixed in 1.2.93–1.2.102 except #10 (the `quitAndInstall` path, which needs a real release feed to exercise). Nothing is tagged or pushed to `master`; tags should be pushed only after the PR is merged, and only for the versions worth a full release pipeline.
+All items that can be done from this machine were implemented, each as its own release commit (version bump + changelog section), 1.2.60 through 1.2.109, on this branch; the five items listed under "Not done" below are the exceptions. An Opus review of the branch produced 13 findings; all 13 are addressed: #1–#9 and #11–#13 by code changes in 1.2.93–1.2.102, and #10 (the `quitAndInstall` path) by extracting the quit handler into a tested guard in 1.2.107. The updater download and install flow itself still needs one real tag build; everything else about it is validated locally (see below).
 
 | Item | Version | Notes |
 |------|---------|-------|
@@ -180,8 +180,13 @@ Every item was implemented as its own release commit (version bump + changelog s
 | Review fix: log stream identity | 1.2.99 | Opus review #12 |
 | Review fix: LF line endings for the Windows format check | 1.2.100 | Opus review #2 |
 | Review fix: cookie-encryption fuse off | 1.2.101 | Opus review #9 |
-| Review fix: update feeds point at published file names | 1.2.102 | Opus review #1; still needs one real tag build to confirm end to end |
+| Review fix: update feeds point at published file names | 1.2.102 | Opus review #1. Validated locally with a signed `dist:mac` build: every `url`/`path` in `latest-mac.yml` names a file that exists in `release/`, and electron-builder's safe-name rule (spaces → dashes) was confirmed in its source. A real tag build is still the only end-to-end proof |
 | D2 bundle preloads and overlay | 1.2.103 | IPC constants now have a single source |
+| Review fix: coverage job timing budget | 1.2.105 | CI only |
+| Login Items icon | 1.2.106 | Apple-built icns; verified in System Settings with the signed build |
+| Review #10: quit guard extracted and tested | 1.2.107 | `before-quit` re-entry from `quitAndInstall` covered by unit tests, with a 5 s cleanup timeout |
+| Matcher timing test stabilised | 1.2.108 | Budgets doubled; the 2 s regression gate stays in `bench:matcher` |
+| Status update | 1.2.109 | |
 
 Not done, and why:
 

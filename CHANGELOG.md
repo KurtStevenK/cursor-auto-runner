@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.109] - 2026-10-18
+
+### Changed
+- **Docs:** the improvement plan status records the local validation of the update feed (signed `dist:mac` build), the quit-guard tests, the icon fix and the exact list of items that still need a real release or another machine.
+
 ## [1.2.108] - 2026-10-18
 
 ### Changed
