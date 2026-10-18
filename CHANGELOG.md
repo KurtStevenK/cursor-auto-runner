@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.104] - 2026-10-18
+
+### Changed
+- **Docs:** the improvement plan's status table now covers the final-review fixes (1.2.93–1.2.103) and corrects the coverage and bundling notes.
+
 ## [1.2.103] - 2026-10-18
 
 ### Changed

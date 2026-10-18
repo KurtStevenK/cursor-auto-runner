@@ -134,7 +134,7 @@ A1 accessibility-API prototype on macOS and Windows · A4 native-resolution wind
 
 ## Status (2026-10-18, branch `improvements/plan-2026-10`)
 
-Every item was implemented as its own release commit (version bump + changelog section), 1.2.60 through 1.2.92, on this branch. Nothing is tagged or pushed to `master`; tags should be pushed only after the PR is merged, and only for the versions worth a full release pipeline.
+Every item was implemented as its own release commit (version bump + changelog section), 1.2.60 through 1.2.104, on this branch. An Opus review of the branch produced 13 findings; all are fixed in 1.2.93–1.2.102 except #10 (the `quitAndInstall` path, which needs a real release feed to exercise). Nothing is tagged or pushed to `master`; tags should be pushed only after the PR is merged, and only for the versions worth a full release pipeline.
 
 | Item | Version | Notes |
 |------|---------|-------|
@@ -153,7 +153,7 @@ Every item was implemented as its own release commit (version bump + changelog s
 | D4 store injection, settings validation | 1.2.72 | |
 | D7 sandboxed capture window | 1.2.73 | Smoke-tested in Electron: no Node access, screenshot loads, ESC cancels |
 | E2 packaged smoke on all OSes | 1.2.74 | |
-| E3 coverage gate | 1.2.75 | 89 % lines on the testable modules |
+| E3 coverage gate | 1.2.75 | 89 % lines on the unit-testable modules only; main, tray, updates, capture and the Electron providers are excluded |
 | C1 Settings submenu, start at login | 1.2.76 | Tray UI not exercised in a live session |
 | C7 global shortcut | 1.2.77 | |
 | C2 focus and typing guards | 1.2.78 | |
@@ -171,6 +171,17 @@ Every item was implemented as its own release commit (version bump + changelog s
 | D1 Biome lint and format | 1.2.90 | |
 | G2 privacy statement | 1.2.91 | |
 | Status update (this section) | 1.2.92 | |
+| Review fix: capture always restores the mode | 1.2.93 | Opus review #5 |
+| Review fix: welcome dialog and start-at-login | 1.2.94 | Opus review #7, #8 and an observed login-item bug |
+| Review fix: applyMode race | 1.2.95 | Opus review #11 |
+| Review fix: shortcut choice, overlay capture theme, zap caches | 1.2.96 | Opus review #13 |
+| Review fix: typing guard vs own click, click-error counting | 1.2.97 | Opus review #3, #6 |
+| Review fix: unchanged-skip TTL and full-coverage hash | 1.2.98 | Opus review #4 |
+| Review fix: log stream identity | 1.2.99 | Opus review #12 |
+| Review fix: LF line endings for the Windows format check | 1.2.100 | Opus review #2 |
+| Review fix: cookie-encryption fuse off | 1.2.101 | Opus review #9 |
+| Review fix: update feeds point at published file names | 1.2.102 | Opus review #1; still needs one real tag build to confirm end to end |
+| D2 bundle preloads and overlay | 1.2.103 | IPC constants now have a single source |
 
 Not done, and why:
 
