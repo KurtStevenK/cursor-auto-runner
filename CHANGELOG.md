@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.65] - 2026-10-18
+
+### Changed
+- **Dependencies:** Dependabot updates arrive grouped (production, development, GitHub Actions). Dependency-only merges no longer need their own release; they ride along with the next user-facing one (see AGENTS.md).
+
 ## [1.2.64] - 2026-10-18
 
 ### Changed
