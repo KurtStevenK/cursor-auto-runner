@@ -63,7 +63,7 @@ jobs:
           path: |
             release/*.exe
             release/*.blockmap
-            release/*.yml
+            release/latest*.yml
             choco-pkg/*.nupkg
 
   linux:
@@ -203,7 +203,7 @@ jobs:
             release/*.dmg
             release/*.zip
             release/*.blockmap
-            release/*.yml
+            release/latest*.yml
 
   release:
     needs: [windows, linux, macos]
@@ -276,8 +276,8 @@ jobs:
           files: |
             artifacts/windows/**
             artifacts/macos/**
-            artifacts/windows/*.yml
-            artifacts/macos/*.yml
+            artifacts/windows/latest*.yml
+            artifacts/macos/latest*.yml
           body_path: release-notes.md
           generate_release_notes: true
 

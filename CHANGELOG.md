@@ -7,6 +7,12 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.102] - 2026-10-18
+
+### Fixed
+- **Updater:** `latest.yml` and `latest-mac.yml` listed electron-builder's dashed file names, but the published assets use dotted names (`Cursor.Auto.Runner.Setup.<v>.exe`, `Cursor.Auto.Runner-<v>-mac.zip`, ...), so in-app updates would have failed with a 404. A new `scripts/fix-update-feeds.js` step rewrites the `url:` and `path:` entries after each build; checksums and sizes are untouched.
+- **Release:** only `latest*.yml` feed files are uploaded, so `builder-debug.yml` is no longer attached to the public release.
+
 ## [1.2.101] - 2026-10-18
 
 ### Changed
