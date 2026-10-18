@@ -43,6 +43,8 @@ Tagged releases run the same scan in CI when `VIRUSTOTAL_API_KEY` is configured;
 
 `npm audit --omit=dev` reports moderate advisories (GHSA-5v7r-6r5c-r473, an infinite loop in `file-type` on malformed input) through `@nut-tree-fork/nut-js`, which pins `jimp` 0.22.x. Cursor Auto Runner only uses nut.js for mouse, window-listing and focus calls and never decodes images through it, so the vulnerable parser is not reached. Overriding `jimp` to 1.x would break nut.js's own image code at runtime, so no override is applied. We track upstream nut.js releases and will update when one moves to a patched `jimp`.
 
+Dependabot also reports two advisories that only affect electron-builder's download tooling (dev dependencies, never packaged into the app): `http-cache-semantics` (overridden to 4.3.0 in `package.json`) and `sprintf-js` 1.1.3 (no patched release exists; it is used by a logging helper of `global-agent` during builds only). Neither runs on a user's machine.
+
 ## Reporting vulnerabilities
 
 Please report security issues via [GitHub Security Advisories](https://github.com/KurtStevenK/cursor-auto-runner/security/advisories/new) or email the maintainer listed in [`package.json`](package.json).
