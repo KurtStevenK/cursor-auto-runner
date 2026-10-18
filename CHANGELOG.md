@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.73] - 2026-10-18
+
+### Changed
+- **Security:** the template-capture window runs with context isolation, a sandboxed preload and a Content Security Policy; the renderer no longer has Node access, region payloads are validated, and no files are left in the OS temp folder.
+
 ## [1.2.72] - 2026-10-18
 
 ### Fixed
