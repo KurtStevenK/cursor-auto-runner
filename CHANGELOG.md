@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.80] - 2026-10-18
+
+### Added
+- **Contributing:** `CONTRIBUTING.md`, GitHub bug-report and feature-request issue forms (blank issues disabled, private security advisory link), and a pull request checklist.
+
 ## [1.2.79] - 2026-10-18
 
 ### Added
