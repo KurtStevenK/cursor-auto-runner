@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.101] - 2026-10-18
+
+### Changed
+- **Packaging:** the cookie-encryption fuse is left off. The app stores no cookies, and enabling it caused keychain or keyring prompts on some systems.
+
 ## [1.2.100] - 2026-10-18
 
 ### Fixed
@@ -210,7 +215,7 @@ and each shipped task gets its own version number.
 ## [1.2.67] - 2026-10-18
 
 ### Added
-- **Security:** packaged builds flip Electron fuses: the binary can no longer run as plain Node, ignores `NODE_OPTIONS` and `--inspect`, loads the app only from the integrity-checked `app.asar`, and encrypts cookies.
+- **Security:** packaged builds flip Electron fuses: the binary can no longer run as plain Node, ignores `NODE_OPTIONS` and `--inspect`, loads the app only from the integrity-checked `app.asar`, and leaves cookie encryption off (the app stores no cookies).
 
 ## [1.2.66] - 2026-10-18
 
