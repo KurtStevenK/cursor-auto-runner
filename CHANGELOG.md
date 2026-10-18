@@ -7,6 +7,12 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.84] - 2026-10-18
+
+### Added
+
+- **Detection health in the overlay and tray** — the stats overlay now shows the last click time and the number of loaded templates, warns when the matcher is failing ("retrying with backoff"), and after 10 minutes without a match while Cursor is visible suggests capturing new templates with a one-click *Capture Run template…* button. The tray tooltip adds "matcher retrying" and a notification appears once when the matcher fails three times in a row.
+
 ## [1.2.83] - 2026-10-18
 
 ### Changed

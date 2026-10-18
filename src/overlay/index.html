@@ -40,6 +40,15 @@
     </div>
 
     <div id="status" class="status">Watching for the Cursor window…</div>
+
+    <div id="detection" class="detection" hidden>
+      <div class="detection-row">
+        <span>Last click: <b id="lastClick">never this session</b></span>
+        <span>Templates: <b id="templateCount">0</b></span>
+      </div>
+      <div id="detectionWarn" class="status warn" hidden></div>
+      <button id="captureBtn" class="interval-btn" hidden>Capture Run template…</button>
+    </div>
   </div>
   <script type="module" src="overlay.js"></script>
 </body>

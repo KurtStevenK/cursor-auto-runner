@@ -18,6 +18,14 @@ export interface StatsSnapshot {
   watchedKind: 'cursor' | 'rustdesk' | null;
   pollIntervalMs: number;
   effectivePollIntervalMs?: number;
+  health?: {
+    lastMatchAt: number | null;
+    lastDetectAt: number | null;
+    consecutiveErrors: number;
+    lastError: string | null;
+    templateCount: number;
+    missStreakMinutes: number | null;
+  };
 }
 
 // Duplicated from shared/types.ts (page must stay self-contained).
@@ -37,6 +45,7 @@ declare global {
       setMode: (mode: Mode) => void;
       close: () => void;
       setPollInterval: (ms: number) => void;
+      captureTemplate: () => void;
       onStats: (cb: (snap: StatsSnapshot) => void) => void;
       onModeChanged: (cb: (mode: Mode) => void) => void;
       onDetectionState: (cb: (state: { windowFound: boolean; watchedKind: 'cursor' | 'rustdesk' | null }) => void) => void;
@@ -136,6 +145,48 @@ function renderStatus(snap: StatsSnapshot): void {
   }
 }
 
+/** "just now" / "2 min ago" / "3 h ago" for a past timestamp. */
+function timeAgo(then: number, now = Date.now()): string {
+  const s = Math.max(0, Math.round((now - then) / 1000));
+  if (s < 45) return 'just now';
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} min ago`;
+  return `${Math.round(m / 60)} h ago`;
+}
+
+/** Miss streak at which the overlay suggests capturing new templates. */
+const MISS_WARN_MINUTES = 10;
+
+function renderDetection(snap: StatsSnapshot): void {
+  const block = $('detection');
+  const h = snap.health;
+  if (!h) {
+    block.hidden = true;
+    return;
+  }
+  block.hidden = false;
+  $('lastClick').textContent = h.lastMatchAt ? timeAgo(h.lastMatchAt) : 'never this session';
+  $('templateCount').textContent = String(h.templateCount);
+  const warn = $('detectionWarn');
+  const btn = $('captureBtn');
+  let message = '';
+  let showCapture = false;
+  if (h.consecutiveErrors > 0) {
+    message = `Matcher problem: ${h.lastError ?? 'unknown error'} — retrying with backoff`;
+  } else if (
+    snap.mode !== 'idle' &&
+    snap.windowFound &&
+    h.missStreakMinutes !== null &&
+    h.missStreakMinutes >= MISS_WARN_MINUTES
+  ) {
+    message = `No button matched for ${h.missStreakMinutes} min. If Cursor's UI changed, capture new templates.`;
+    showCapture = true;
+  }
+  warn.textContent = message;
+  warn.hidden = message === '';
+  btn.hidden = !showCapture;
+}
+
 let latestSnapshot: StatsSnapshot | null = null;
 
 function render(snap: StatsSnapshot): void {
@@ -149,9 +200,11 @@ function render(snap: StatsSnapshot): void {
   renderSpark(snap.byDay);
   renderInterval(snap.pollIntervalMs);
   renderStatus(snap);
+  renderDetection(snap);
 }
 
 $('close').addEventListener('click', () => window.autoRunner.close());
+$('captureBtn').addEventListener('click', () => window.autoRunner.captureTemplate());
 $('fasterBtn').addEventListener('click', () => {
   const ms = Number(($('fasterBtn') as HTMLButtonElement).dataset.ms);
   if (ms) window.autoRunner.setPollInterval(ms);

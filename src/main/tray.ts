@@ -26,6 +26,7 @@ export type TrayCallbacks = {
   getPollInterval: () => number;
   setPollInterval: (ms: number) => void;
   getSettings: () => Settings;
+  isMatcherRetrying?: () => boolean;
   updateSettings: (patch: Partial<Settings>) => void;
 };
 
@@ -62,10 +63,11 @@ export class TrayUI {
     if (!this.tray) return;
     const mode = this.cb.getMode();
     this.tray.setImage(nativeImage.createFromPath(this.iconPath(mode)));
+    const retrying = this.cb.isMatcherRetrying?.() ? ' · matcher retrying' : '';
     this.tray.setToolTip(
-      mode === 'idle'
+      (mode === 'idle'
         ? 'Cursor Auto Runner — idle'
-        : `Cursor Auto Runner — auto ${mode === 'run' ? 'Run' : 'Always Run'} active`
+        : `Cursor Auto Runner — auto ${mode === 'run' ? 'Run' : 'Always Run'} active`) + retrying
     );
 
     const interval = this.cb.getPollInterval();

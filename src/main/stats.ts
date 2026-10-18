@@ -212,6 +212,14 @@ export class StatsStore {
       watchedKind: null,
       pollIntervalMs: 4000, // filled in by main from the controller
       effectivePollIntervalMs: 4000, // filled in by main from the controller
+      health: {
+        lastMatchAt: null,
+        lastDetectAt: null,
+        consecutiveErrors: 0,
+        lastError: null,
+        templateCount: 0,
+        missStreakMinutes: null,
+      }, // filled in by main from the controller
     };
     this.snapshotCache = { at: now, snapshot };
     reportStatsDuration(perfNow() - startedAt);

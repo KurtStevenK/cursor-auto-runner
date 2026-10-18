@@ -45,6 +45,9 @@ let quitCleanupStarted = false;
 let lastActiveMode: Mode = 'run';
 let registeredShortcut = '';
 let modeBeforeSleep: Mode | null = null;
+let modeStartedAt: number | null = null;
+let matcherRetrying = false;
+let errorNotified = false;
 
 function currentSnapshot(): StatsSnapshot {
   const snap = stats.snapshot(controller.current);
@@ -52,6 +55,17 @@ function currentSnapshot(): StatsSnapshot {
   snap.watchedKind = detector.watchedKind;
   snap.pollIntervalMs = controller.pollIntervalMs;
   snap.effectivePollIntervalMs = controller.effectivePollIntervalMs;
+  const h = controller.health;
+  const now = Date.now();
+  const since = Math.max(h.lastMatchAt ?? 0, modeStartedAt ?? 0);
+  snap.health = {
+    lastMatchAt: h.lastMatchAt,
+    lastDetectAt: h.lastDetectAt,
+    consecutiveErrors: h.consecutiveErrors,
+    lastError: h.lastError,
+    templateCount: detector.lastMetrics.templateCount,
+    missStreakMinutes: controller.current !== 'idle' && since > 0 ? Math.floor((now - since) / 60_000) : null,
+  };
   return snap;
 }
 
@@ -150,6 +164,46 @@ function applySettings(patch: Partial<Settings>): void {
   tray?.rebuild();
 }
 
+/** Controller health changed: refresh the overlay, tray tooltip and (once per streak) notify. */
+function onHealthChange(): void {
+  const errors = controller.health.consecutiveErrors;
+  const retrying = errors > 0;
+  if (retrying !== matcherRetrying) {
+    matcherRetrying = retrying;
+    tray?.rebuild();
+  }
+  if (errors >= 3 && !errorNotified) {
+    errorNotified = true;
+    try {
+      new Notification({
+        title: 'Cursor Auto Runner',
+        body: `The matcher keeps failing (${controller.health.lastError ?? 'unknown error'}). It is retrying with backoff; see the log folder for details.`,
+      }).show();
+    } catch {
+      /* notifications are best effort */
+    }
+  } else if (errors === 0) {
+    errorNotified = false;
+  }
+  sendStats();
+}
+
+/** Start the template capture flow (tray menu and overlay button). */
+function startTemplateCapture(name: 'run' | 'always-run' | 'allow', theme: 'dark' | 'light'): void {
+  // Pause the auto-clicker while the screen is frozen for capture.
+  const prevMode = controller.current;
+  controller.set('idle');
+  void startCapture(name, theme, {
+    onSaved: () => detector.resetTemplates(),
+    onDone: () => {
+      // Resume what was running before the capture session.
+      if (prevMode !== 'idle') {
+        void applyMode(prevMode);
+      }
+    },
+  }).catch((err) => console.error('[capture] failed:', err));
+}
+
 function registerToggleShortcut(accelerator: string): void {
   if (registeredShortcut) {
     globalShortcut.unregister(registeredShortcut);
@@ -206,12 +260,14 @@ app.whenReady().then(() => {
     },
     (mode) => {
       if (mode !== 'idle') lastActiveMode = mode;
+      modeStartedAt = mode === 'idle' ? null : Date.now();
       settings.set({ lastMode: mode });
       tray?.rebuild();
       sendStats(true);
     },
     (windowFound, watchedKind) => sendDetectionState(windowFound, watchedKind),
-    () => sendStats()
+    () => sendStats(),
+    onHealthChange
   );
   tray = new TrayUI({
     getMode: () => controller.current,
@@ -229,20 +285,8 @@ app.whenReady().then(() => {
     },
     getSettings: () => settings.get(),
     updateSettings: (patch) => applySettings(patch),
-    capture: (name, theme) => {
-      // Pause the auto-clicker while the screen is frozen for capture.
-      const prevMode = controller.current;
-      controller.set('idle');
-      void startCapture(name, theme, {
-        onSaved: () => detector.resetTemplates(),
-        onDone: () => {
-          // Resume what was running before the capture session.
-          if (prevMode !== 'idle') {
-            void applyMode(prevMode);
-          }
-        },
-      }).catch((err) => console.error('[capture] failed:', err));
-    },
+    capture: (name, theme) => startTemplateCapture(name, theme),
+    isMatcherRetrying: () => matcherRetrying,
     showButtonTest: () => showButtonTest(),
     checkForUpdates: () => updates.checkFromMenu(),
     updateMenu: () => updates.menuState(),
@@ -275,6 +319,7 @@ app.whenReady().then(() => {
     }
     void applyMode(mode);
   });
+  ipcMain.on(IPC.CAPTURE_TEMPLATE, () => startTemplateCapture('run', 'dark'));
   ipcMain.on(IPC.CLOSE_OVERLAY, () => overlay?.close());
   ipcMain.on(IPC.SET_POLL_INTERVAL, (_e, ms: number) => {
     const clamped = Math.max(150, Math.min(60000, Number(ms) || DEFAULT_SETTINGS.pollIntervalMs));

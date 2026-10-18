@@ -23,6 +23,17 @@ export interface StatsSnapshot {
   watchedKind: WatchKind | null;
   pollIntervalMs: number; // current detection refresh interval (user setting)
   effectivePollIntervalMs: number; // interval actually used right now (adaptive)
+  health: DetectionHealth;
+}
+
+export interface DetectionHealth {
+  lastMatchAt: number | null;
+  lastDetectAt: number | null;
+  consecutiveErrors: number;
+  lastError: string | null;
+  templateCount: number;
+  /** Minutes since the last click (or mode start) while a mode is active; null when idle. */
+  missStreakMinutes: number | null;
 }
 
 export interface DetectionState {
@@ -86,6 +97,7 @@ export const IPC = {
   DETECTION_STATE: 'detection-state',
   CLOSE_OVERLAY: 'close-overlay',
   SET_POLL_INTERVAL: 'set-poll-interval',
+  CAPTURE_TEMPLATE: 'capture-template',
 } as const;
 
 /** Adjustable detection refresh interval, ms. Faster = checks more often. */
