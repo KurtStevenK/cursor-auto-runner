@@ -21,6 +21,8 @@ npm run bench:matcher    # worker latency and main-thread heartbeat benchmark
 `npm run compile` type-checks and builds everything into `dist/`. Run it before
 `npm test` if you touch TypeScript outside the test loop.
 
+- Changing the app icon: edit `scripts/generate-icons.js`, run `npm run generate:icons`, then on macOS run `bash scripts/make-mac-icns.sh` and commit the regenerated `assets/icons/icon.icns` (electron-builder's own PNG→icns conversion renders as noise in macOS Login Items).
+
 ## Project layout
 
 - `src/main/`: Electron main process (tray, controller, capture window, settings, stats, logging).

@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.106] - 2026-10-18
+
+### Fixed
+- **macOS app icon:** System Settings → Login Items showed the app as a square of colourful noise. electron-builder's PNG-to-icns conversion produces image streams that the Login Items renderer cannot decode; the app now ships a prebuilt `icon.icns` made with Apple's `sips` and `iconutil` (`scripts/make-mac-icns.sh`), which renders correctly. Finder and Dock were unaffected.
+
 ## [1.2.105] - 2026-10-18
 
 ### Fixed
