@@ -25,4 +25,12 @@ cask "cursor-auto-runner" do
   # the app back into the Caskroom, so deleting it first makes every upgrade
   # fail with "App source … is not there."
   uninstall quit: "com.kurtstevenk.cursor-auto-runner"
+
+  # `brew uninstall --zap` also removes the app's user data.
+  zap trash: [
+    "~/Library/Application Support/Cursor Auto Runner",
+    "~/Library/Preferences/com.kurtstevenk.cursor-auto-runner.plist",
+    "~/Library/Saved Application State/com.kurtstevenk.cursor-auto-runner.savedState",
+    "~/Library/Logs/Cursor Auto Runner",
+  ]
 end

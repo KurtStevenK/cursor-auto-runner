@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.66] - 2026-10-18
+
+### Added
+- **Homebrew:** `brew uninstall --zap cursor-auto-runner` now removes the app's settings, stats and logs under `~/Library`.
+
 ## [1.2.65] - 2026-10-18
 
 ### Changed
