@@ -19,8 +19,8 @@
   <a href="https://cursor-auto-runner-linux.web.app"><img src="https://img.shields.io/badge/download-Firebase_landing-red" alt="download" /></a>
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="license" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="platform" />
-  <img src="https://img.shields.io/badge/electron-33-47848f?logo=electron&logoColor=white" alt="electron" />
-  <img src="https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white" alt="node" />
+  <img src="https://img.shields.io/badge/electron-44-47848f?logo=electron&logoColor=white" alt="electron" />
+  <img src="https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white" alt="node" />
   <a href="https://github.com/KurtStevenK/cursor-auto-runner"><img src="https://img.shields.io/badge/source-open_on_GitHub-181717?logo=github" alt="source" /></a>
 </p>
 
@@ -110,7 +110,7 @@ This repository is **public and auditable** (MIT). Installers are built in [GitH
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org) 18+ and npm
+- [Node.js](https://nodejs.org) 22+ and npm
 - The Cursor IDE ([cursor.com](https://cursor.com))
 
 ### Download a release (recommended)

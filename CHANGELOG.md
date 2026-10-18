@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.63] - 2026-10-18
+
+### Fixed
+- **Docs:** README badges and prerequisites now state the shipped Electron 44 and Node 22 instead of Electron 33 / Node 18.
+
 ## [1.2.62] - 2026-10-18
 
 ### Fixed
