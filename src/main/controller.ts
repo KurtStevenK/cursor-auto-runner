@@ -13,6 +13,8 @@ export interface ControllerHealth {
   lastErrorAt: number | null;
   lastMatchAt: number | null;
   lastDetectAt: number | null;
+  consecutiveDetectErrors?: number;
+  consecutiveClickErrors?: number;
 }
 
 type DetectorLike = Pick<Detector, 'detect' | 'cancelPending' | 'windowFound' | 'watchedKind'>;
@@ -58,8 +60,12 @@ const defaultClicker: ClickFn = (x, y) =>
 const defaultIdleSeconds: IdleFn = () =>
   (require('electron') as typeof import('electron')).powerMonitor.getSystemIdleTime();
 
+/** Idle readings this soon after our own click are ignored (the click resets the idle timer). */
+const OWN_INPUT_GRACE_MS = 1500;
+
 export class ModeController {
-  private consecutiveErrors = 0;
+  private consecutiveDetectErrors = 0;
+  private consecutiveClickErrors = 0;
   private lastError: string | null = null;
   private lastErrorAt: number | null = null;
   private lastMatchAt: number | null = null;
@@ -95,7 +101,9 @@ export class ModeController {
 
   get health(): ControllerHealth {
     return {
-      consecutiveErrors: this.consecutiveErrors,
+      consecutiveErrors: Math.max(this.consecutiveDetectErrors, this.consecutiveClickErrors),
+      consecutiveDetectErrors: this.consecutiveDetectErrors,
+      consecutiveClickErrors: this.consecutiveClickErrors,
       lastError: this.lastError,
       lastErrorAt: this.lastErrorAt,
       lastMatchAt: this.lastMatchAt,
@@ -135,6 +143,9 @@ export class ModeController {
   /** True when a click should be deferred because the user is active right now. */
   private userIsActive(): boolean {
     if (this.opts.pauseWhileTyping === false) return false;
+    // Our own synthetic click resets the OS idle timer; ignore idle readings
+    // taken shortly after it so we do not mistake ourselves for the user.
+    if (Date.now() - this.lastClickAt < OWN_INPUT_GRACE_MS) return false;
     try {
       return this.idleSeconds() < TYPING_IDLE_THRESHOLD_S;
     } catch {
@@ -193,12 +204,13 @@ export class ModeController {
 
   private async loop(token: number): Promise<void> {
     while (this.running && token === this.loopToken) {
+      let stage: 'detect' | 'click' = 'detect';
       try {
         const clickMode: ClickMode = this.mode === 'always-run' ? 'always-run' : 'run';
         const result = await this.detector.detect(clickMode, this.opts.confidence);
         if (!this.running || token !== this.loopToken) break;
         this.lastDetectAt = Date.now();
-        this.consecutiveErrors = 0;
+        this.consecutiveDetectErrors = 0;
         this.onHealthChange?.();
         this.onDetectionState?.(this.detector.windowFound, this.detector.watchedKind);
 
@@ -206,7 +218,10 @@ export class ModeController {
           const sinceClick = Date.now() - this.lastClickAt;
           if (sinceClick >= this.opts.cooldownMs && !this.userIsActive()) {
             await this.focusIfWanted(result);
+            stage = 'click';
             await this.clicker(result.x, result.y);
+            stage = 'detect';
+            this.consecutiveClickErrors = 0;
             this.lastClickAt = Date.now();
             this.lastMatchAt = this.lastClickAt;
             this.fastPollsLeft = FAST_POLLS_AFTER_CLICK;
@@ -228,7 +243,10 @@ export class ModeController {
               if (!near) break; // different button -> let the next poll handle it
               if (this.userIsActive()) break; // retry on the next poll
               await this.focusIfWanted(again);
+              stage = 'click';
               await this.clicker(again.x, again.y);
+              stage = 'detect';
+              this.consecutiveClickErrors = 0;
               this.lastClickAt = Date.now();
               this.lastMatchAt = this.lastClickAt;
               this.fastPollsLeft = FAST_POLLS_AFTER_CLICK;
@@ -241,7 +259,8 @@ export class ModeController {
         }
       } catch (err) {
         console.error('[controller] loop error:', err);
-        this.consecutiveErrors++;
+        if (stage === 'click') this.consecutiveClickErrors++;
+        else this.consecutiveDetectErrors++;
         this.lastError = err instanceof Error ? err.message : String(err);
         this.lastErrorAt = Date.now();
         this.onHealthChange?.();
@@ -254,10 +273,8 @@ export class ModeController {
       }
       const interval = this.effectivePollIntervalMs;
       if (this.fastPollsLeft > 0) this.fastPollsLeft--;
-      const wait =
-        this.consecutiveErrors > 0
-          ? Math.min(MAX_BACKOFF_MS, interval * 2 ** this.consecutiveErrors)
-          : interval;
+      const errors = this.health.consecutiveErrors;
+      const wait = errors > 0 ? Math.min(MAX_BACKOFF_MS, interval * 2 ** errors) : interval;
       const deadline = Date.now() + wait;
       while (Date.now() < deadline && this.running && token === this.loopToken) {
         await new Promise((r) => setTimeout(r, Math.min(50, Math.max(1, deadline - Date.now()))));

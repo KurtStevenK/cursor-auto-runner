@@ -14,7 +14,8 @@ function setup(
     focusBeforeClick?: boolean;
     pauseWhileTyping?: boolean;
   } = {},
-  idleSeconds?: () => number
+  idleSeconds?: () => number,
+  clicker?: (x: number, y: number) => Promise<void>
 ) {
   const detectTimes: number[] = [];
   const clicks: Array<[number, number]> = [];
@@ -41,7 +42,7 @@ function setup(
     undefined,
     undefined,
     () => void healthEvents++,
-    async (x, y) => void clicks.push([x, y]),
+    clicker ?? (async (x, y) => void clicks.push([x, y])),
     idleSeconds
   );
   return { c, detectTimes, clicks, recorded, events: () => healthEvents };
@@ -182,6 +183,61 @@ test('pauseWhileTyping=false clicks even while the user is active', async () => 
   await sleep(120);
   t.c.set('idle');
   assert.equal(t.clicks.length, 1);
+});
+
+test('idle 0 right after our own click does not block the repeat click', async () => {
+  let clickedAt = 0;
+  const t = setup(
+    [hit(100, 100), hit(110, 100), null],
+    { cooldownMs: 10_000 },
+    () => (clickedAt && Date.now() - clickedAt < 1500 ? 0 : 5),
+    async (x, y) => {
+      clickedAt = Date.now();
+      t.clicks.push([x, y]);
+    }
+  );
+  t.c.set('run');
+  await sleep(200);
+  t.c.set('idle');
+  assert.deepEqual(t.clicks, [
+    [100, 100],
+    [110, 100],
+  ]);
+});
+
+test('idle 0 before any click still defers the click', async () => {
+  const t = setup([hit(10, 10)], { cooldownMs: 0 }, () => 0);
+  t.c.set('run');
+  await sleep(120);
+  t.c.set('idle');
+  assert.equal(t.clicks.length, 0);
+});
+
+test('persistent click failures accumulate, back off, and are reported', async () => {
+  const orig = console.error;
+  console.error = () => {};
+  try {
+    const attempts: number[] = [];
+    const t = setup(
+      [hit(10, 10)],
+      { cooldownMs: 0, pollIntervalMs: 20 },
+      () => 60,
+      async () => {
+        attempts.push(Date.now());
+        throw new Error('no accessibility');
+      }
+    );
+    t.c.set('run');
+    await sleep(500);
+    t.c.set('idle');
+    assert.ok(attempts.length >= 3, `attempts: ${attempts.length}`);
+    assert.ok(t.c.health.consecutiveErrors >= 3);
+    assert.equal(t.c.health.lastError, 'no accessibility');
+    const gaps = attempts.slice(1).map((v, k) => v - attempts[k]);
+    assert.ok(gaps[2] === undefined || gaps[1] > gaps[0], `gaps should grow: ${gaps}`);
+  } finally {
+    console.error = orig;
+  }
 });
 
 import { nextPollIntervalMs, FAST_POLLS_AFTER_CLICK } from '../src/main/controller';

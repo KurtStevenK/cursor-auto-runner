@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.97] - 2026-10-18
+
+### Fixed
+- **Clicks:** the typing guard no longer treats the app's own click as user activity, so the built-in repeat click works again with "Pause while typing" on. Detection and click failures are counted separately, so a clicker that keeps failing now backs off and raises the health warning.
+
 ## [1.2.96] - 2026-10-18
 
 ### Changed
