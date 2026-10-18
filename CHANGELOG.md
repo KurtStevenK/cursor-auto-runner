@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.60] - 2026-10-18
+
+### Changed
+- **Installer size:** compiled tests and helper scripts (`dist/tests`, `dist/scripts`) are no longer packaged into the app; only `dist/src` ships.
+
 ## [1.2.59] - 2026-10-13
 
 ### Fixed
