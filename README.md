@@ -115,6 +115,18 @@ This repository is **public and auditable** (MIT). Installers are built in [GitH
 
 > **Note:** macOS DMGs are **Developer ID signed and notarized** when Apple secrets in [packaging/mac/README.md](packaging/mac/README.md) are set on GitHub Actions. Without those secrets the macOS job still publishes an unsigned DMG. Windows Authenticode is not configured. Some AV engines flag new Electron apps heuristically — read the **full** VirusTotal report. Local scans: `npm run scan:virustotal` after `npm run dist` (key in `.env.local`; see [.env.example](.env.example)).
 
+## Privacy
+
+- **Screen captures stay in memory.** Frames of the Cursor window are processed in RAM to find buttons and are never written to disk.
+- **Only deliberate template captures are saved.** Button templates you create via tray → **Capture templates…** are PNG files in the app's user-data folder.
+- **Nothing is uploaded.** Screen content never leaves your computer.
+- **Click statistics are local.** They live in a SQLite database (`stats.db`), or a JSON fallback (`clicks-fallback.json`), in the user-data folder.
+- **Only two kinds of network calls.** The optional update check against GitHub Releases (toggle **Check for updates automatically** in the tray Settings submenu), and `brew upgrade` on macOS Homebrew installs when an update is installed that way.
+- **No analytics or telemetry.** The app does not report usage anywhere.
+- **Logs stay local.** Tray → **Open log folder** opens a local log file that contains no screen content.
+
+Screen Recording is needed to see the Cursor window, and Accessibility is needed to send the clicks; the app cannot work without them on macOS.
+
 ## Getting started
 
 ### Prerequisites

@@ -177,6 +177,13 @@ export default function App() {
             ))}
           </div>
         </Reveal>
+
+        <Reveal as="section" inView className="section" variant="fade">
+          <h2>Privacy</h2>
+          <p>
+            Screen captures are processed in memory and never uploaded. Only button templates you capture on purpose are saved to disk, alongside local click statistics. The only network calls are the optional update check against GitHub (toggle in the tray Settings) and Homebrew upgrades. No analytics or telemetry; logs stay local and contain no screen content.
+          </p>
+        </Reveal>
       </main>
 
       <footer className="footer">

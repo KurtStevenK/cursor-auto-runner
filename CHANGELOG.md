@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.91] - 2026-10-18
+
+### Added
+- **Privacy:** README and both landing pages state what the app does with screen captures, statistics, logs and network access (local only, no telemetry; the update check is optional).
+
 ## [1.2.90] - 2026-10-18
 
 ### Changed
