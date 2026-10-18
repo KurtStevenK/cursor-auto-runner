@@ -1,12 +1,15 @@
 /** Electron desktopCapturer-backed capture. Only loaded when the real app runs. */
 import { desktopCapturer, screen as electronScreen } from 'electron';
-import {
-  captureRequestSize,
-  captureToNativeScales,
-} from '../capture-geometry';
+import { captureRequestSize, captureToNativeScales } from '../capture-geometry';
 import { ensureMacScreenCapture } from '../permissions';
 import { nativeImageToTightBgra } from '../native-image-bgra';
-import { windowKey, type CaptureResult, type CropContext, type DisplayInfo, type WindowInfo } from './types';
+import {
+  windowKey,
+  type CaptureResult,
+  type CropContext,
+  type DisplayInfo,
+  type WindowInfo,
+} from './types';
 
 export interface CaptureProvider {
   captureCrops(
@@ -210,12 +213,24 @@ export class ElectronCaptureProvider implements CaptureProvider {
         if (cancelled()) break;
         const left = Math.max(window.left, entry.display.bounds.x);
         const top = Math.max(window.top, entry.display.bounds.y);
-        const right = Math.min(window.left + window.width, entry.display.bounds.x + entry.display.bounds.width);
-        const bottom = Math.min(window.top + window.height, entry.display.bounds.y + entry.display.bounds.height);
+        const right = Math.min(
+          window.left + window.width,
+          entry.display.bounds.x + entry.display.bounds.width
+        );
+        const bottom = Math.min(
+          window.top + window.height,
+          entry.display.bounds.y + entry.display.bounds.height
+        );
         const cropX = Math.max(0, Math.floor((left - entry.display.bounds.x) * scaleX));
         const cropY = Math.max(0, Math.floor((top - entry.display.bounds.y) * scaleY));
-        const cropRight = Math.min(size.width, Math.ceil((right - entry.display.bounds.x) * scaleX));
-        const cropBottom = Math.min(size.height, Math.ceil((bottom - entry.display.bounds.y) * scaleY));
+        const cropRight = Math.min(
+          size.width,
+          Math.ceil((right - entry.display.bounds.x) * scaleX)
+        );
+        const cropBottom = Math.min(
+          size.height,
+          Math.ceil((bottom - entry.display.bounds.y) * scaleY)
+        );
         const width = cropRight - cropX;
         const height = cropBottom - cropY;
         if (width < 10 || height < 10) continue;

@@ -1,7 +1,7 @@
 {
   "name": "cursor-auto-runner",
   "productName": "Cursor Auto Runner",
-  "version": "1.2.89",
+  "version": "1.2.90",
   "description": "System-tray app that automatically clicks the Run / Always Run button in the Cursor IDE and tracks click statistics.",
   "main": "dist/src/main/main.js",
   "license": "MIT",
@@ -35,7 +35,12 @@
     "sync:firebase-release-data": "node scripts/sync-firebase-release-data.js",
     "build:firebase-landing": "node scripts/sync-firebase-release-data.js && npm run build --prefix firebase-landing",
     "deploy:firebase": "npm run build:firebase-landing && firebase deploy --only hosting,storage --project cursor-auto-runner-linux",
-    "scan:virustotal": "node scripts/virustotal-scan.js --artifacts-dir release"
+    "scan:virustotal": "node scripts/virustotal-scan.js --artifacts-dir release",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check ."
   },
   "build": {
     "appId": "com.kurtstevenk.cursor-auto-runner",
@@ -135,6 +140,7 @@
     "electron-updater": "^6.8.9"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
     "@types/node": "^26.6.4",
     "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
@@ -143,5 +149,8 @@
   },
   "overrides": {
     "node-gyp": "13.0.2"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

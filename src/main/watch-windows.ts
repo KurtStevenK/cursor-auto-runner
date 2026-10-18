@@ -34,7 +34,10 @@ export function watchKindForTitle(title: string): WatchKind | null {
   return watchKindForWindow({ title });
 }
 
-export function watchKindForWindow(window: { title: string; owner?: string | null }): WatchKind | null {
+export function watchKindForWindow(window: {
+  title: string;
+  owner?: string | null;
+}): WatchKind | null {
   const title = window.title.toLowerCase();
   const owner = (window.owner || '').trim().toLowerCase();
   if (title === BUTTON_TEST_TITLE.toLowerCase()) return 'cursor';
@@ -58,7 +61,10 @@ function intersectionArea(window: WindowRect, display: DisplayRect): number {
  * drop Cursor windows centered on that display so a click cannot raise the
  * local IDE in front of the remote session.
  */
-export function selectWatchWindows<T extends WindowRect>(windows: T[], displays: DisplayRect[]): T[] {
+export function selectWatchWindows<T extends WindowRect>(
+  windows: T[],
+  displays: DisplayRect[]
+): T[] {
   const eligible = windows.filter((window) => watchKindForWindow(window) !== null);
   const covered = displays.filter((display) => {
     const area = display.width * display.height;

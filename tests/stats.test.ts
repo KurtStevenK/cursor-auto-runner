@@ -25,11 +25,15 @@ test('record and snapshot counts (JSON fallback under plain Node)', () => {
     store.record('run' as never);
     store.record('run' as never);
     const snap = store.snapshot('run');
-    for (const k of ['session', 'day', 'week', 'month', 'total'] as const) assert.equal(snap[k], 3, k);
+    for (const k of ['session', 'day', 'week', 'month', 'total'] as const)
+      assert.equal(snap[k], 3, k);
     assert.equal(snap.mode, 'run');
     assert.equal(snap.byDay.length, 7);
     assert.equal(snap.byDay[6].count, 3);
-    assert.equal(snap.byDay.slice(0, 6).every((d) => d.count === 0), true);
+    assert.equal(
+      snap.byDay.slice(0, 6).every((d) => d.count === 0),
+      true
+    );
   } finally {
     store.dispose();
     restore();

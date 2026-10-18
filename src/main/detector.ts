@@ -9,23 +9,16 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type { ClickMode } from '../shared/types';
 import type { MatchDebugInfo, TemplatePayload } from '../shared/match-protocol';
-import {
-  capturePointToPhysical,
-  windowCapturePointToPhysical,
-} from './capture-geometry';
+import { capturePointToPhysical, windowCapturePointToPhysical } from './capture-geometry';
 import type { GrayImage } from './matcher';
 import { MatchWorkerClient } from './match-worker-client';
 import { watchKindForWindow, type WatchKind } from './watch-windows';
-import { DetectionMetrics, perfNow, reportDetectionMetrics } from './perf';
+import { type DetectionMetrics, perfNow, reportDetectionMetrics } from './perf';
 import { hashBgra } from '../shared/crop-hash';
 import { loadTemplateCatalog } from './detection/template-loader';
 import { windowRank, type WindowProvider } from './detection/window-finder';
 import type { CaptureProvider } from './detection/screen-capture';
-import type {
-  CropContext,
-  DisplayInfo,
-  WindowInfo,
-} from './detection/types';
+import type { CropContext, DisplayInfo, WindowInfo } from './detection/types';
 
 export type { CaptureProvider } from './detection/screen-capture';
 export type { WindowProvider } from './detection/window-finder';
@@ -140,7 +133,7 @@ export class Detector {
   watchedKind: WatchKind | null = null;
   lastMetrics: DetectionMetrics = { ...EMPTY_METRICS };
 
-  constructor(private readonly options: DetectorOptions = {}) {
+  constructor(options: DetectorOptions = {}) {
     this.matcher = options.matcher ?? new MatchWorkerClient();
     this.windowProvider = options.windows ?? null;
     this.captureProvider = options.capture ?? null;
@@ -150,13 +143,16 @@ export class Detector {
     this.loadImageFn =
       options.loadImage ??
       ((file) =>
-        (require('./template-loader') as typeof import('./template-loader')).loadTemplateNative(file));
+        (require('./template-loader') as typeof import('./template-loader')).loadTemplateNative(
+          file
+        ));
   }
 
   private windows(): WindowProvider {
     if (!this.windowProvider) {
       const { screen } = electron();
-      const { NutWindowProvider } = require('./detection/window-finder') as typeof import('./detection/window-finder');
+      const { NutWindowProvider } =
+        require('./detection/window-finder') as typeof import('./detection/window-finder');
       const { getButtonTestWindow } = require('./button-test') as typeof import('./button-test');
       this.windowProvider = new NutWindowProvider({
         displayNearestPoint: (point) => screen.getDisplayNearestPoint(point),
@@ -169,7 +165,8 @@ export class Detector {
 
   private capturer(): CaptureProvider {
     if (!this.captureProvider) {
-      const { ElectronCaptureProvider } = require('./detection/screen-capture') as typeof import('./detection/screen-capture');
+      const { ElectronCaptureProvider } =
+        require('./detection/screen-capture') as typeof import('./detection/screen-capture');
       this.captureProvider = new ElectronCaptureProvider();
     }
     return this.captureProvider;
@@ -183,7 +180,9 @@ export class Detector {
     );
     this.templateCount = payloads.length;
     if (payloads.length === 0) {
-      console.warn('[detector] no valid templates found; capture a tightly cropped button template first');
+      console.warn(
+        '[detector] no valid templates found; capture a tightly cropped button template first'
+      );
     } else {
       console.log(
         `[detector] ${payloads.length} unique templates ready (${duplicates} duplicates, ${rejected} invalid, ${limited} over limit skipped)`
@@ -242,7 +241,6 @@ export class Detector {
     this.missHashes.clear();
   }
 
-
   /** Find all Cursor windows, caching the native enumeration briefly. */
   private async findCursorWindows(): Promise<WindowInfo[]> {
     const now = Date.now();
@@ -265,8 +263,7 @@ export class Detector {
     if (!bestMiss || this.disposing) return;
     this.missLogStreak++;
     const now = Date.now();
-    const shouldLog =
-      DEBUG_DETECT || this.missLogStreak >= 3 || now - this.lastMissLogAt > 15_000;
+    const shouldLog = DEBUG_DETECT || this.missLogStreak >= 3 || now - this.lastMissLogAt > 15_000;
     if (!shouldLog) return;
     this.lastMissLogAt = now;
     const sample = crops[0];
@@ -365,7 +362,11 @@ export class Detector {
       let cropsDropped = 0;
       for (const crop of crops) {
         const key = `${crop.windowKey}\0${crop.cropX}\0${crop.cropY}`;
-        const hash = hashBgra(new Uint8Array(crop.payload.bgra), crop.payload.width, crop.payload.height);
+        const hash = hashBgra(
+          new Uint8Array(crop.payload.bgra),
+          crop.payload.width,
+          crop.payload.height
+        );
         hashes.set(crop.id, { key, hash });
         const previous = this.missHashes.get(key);
         if (previous && previous.hash === hash) {

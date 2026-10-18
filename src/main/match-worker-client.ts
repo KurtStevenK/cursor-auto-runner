@@ -43,7 +43,9 @@ export class MatchWorkerClient {
     if (this.worker) return this.worker;
     if (this.stopping) throw new Error('matcher worker is shutting down');
     if (Date.now() < this.retryAfter) {
-      throw new Error(`matcher worker restart is backing off until ${new Date(this.retryAfter).toISOString()}`);
+      throw new Error(
+        `matcher worker restart is backing off until ${new Date(this.retryAfter).toISOString()}`
+      );
     }
 
     const worker = new Worker(this.workerPath());
@@ -53,7 +55,8 @@ export class MatchWorkerClient {
     worker.on('exit', (code) => {
       if (this.worker !== worker) return;
       this.worker = null;
-      if (!this.stopping && code !== 0) this.handleFailure(new Error(`matcher worker exited with code ${code}`));
+      if (!this.stopping && code !== 0)
+        this.handleFailure(new Error(`matcher worker exited with code ${code}`));
     });
     return worker;
   }
@@ -64,7 +67,9 @@ export class MatchWorkerClient {
     this.pending.delete(response.requestId);
     if (response.type === 'error') {
       this.activeCancelView = null;
-      pending.reject(new Error(response.stack ? `${response.message}\n${response.stack}` : response.message));
+      pending.reject(
+        new Error(response.stack ? `${response.message}\n${response.stack}` : response.message)
+      );
       return;
     }
     if (response.type === 'ready') this.crashCount = 0;
@@ -87,7 +92,10 @@ export class MatchWorkerClient {
     }
   }
 
-  private request(request: MatchWorkerRequest, transfer: ArrayBuffer[]): Promise<MatchWorkerResponse> {
+  private request(
+    request: MatchWorkerRequest,
+    transfer: ArrayBuffer[]
+  ): Promise<MatchWorkerResponse> {
     const worker = this.ensureWorker();
     return new Promise((resolve, reject) => {
       this.pending.set(request.requestId, { resolve, reject });
@@ -120,7 +128,8 @@ export class MatchWorkerClient {
       { type: 'match', requestId, mode, confidence, crops, cancelBuffer },
       crops.map((crop) => crop.bgra)
     );
-    if (response.type !== 'result') throw new Error(`unexpected matcher response: ${response.type}`);
+    if (response.type !== 'result')
+      throw new Error(`unexpected matcher response: ${response.type}`);
     return response;
   }
 
@@ -131,7 +140,8 @@ export class MatchWorkerClient {
   async dispose(): Promise<void> {
     this.stopping = true;
     this.cancelCurrent();
-    for (const pending of this.pending.values()) pending.reject(new Error('matcher worker disposed'));
+    for (const pending of this.pending.values())
+      pending.reject(new Error('matcher worker disposed'));
     this.pending.clear();
     const worker = this.worker;
     this.worker = null;

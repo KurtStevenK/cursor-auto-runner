@@ -35,7 +35,11 @@ function stepPoll(current: number, dir: -1 | 1): number | null {
   const idx = POLL_LADDER_MS.indexOf(current);
   if (idx !== -1) return POLL_LADDER_MS[idx + dir] ?? null;
   const candidates = POLL_LADDER_MS.filter((v) => (dir === -1 ? v < current : v > current));
-  return candidates.length ? (dir === -1 ? candidates[candidates.length - 1] : candidates[0]) : null;
+  return candidates.length
+    ? dir === -1
+      ? candidates[candidates.length - 1]
+      : candidates[0]
+    : null;
 }
 
 declare global {
@@ -48,7 +52,9 @@ declare global {
       captureTemplate: () => void;
       onStats: (cb: (snap: StatsSnapshot) => void) => void;
       onModeChanged: (cb: (mode: Mode) => void) => void;
-      onDetectionState: (cb: (state: { windowFound: boolean; watchedKind: 'cursor' | 'rustdesk' | null }) => void) => void;
+      onDetectionState: (
+        cb: (state: { windowFound: boolean; watchedKind: 'cursor' | 'rustdesk' | null }) => void
+      ) => void;
     };
   }
 }
@@ -69,7 +75,9 @@ function renderBadge(mode: Mode): void {
 function renderSpark(byDay: { date: string; count: number }[]): void {
   const svg = $('sparkSvg');
   const labels = $('sparkLabels');
-  const W = 340, H = 90, pad = 6;
+  const W = 340,
+    H = 90,
+    pad = 6;
   const max = Math.max(1, ...byDay.map((d) => d.count));
   const n = byDay.length || 1;
   const step = (W - pad * 2) / (n - 1 || 1);
@@ -227,7 +235,8 @@ window.autoRunner.onModeChanged((mode) => {
 window.autoRunner.onDetectionState((state) => {
   if (
     !latestSnapshot ||
-    (latestSnapshot.windowFound === state.windowFound && latestSnapshot.watchedKind === state.watchedKind)
+    (latestSnapshot.windowFound === state.windowFound &&
+      latestSnapshot.watchedKind === state.watchedKind)
   ) {
     return;
   }
@@ -235,4 +244,7 @@ window.autoRunner.onDetectionState((state) => {
   latestSnapshot.watchedKind = state.watchedKind;
   renderStatus(latestSnapshot);
 });
-window.autoRunner.getStats().then(render).catch(() => {});
+window.autoRunner
+  .getStats()
+  .then(render)
+  .catch(() => {});

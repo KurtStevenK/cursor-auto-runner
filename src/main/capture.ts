@@ -98,7 +98,8 @@ function validateRegion(
 ): { x: number; y: number; w: number; h: number } | null {
   if (!r || typeof r !== 'object') return null;
   const { x, y, w, h } = r as Record<string, unknown>;
-  if (![x, y, w, h].every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0)) return null;
+  if (![x, y, w, h].every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0))
+    return null;
   const [rx, ry, rw, rh] = [x, y, w, h] as number[];
   if (rw <= 0 || rh <= 0) return null;
   const maxW = size.width / scale;

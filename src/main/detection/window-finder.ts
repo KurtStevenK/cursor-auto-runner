@@ -44,7 +44,8 @@ export class NutWindowProvider implements WindowProvider {
     const testWindow = (): WindowInfo | null => this.deps.testWindow?.() ?? null;
     let enumerated = false;
     try {
-      const { getWindows } = require('@nut-tree-fork/nut-js') as typeof import('@nut-tree-fork/nut-js');
+      const { getWindows } =
+        require('@nut-tree-fork/nut-js') as typeof import('@nut-tree-fork/nut-js');
       const owned = await listOwnedWindows(forceOwners);
       const ownedTitles = new Set(owned.map((window) => window.title));
       const windows = await getWindows();

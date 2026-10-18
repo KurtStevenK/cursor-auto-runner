@@ -3,7 +3,6 @@
 export function macPermAuthStatus(type: string): string {
   if (process.platform !== 'darwin') return 'not determined';
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getAuthStatus } = require('@nut-tree-fork/node-mac-permissions') as {
       getAuthStatus: (t: string) => string;
     };

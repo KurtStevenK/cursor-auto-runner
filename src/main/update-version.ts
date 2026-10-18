@@ -5,7 +5,10 @@ export const BREW_CANDIDATES = ['/opt/homebrew/bin/brew', '/usr/local/bin/brew']
 export const BREW_UPGRADE_ARGS = ['upgrade', '--cask', CASK_NAME] as const;
 
 export function parseVersion(value: string): [number, number, number] | null {
-  const match = value.trim().replace(/^v/i, '').match(/^(\d+)\.(\d+)\.(\d+)/);
+  const match = value
+    .trim()
+    .replace(/^v/i, '')
+    .match(/^(\d+)\.(\d+)\.(\d+)/);
   if (!match) return null;
   return [Number(match[1]), Number(match[2]), Number(match[3])];
 }
@@ -26,7 +29,10 @@ export function isNewerVersion(latest: string, current: string): boolean {
   return order !== null && order > 0;
 }
 
-export function firstExistingPath(candidates: string[], exists: (file: string) => boolean): string | null {
+export function firstExistingPath(
+  candidates: string[],
+  exists: (file: string) => boolean
+): string | null {
   return candidates.find((candidate) => exists(candidate)) ?? null;
 }
 

@@ -86,7 +86,12 @@ async function setup(getBgra: () => Promise<{ width: number; height: number; bgr
 }
 
 function insideWindow(x: number, y: number): boolean {
-  return x >= WINDOW.left && x <= WINDOW.left + WINDOW.width && y >= WINDOW.top && y <= WINDOW.top + WINDOW.height;
+  return (
+    x >= WINDOW.left &&
+    x <= WINDOW.left + WINDOW.width &&
+    y >= WINDOW.top &&
+    y <= WINDOW.top + WINDOW.height
+  );
 }
 
 test('detector finds Run and Always run in a captured Cursor window', async () => {

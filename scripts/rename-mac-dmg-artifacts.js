@@ -3,31 +3,22 @@
  * electron-builder uses productName (spaces) in DMG basenames; GitHub Releases,
  * the Homebrew cask, and landing links use dotted names. Rename after dist:mac.
  */
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-const version = require("../package.json").version;
-const releaseDir = path.join(__dirname, "..", "release");
+const version = require('../package.json').version;
+const releaseDir = path.join(__dirname, '..', 'release');
 
 const renames = [
   [`Cursor Auto Runner-${version}.dmg`, `Cursor.Auto.Runner-${version}.dmg`],
-  [
-    `Cursor Auto Runner-${version}-arm64.dmg`,
-    `Cursor.Auto.Runner-${version}-arm64.dmg`,
-  ],
-  [
-    `Cursor Auto Runner-${version}.dmg.blockmap`,
-    `Cursor.Auto.Runner-${version}.dmg.blockmap`,
-  ],
+  [`Cursor Auto Runner-${version}-arm64.dmg`, `Cursor.Auto.Runner-${version}-arm64.dmg`],
+  [`Cursor Auto Runner-${version}.dmg.blockmap`, `Cursor.Auto.Runner-${version}.dmg.blockmap`],
   [
     `Cursor Auto Runner-${version}-arm64.dmg.blockmap`,
     `Cursor.Auto.Runner-${version}-arm64.dmg.blockmap`,
   ],
   [`Cursor Auto Runner-${version}-mac.zip`, `Cursor.Auto.Runner-${version}-mac.zip`],
-  [
-    `Cursor Auto Runner-${version}-arm64-mac.zip`,
-    `Cursor.Auto.Runner-${version}-arm64-mac.zip`,
-  ],
+  [`Cursor Auto Runner-${version}-arm64-mac.zip`, `Cursor.Auto.Runner-${version}-arm64-mac.zip`],
 ];
 
 for (const [from, to] of renames) {

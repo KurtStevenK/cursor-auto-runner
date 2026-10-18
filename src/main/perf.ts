@@ -56,5 +56,8 @@ export function reportDetectionMetrics(metrics: DetectionMetrics): void {
 
 export function reportStatsDuration(durationMs: number): void {
   if (!enabled || durationMs < 1) return;
-  console.log('[perf] stats-snapshot', JSON.stringify({ durationMs: Number(durationMs.toFixed(1)) }));
+  console.log(
+    '[perf] stats-snapshot',
+    JSON.stringify({ durationMs: Number(durationMs.toFixed(1)) })
+  );
 }

@@ -52,7 +52,9 @@ export async function loadTemplateCatalog(
       if (!fs.existsSync(themeDir)) continue;
       const names = fs.readdirSync(themeDir).filter((file) => file.toLowerCase().endsWith('.png'));
       for (const mode of ['always-run', 'run', 'allow'] as const) {
-        const matching = names.filter((file) => file === `${mode}.png` || file.startsWith(`${mode}-`));
+        const matching = names.filter(
+          (file) => file === `${mode}.png` || file.startsWith(`${mode}-`)
+        );
         const group = `${mode}:${theme}`;
         const bucket = grouped.get(group) ?? [];
         for (const fileName of matching) {
@@ -61,7 +63,7 @@ export async function loadTemplateCatalog(
           try {
             mtimeMs = fs.statSync(file).mtimeMs;
           } catch {
-            mtimeMs = 0;
+            // keep the default of 0 when the file cannot be stat'ed
           }
           bucket.push({ file, source, mtimeMs, mode, theme });
         }

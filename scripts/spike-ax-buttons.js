@@ -73,23 +73,42 @@ function run() {
 `;
 
 const t = Date.now();
-const r = spawnSync('osascript', ['-l', 'JavaScript', '-e', jxa], { encoding: 'utf8', timeout: 60000 });
+const r = spawnSync('osascript', ['-l', 'JavaScript', '-e', jxa], {
+  encoding: 'utf8',
+  timeout: 60000,
+});
 const wall = Date.now() - t;
 if (r.status !== 0) {
   const err = (r.stderr || '').trim();
   console.error('osascript failed:', err);
   if (/not allowed assistive|-25211|1743|not authorized/i.test(err)) {
-    console.error('=> The calling process lacks Accessibility permission (System Settings > Privacy & Security > Accessibility).');
+    console.error(
+      '=> The calling process lacks Accessibility permission (System Settings > Privacy & Security > Accessibility).'
+    );
   }
   process.exit(1);
 }
 let o;
-try { o = JSON.parse(r.stdout.trim()); } catch { console.error('Unparseable output:', r.stdout); process.exit(1); }
-if (!o.running) { console.log('Cursor process not running. Nothing to walk.'); process.exit(0); }
+try {
+  o = JSON.parse(r.stdout.trim());
+} catch {
+  console.error('Unparseable output:', r.stdout);
+  process.exit(1);
+}
+if (!o.running) {
+  console.log('Cursor process not running. Nothing to walk.');
+  process.exit(0);
+}
 console.log('enable attrs:', o.enable ? JSON.stringify(o.enable) : '(skipped, --no-enable)');
-console.log(`windows: ${o.windowCount}, elements visited: ${o.visited}${o.truncated ? ' (stopped: ' + o.truncated + ')' : ''}`);
+console.log(
+  `windows: ${o.windowCount}, elements visited: ${o.visited}${o.truncated ? ' (stopped: ' + o.truncated + ')' : ''}`
+);
 console.log(`walk time: ${o.walkMs} ms in-script, ${wall} ms wall (incl. osascript startup)`);
-console.log('roles:', JSON.stringify(Object.fromEntries(Object.entries(o.roles || {}).sort((a, b) => b[1] - a[1]))));
+console.log(
+  'roles:',
+  JSON.stringify(Object.fromEntries(Object.entries(o.roles || {}).sort((a, b) => b[1] - a[1])))
+);
 console.log(`matching buttons: ${(o.matches || []).length}`);
-for (const m of o.matches || []) console.log(`  ${m.role} "${m.name}" pos=${m.position} size=${m.size} window="${m.window}"`);
+for (const m of o.matches || [])
+  console.log(`  ${m.role} "${m.name}" pos=${m.position} size=${m.size} window="${m.window}"`);
 if (PRESS) console.log('press:', o.pressed);

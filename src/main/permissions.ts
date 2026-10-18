@@ -44,14 +44,12 @@ export async function ensureMacPermissions(): Promise<boolean> {
       await shell.openExternal(
         'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'
       );
-      continue;
     }
     /* Try again (0) or fall-through: re-check */
   }
 }
 
 function appIconDir(): string {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const electron = require('electron');
   // app.getAppPath() is the project root in dev and resources/app.asar when packaged.
   return path.join(electron.app.getAppPath(), 'assets', 'icons');

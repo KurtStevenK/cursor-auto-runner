@@ -134,5 +134,9 @@ export function stepPoll(current: number, dir: -1 | 1): number | null {
   const idx = POLL_LADDER_MS.indexOf(current);
   if (idx !== -1) return POLL_LADDER_MS[idx + dir] ?? null;
   const candidates = POLL_LADDER_MS.filter((v) => (dir === -1 ? v < current : v > current));
-  return candidates.length ? (dir === -1 ? candidates[candidates.length - 1] : candidates[0]) : null;
+  return candidates.length
+    ? dir === -1
+      ? candidates[candidates.length - 1]
+      : candidates[0]
+    : null;
 }

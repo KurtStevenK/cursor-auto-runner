@@ -7,6 +7,11 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.90] - 2026-10-18
+
+### Changed
+- **Tooling:** Biome lints and formats `src/`, `tests/` and `scripts/` (`npm run lint`, `npm run format`), enforced in CI; `engines.node >= 22`, `.nvmrc` and `.editorconfig` added. Sources are formatted once; no behaviour change.
+
 ## [1.2.89] - 2026-10-18
 
 ### Added

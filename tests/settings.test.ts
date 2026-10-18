@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { SettingsStore, sanitizeSettings, sanitizeOverlayBounds, boundsIntersectDisplays } from '../src/main/settings';
+import {
+  SettingsStore,
+  sanitizeSettings,
+  sanitizeOverlayBounds,
+  boundsIntersectDisplays,
+} from '../src/main/settings';
 import { DEFAULT_SETTINGS, nextToggleMode } from '../src/shared/types';
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'car-settings-'));
@@ -36,7 +41,10 @@ test('out-of-range and invalid values are clamped or defaulted', () => {
   assert.equal(s.lastMode, 'idle');
   assert.equal('extra' in s, false);
   assert.equal(sanitizeSettings({ pollIntervalMs: 1e9 }).pollIntervalMs, 60000);
-  assert.equal(sanitizeSettings({ pollIntervalMs: NaN }).pollIntervalMs, DEFAULT_SETTINGS.pollIntervalMs);
+  assert.equal(
+    sanitizeSettings({ pollIntervalMs: NaN }).pollIntervalMs,
+    DEFAULT_SETTINGS.pollIntervalMs
+  );
   assert.equal(sanitizeSettings({ confidence: 0.1 }).confidence, 0.5);
   assert.deepEqual(sanitizeSettings(null), DEFAULT_SETTINGS);
 });
@@ -60,7 +68,10 @@ test('launchAtLogin defaults to false and only accepts booleans', () => {
 
 test('toggleShortcut only accepts the offered accelerators', () => {
   assert.equal(DEFAULT_SETTINGS.toggleShortcut, '');
-  assert.equal(sanitizeSettings({ toggleShortcut: 'CommandOrControl+Alt+R' }).toggleShortcut, 'CommandOrControl+Alt+R');
+  assert.equal(
+    sanitizeSettings({ toggleShortcut: 'CommandOrControl+Alt+R' }).toggleShortcut,
+    'CommandOrControl+Alt+R'
+  );
   assert.equal(sanitizeSettings({ toggleShortcut: 'Ctrl+Q' }).toggleShortcut, '');
   assert.equal(sanitizeSettings({ toggleShortcut: 5 }).toggleShortcut, '');
 });
@@ -90,20 +101,35 @@ test('overlayBounds are sanitized to finite integers at or above the minimum siz
   assert.equal(sanitizeOverlayBounds({ x: NaN, y: 0, width: 400, height: 560 }), undefined);
   assert.equal(sanitizeOverlayBounds({ x: '1', y: 0, width: 400, height: 560 }), undefined);
   assert.equal(sanitizeOverlayBounds(null), undefined);
-  assert.equal(sanitizeSettings({ overlayBounds: { x: 1, y: 2, width: 10, height: 10 } }).overlayBounds, undefined);
-  assert.deepEqual(sanitizeSettings({ overlayBounds: { x: 1, y: 2, width: 400, height: 560 } }).overlayBounds, {
-    x: 1,
-    y: 2,
-    width: 400,
-    height: 560,
-  });
+  assert.equal(
+    sanitizeSettings({ overlayBounds: { x: 1, y: 2, width: 10, height: 10 } }).overlayBounds,
+    undefined
+  );
+  assert.deepEqual(
+    sanitizeSettings({ overlayBounds: { x: 1, y: 2, width: 400, height: 560 } }).overlayBounds,
+    {
+      x: 1,
+      y: 2,
+      width: 400,
+      height: 560,
+    }
+  );
 });
 
 test('boundsIntersectDisplays rejects windows left on a disconnected display', () => {
   const displays = [{ x: 0, y: 0, width: 1920, height: 1080 }];
-  assert.equal(boundsIntersectDisplays({ x: 100, y: 100, width: 400, height: 560 }, displays), true);
-  assert.equal(boundsIntersectDisplays({ x: 2500, y: 100, width: 400, height: 560 }, displays), false);
-  assert.equal(boundsIntersectDisplays({ x: 1900, y: 100, width: 400, height: 560 }, displays), false);
+  assert.equal(
+    boundsIntersectDisplays({ x: 100, y: 100, width: 400, height: 560 }, displays),
+    true
+  );
+  assert.equal(
+    boundsIntersectDisplays({ x: 2500, y: 100, width: 400, height: 560 }, displays),
+    false
+  );
+  assert.equal(
+    boundsIntersectDisplays({ x: 1900, y: 100, width: 400, height: 560 }, displays),
+    false
+  );
 });
 
 test('focusCursorBeforeClick and pauseWhileTyping default to true and only accept booleans', () => {
@@ -118,7 +144,10 @@ test('focusCursorBeforeClick and pauseWhileTyping default to true and only accep
 
 test('onboardingShownVersion defaults to empty and only accepts short strings', () => {
   assert.equal(DEFAULT_SETTINGS.onboardingShownVersion, '');
-  assert.equal(sanitizeSettings({ onboardingShownVersion: '1.2.86' }).onboardingShownVersion, '1.2.86');
+  assert.equal(
+    sanitizeSettings({ onboardingShownVersion: '1.2.86' }).onboardingShownVersion,
+    '1.2.86'
+  );
   assert.equal(sanitizeSettings({ onboardingShownVersion: 5 }).onboardingShownVersion, '');
 });
 

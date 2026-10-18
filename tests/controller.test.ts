@@ -8,7 +8,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function setup(
   script: Array<Hit | null | Error>,
-  opts: { pollIntervalMs?: number; cooldownMs?: number; focusBeforeClick?: boolean; pauseWhileTyping?: boolean } = {},
+  opts: {
+    pollIntervalMs?: number;
+    cooldownMs?: number;
+    focusBeforeClick?: boolean;
+    pauseWhileTyping?: boolean;
+  } = {},
   idleSeconds?: () => number
 ) {
   const detectTimes: number[] = [];
@@ -132,7 +137,15 @@ test('setConfidence and setCooldown apply live and are clamped', () => {
 
 test('focus runs before the click by default and is skipped when disabled', async () => {
   let focuses = 0;
-  const h: Hit = { x: 5, y: 5, mode: 'run', focus: async () => (focuses++, true) };
+  const h: Hit = {
+    x: 5,
+    y: 5,
+    mode: 'run',
+    focus: async () => {
+      focuses++;
+      return true;
+    },
+  };
   const on = setup([h, null], {}, () => 60);
   on.c.set('run');
   await sleep(120);

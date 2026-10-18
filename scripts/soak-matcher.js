@@ -1,7 +1,6 @@
 /* Long-running worker soak. Safe: uses generated pixels, never captures or clicks. */
 const path = require('node:path');
 const { Worker } = require('node:worker_threads');
-const { performance } = require('node:perf_hooks');
 
 const durationMinutes = Number(process.env.SOAK_MINUTES || 30);
 const intervalMs = Number(process.env.SOAK_INTERVAL_MS || 4000);
@@ -16,7 +15,8 @@ function request(message, transfer = []) {
     const onMessage = (response) => {
       if (response.requestId !== id) return;
       cleanup();
-      response.type === 'error' ? reject(new Error(response.message)) : resolve(response);
+      if (response.type === 'error') reject(new Error(response.message));
+      else resolve(response);
     };
     const onError = (error) => {
       cleanup();
@@ -75,7 +75,10 @@ function percentile(values, percentileValue) {
     template('run', 3),
     template('run', 4),
   ];
-  await request({ type: 'init', templates }, templates.map((entry) => entry.data));
+  await request(
+    { type: 'init', templates },
+    templates.map((entry) => entry.data)
+  );
 
   const heartbeat = [];
   let expected = performance.now() + 20;
@@ -104,7 +107,8 @@ function percentile(values, percentileValue) {
     matchSamples.push(response.matchMs);
     iterations++;
     const remaining = deadline - performance.now();
-    if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, Math.min(intervalMs, remaining)));
+    if (remaining > 0)
+      await new Promise((resolve) => setTimeout(resolve, Math.min(intervalMs, remaining)));
   }
   clearInterval(heartbeatTimer);
 
@@ -122,8 +126,10 @@ function percentile(values, percentileValue) {
   };
   console.log(JSON.stringify(summary, null, 2));
 
-  if (summary.heartbeatP99Ms > 50) throw new Error(`heartbeat p99 exceeded 50 ms: ${summary.heartbeatP99Ms}`);
-  if (lastHeap - firstHeap > 32 * 1024 * 1024) throw new Error('worker heap grew by more than 32 MiB');
+  if (summary.heartbeatP99Ms > 50)
+    throw new Error(`heartbeat p99 exceeded 50 ms: ${summary.heartbeatP99Ms}`);
+  if (lastHeap - firstHeap > 32 * 1024 * 1024)
+    throw new Error('worker heap grew by more than 32 MiB');
 })()
   .finally(() => worker.terminate())
   .catch((error) => {

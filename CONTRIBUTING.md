@@ -16,6 +16,8 @@ npm run test:coverage    # same suites with coverage gates (80 % lines, 70 % bra
 npm run bench:matcher    # worker latency and main-thread heartbeat benchmark
 ```
 
+- **Development:** run `npm run lint` (Biome) and `npm run format` before opening a PR; CI runs `npm run lint` and `npm run format:check`.
+
 `npm run compile` type-checks and builds everything into `dist/`. Run it before
 `npm test` if you touch TypeScript outside the test loop.
 

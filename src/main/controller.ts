@@ -5,7 +5,7 @@
  */
 import type { Detector } from './detector';
 import type { StatsStore } from './stats';
-import { Mode, ClickMode } from '../shared/types';
+import type { Mode, ClickMode } from '../shared/types';
 
 export interface ControllerHealth {
   consecutiveErrors: number;
@@ -74,12 +74,19 @@ export class ModeController {
   constructor(
     private detector: DetectorLike,
     private stats: Pick<StatsStore, 'record'>,
-    private opts: { pollIntervalMs: number; confidence: number; cooldownMs: number; retryDelayMs?: number;
+    private opts: {
+      pollIntervalMs: number;
+      confidence: number;
+      cooldownMs: number;
+      retryDelayMs?: number;
       focusBeforeClick?: boolean;
       pauseWhileTyping?: boolean;
     },
     private onModeChange?: (mode: Mode) => void,
-    private onDetectionState?: (windowFound: boolean, watchedKind: 'cursor' | 'rustdesk' | null) => void,
+    private onDetectionState?: (
+      windowFound: boolean,
+      watchedKind: 'cursor' | 'rustdesk' | null
+    ) => void,
     private onClick?: () => void,
     private onHealthChange?: () => void,
     private clicker: ClickFn = defaultClicker,
@@ -257,5 +264,4 @@ export class ModeController {
       }
     }
   }
-
 }

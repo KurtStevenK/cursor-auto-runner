@@ -8,14 +8,14 @@
  */
 import * as path from 'path';
 import * as fs from 'fs';
-import { DayCount, ClickMode, Mode, StatsSnapshot } from '../shared/types';
+import type { DayCount, ClickMode, Mode, StatsSnapshot } from '../shared/types';
 import { perfNow, reportStatsDuration } from './perf';
 
 export type { Mode };
 
 function defaultUserDataDir(): string {
   // Lazy so this module can be loaded under plain Node (tests).
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   return require('electron').app.getPath('userData');
 }
 
@@ -51,10 +51,11 @@ export class StatsStore {
 
   private init(): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const Database = require('better-sqlite3');
       const db = new Database(path.join(this.userDataDir, 'stats.db'));
-      db.exec('CREATE TABLE IF NOT EXISTS clicks (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, mode TEXT NOT NULL)');
+      db.exec(
+        'CREATE TABLE IF NOT EXISTS clicks (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, mode TEXT NOT NULL)'
+      );
       db.exec('CREATE INDEX IF NOT EXISTS idx_clicks_ts ON clicks (ts)');
       this.db = db;
       this.insertStatement = db.prepare('INSERT INTO clicks (ts, mode) VALUES (?, ?)');

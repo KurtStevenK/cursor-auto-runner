@@ -67,12 +67,22 @@ test('worker matches off-thread and returns only eligible variants', async () =>
       type: 'init',
       requestId: 1,
       templates: [
-        { file: 'always-run.png', mode: 'always-run', theme: 'dark', width, height, data: templateBuffer.slice(0) },
+        {
+          file: 'always-run.png',
+          mode: 'always-run',
+          theme: 'dark',
+          width,
+          height,
+          data: templateBuffer.slice(0),
+        },
         { file: 'run.png', mode: 'run', theme: 'dark', width, height, data: templateBuffer },
       ],
     };
     const readyPromise = waitFor(worker, 1);
-    worker.postMessage(init, init.templates.map((template) => template.data));
+    worker.postMessage(
+      init,
+      init.templates.map((template) => template.data)
+    );
     const ready = await readyPromise;
     assert.equal(ready.type, 'ready');
 
@@ -97,14 +107,16 @@ test('worker matches off-thread and returns only eligible variants', async () =>
       requestId: 2,
       mode: 'run',
       confidence: 0.99,
-      crops: [{
-        id: 7,
-        width: cropWidth,
-        height: cropHeight,
-        captureToNativeScaleX: 1,
-        captureToNativeScaleY: 1,
-        bgra: bgra.buffer,
-      }],
+      crops: [
+        {
+          id: 7,
+          width: cropWidth,
+          height: cropHeight,
+          captureToNativeScaleX: 1,
+          captureToNativeScaleY: 1,
+          bgra: bgra.buffer,
+        },
+      ],
       cancelBuffer,
     };
     const resultPromise = waitFor(worker, 2);
@@ -132,14 +144,16 @@ test('worker matches off-thread and returns only eligible variants', async () =>
       requestId: 3,
       mode: 'run',
       confidence: 0.99,
-      crops: [{
-        id: 8,
-        width: 1280,
-        height: 720,
-        captureToNativeScaleX: 1,
-        captureToNativeScaleY: 1,
-        bgra: large.buffer,
-      }],
+      crops: [
+        {
+          id: 8,
+          width: 1280,
+          height: 720,
+          captureToNativeScaleX: 1,
+          captureToNativeScaleY: 1,
+          bgra: large.buffer,
+        },
+      ],
       cancelBuffer: cancellation,
     };
     const cancelledPromise = waitFor(worker, 3);
@@ -195,14 +209,16 @@ test('worker applies the detector capture ratio to template scales', async () =>
       requestId: 11,
       mode: 'run',
       confidence: 0.99,
-      crops: [{
-        id: 9,
-        width: cropWidth,
-        height: cropHeight,
-        captureToNativeScaleX: 0.9375,
-        captureToNativeScaleY: 0.9375,
-        bgra: bgra.buffer,
-      }],
+      crops: [
+        {
+          id: 9,
+          width: cropWidth,
+          height: cropHeight,
+          captureToNativeScaleX: 0.9375,
+          captureToNativeScaleY: 0.9375,
+          bgra: bgra.buffer,
+        },
+      ],
       cancelBuffer: new SharedArrayBuffer(4),
     };
     const resultPromise = waitFor(worker, 11);
@@ -258,14 +274,16 @@ test('worker returns best-miss details only when match debugging is enabled', as
       requestId: 21,
       mode: 'run',
       confidence: 0.99,
-      crops: [{
-        id: 12,
-        width: cropWidth,
-        height: cropHeight,
-        captureToNativeScaleX: 0.9375,
-        captureToNativeScaleY: 0.9375,
-        bgra: bgra.buffer,
-      }],
+      crops: [
+        {
+          id: 12,
+          width: cropWidth,
+          height: cropHeight,
+          captureToNativeScaleX: 0.9375,
+          captureToNativeScaleY: 0.9375,
+          bgra: bgra.buffer,
+        },
+      ],
       cancelBuffer: new SharedArrayBuffer(4),
     };
     const resultPromise = waitFor(worker, 21);
@@ -319,7 +337,10 @@ test('worker detects real Run, Always Run, and Allow capped fixtures', async () 
       templates,
     };
     const readyPromise = waitFor(worker, 30);
-    worker.postMessage(init, templates.map((template) => template.data));
+    worker.postMessage(
+      init,
+      templates.map((template) => template.data)
+    );
     await readyPromise;
 
     let requestId = 31;
@@ -369,14 +390,16 @@ test('worker detects real Run, Always Run, and Allow capped fixtures', async () 
         requestId,
         mode: entry.mode,
         confidence: 0.88,
-        crops: [{
-          id: requestId,
-          width: cropWidth,
-          height: cropHeight,
-          captureToNativeScaleX: 0.75,
-          captureToNativeScaleY: 0.75,
-          bgra: bgra.buffer,
-        }],
+        crops: [
+          {
+            id: requestId,
+            width: cropWidth,
+            height: cropHeight,
+            captureToNativeScaleX: 0.75,
+            captureToNativeScaleY: 0.75,
+            bgra: bgra.buffer,
+          },
+        ],
         cancelBuffer: new SharedArrayBuffer(4),
       };
       const resultPromise = waitFor(worker, requestId);
@@ -421,7 +444,10 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
     );
     const init: MatchWorkerRequest = { type: 'init', requestId: 40, templates };
     const readyPromise = waitFor(worker, 40);
-    worker.postMessage(init, templates.map((template) => template.data));
+    worker.postMessage(
+      init,
+      templates.map((template) => template.data)
+    );
     await readyPromise;
 
     const cases = [
@@ -481,14 +507,16 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
         requestId,
         mode: entry.requestMode,
         confidence: 0.88,
-        crops: [{
-          id: requestId,
-          width: fixture.width,
-          height: fixture.height,
-          captureToNativeScaleX: 0.75,
-          captureToNativeScaleY: 0.75,
-          bgra: bgraBuffer,
-        }],
+        crops: [
+          {
+            id: requestId,
+            width: fixture.width,
+            height: fixture.height,
+            captureToNativeScaleX: 0.75,
+            captureToNativeScaleY: 0.75,
+            bgra: bgraBuffer,
+          },
+        ],
         cancelBuffer: new SharedArrayBuffer(4),
       };
       const resultPromise = waitFor(worker, requestId);
@@ -501,7 +529,10 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
       assert.equal(result.match?.path, entry.path);
       assert.ok(Math.abs((result.match?.x ?? -100) - entry.expected.x) <= 1);
       assert.ok(Math.abs((result.match?.y ?? -100) - entry.expected.y) <= 1);
-      assert.ok(result.matchMs < 750 * TIMING_SCALE, `full-window match took ${result.matchMs.toFixed(1)} ms`);
+      assert.ok(
+        result.matchMs < 750 * TIMING_SCALE,
+        `full-window match took ${result.matchMs.toFixed(1)} ms`
+      );
       requestId++;
     }
 
@@ -523,14 +554,16 @@ test('worker safely anchors all actions in cluttered full-window fixtures', asyn
       requestId,
       mode: 'always-run',
       confidence: 0.88,
-      crops: [{
-        id: requestId,
-        width: noButton.width,
-        height: noButton.height,
-        captureToNativeScaleX: 0.75,
-        captureToNativeScaleY: 0.75,
-        bgra: noButtonBuffer,
-      }],
+      crops: [
+        {
+          id: requestId,
+          width: noButton.width,
+          height: noButton.height,
+          captureToNativeScaleX: 0.75,
+          captureToNativeScaleY: 0.75,
+          bgra: noButtonBuffer,
+        },
+      ],
       cancelBuffer: new SharedArrayBuffer(4),
     };
     const noButtonPromise = waitFor(worker, requestId);
@@ -555,10 +588,12 @@ test('always-run still clicks Run when accent color hides the button component',
   try {
     const templates = await Promise.all(
       ['run-2.png', 'always-run-2.png'].map(async (file) => {
-        const image = await loadTemplate(path.join(process.cwd(), 'assets', 'templates', 'dark', file));
+        const image = await loadTemplate(
+          path.join(process.cwd(), 'assets', 'templates', 'dark', file)
+        );
         return {
           file,
-          mode: file.startsWith('always-run') ? 'always-run' as const : 'run' as const,
+          mode: file.startsWith('always-run') ? ('always-run' as const) : ('run' as const),
           theme: 'dark' as const,
           width: image.width,
           height: image.height,
@@ -568,10 +603,15 @@ test('always-run still clicks Run when accent color hides the button component',
     );
     const init: MatchWorkerRequest = { type: 'init', requestId: 70, templates };
     const readyPromise = waitFor(worker, 70);
-    worker.postMessage(init, templates.map((template) => template.data));
+    worker.postMessage(
+      init,
+      templates.map((template) => template.data)
+    );
     await readyPromise;
 
-    const fixture = await loadBgraFixture(path.join(process.cwd(), 'tests', 'fixtures', 'run-capped.png'));
+    const fixture = await loadBgraFixture(
+      path.join(process.cwd(), 'tests', 'fixtures', 'run-capped.png')
+    );
     const width = 900;
     const height = 420;
     const buttonX = 520;
@@ -617,14 +657,16 @@ test('always-run still clicks Run when accent color hides the button component',
       requestId: 71,
       mode: 'always-run',
       confidence: 0.88,
-      crops: [{
-        id: 71,
-        width,
-        height,
-        captureToNativeScaleX: 0.75,
-        captureToNativeScaleY: 0.75,
-        bgra: bgra.buffer,
-      }],
+      crops: [
+        {
+          id: 71,
+          width,
+          height,
+          captureToNativeScaleX: 0.75,
+          captureToNativeScaleY: 0.75,
+          bgra: bgra.buffer,
+        },
+      ],
       cancelBuffer: new SharedArrayBuffer(4),
     };
     const resultPromise = waitFor(worker, 71);
@@ -669,14 +711,16 @@ test('shipped Run template matches the current arrow button', async () => {
       requestId: 81,
       mode: 'always-run',
       confidence: 0.88,
-      crops: [{
-        id: 81,
-        width: fixture.width,
-        height: fixture.height,
-        captureToNativeScaleX: 1,
-        captureToNativeScaleY: 1,
-        bgra: fixture.bgra.buffer as ArrayBuffer,
-      }],
+      crops: [
+        {
+          id: 81,
+          width: fixture.width,
+          height: fixture.height,
+          captureToNativeScaleX: 1,
+          captureToNativeScaleY: 1,
+          bgra: fixture.bgra.buffer as ArrayBuffer,
+        },
+      ],
       cancelBuffer: new SharedArrayBuffer(4),
     };
     const resultPromise = waitFor(worker, 81);

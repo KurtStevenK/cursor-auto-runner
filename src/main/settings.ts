@@ -2,24 +2,30 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import {
-  Settings,
+  type Settings,
   DEFAULT_SETTINGS,
-  Mode,
+  type Mode,
   SHORTCUT_CHOICES,
-  OverlayBounds,
+  type OverlayBounds,
   OVERLAY_MIN_WIDTH,
   OVERLAY_MIN_HEIGHT,
 } from '../shared/types';
 
 function defaultUserDataDir(): string {
   // Lazy so this module can be loaded under plain Node (tests).
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   return require('electron').app.getPath('userData');
 }
 
 const MODES: readonly Mode[] = ['idle', 'run', 'always-run'];
 
-function clampNumber(value: unknown, min: number, max: number, fallback: number, integer = false): number {
+function clampNumber(
+  value: unknown,
+  min: number,
+  max: number,
+  fallback: number,
+  integer = false
+): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
   const n = integer ? Math.round(value) : value;
   return Math.min(max, Math.max(min, n));
@@ -29,7 +35,8 @@ function clampNumber(value: unknown, min: number, max: number, fallback: number,
 export function sanitizeOverlayBounds(raw: unknown): OverlayBounds | undefined {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
   const r = raw as Record<string, unknown>;
-  const ok = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 1e6;
+  const ok = (v: unknown): v is number =>
+    typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 1e6;
   if (!ok(r.x) || !ok(r.y) || !ok(r.width) || !ok(r.height)) return undefined;
   const width = Math.round(r.width);
   const height = Math.round(r.height);
@@ -48,7 +55,10 @@ export function boundsIntersectDisplays(b: OverlayBounds, areas: OverlayBounds[]
 
 /** Merge untrusted input with defaults, validating and clamping every field. Unknown keys are dropped. */
 export function sanitizeSettings(raw: unknown): Settings {
-  const r = (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>;
+  const r = (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<
+    string,
+    unknown
+  >;
   const d = DEFAULT_SETTINGS;
   return {
     pollIntervalMs: clampNumber(r.pollIntervalMs, 150, 60000, d.pollIntervalMs, true),
@@ -57,22 +67,32 @@ export function sanitizeSettings(raw: unknown): Settings {
     restoreLastMode: typeof r.restoreLastMode === 'boolean' ? r.restoreLastMode : d.restoreLastMode,
     lastMode: MODES.includes(r.lastMode as Mode) ? (r.lastMode as Mode) : d.lastMode,
     installUpdatesWithHomebrew:
-      typeof r.installUpdatesWithHomebrew === 'boolean' ? r.installUpdatesWithHomebrew : d.installUpdatesWithHomebrew,
-    autoCheckUpdates: typeof r.autoCheckUpdates === 'boolean' ? r.autoCheckUpdates : d.autoCheckUpdates,
+      typeof r.installUpdatesWithHomebrew === 'boolean'
+        ? r.installUpdatesWithHomebrew
+        : d.installUpdatesWithHomebrew,
+    autoCheckUpdates:
+      typeof r.autoCheckUpdates === 'boolean' ? r.autoCheckUpdates : d.autoCheckUpdates,
     launchAtLogin: typeof r.launchAtLogin === 'boolean' ? r.launchAtLogin : d.launchAtLogin,
     toggleShortcut: (SHORTCUT_CHOICES as readonly unknown[]).includes(r.toggleShortcut)
       ? (r.toggleShortcut as string)
       : d.toggleShortcut,
     focusCursorBeforeClick:
-      typeof r.focusCursorBeforeClick === 'boolean' ? r.focusCursorBeforeClick : d.focusCursorBeforeClick,
-    pauseWhileTyping: typeof r.pauseWhileTyping === 'boolean' ? r.pauseWhileTyping : d.pauseWhileTyping,
-    overlayAlwaysOnTop: typeof r.overlayAlwaysOnTop === 'boolean' ? r.overlayAlwaysOnTop : d.overlayAlwaysOnTop,
+      typeof r.focusCursorBeforeClick === 'boolean'
+        ? r.focusCursorBeforeClick
+        : d.focusCursorBeforeClick,
+    pauseWhileTyping:
+      typeof r.pauseWhileTyping === 'boolean' ? r.pauseWhileTyping : d.pauseWhileTyping,
+    overlayAlwaysOnTop:
+      typeof r.overlayAlwaysOnTop === 'boolean' ? r.overlayAlwaysOnTop : d.overlayAlwaysOnTop,
     onboardingShownVersion:
       typeof r.onboardingShownVersion === 'string' && r.onboardingShownVersion.length <= 32
         ? r.onboardingShownVersion
         : d.onboardingShownVersion,
-    waylandNoticeShown: typeof r.waylandNoticeShown === 'boolean' ? r.waylandNoticeShown : d.waylandNoticeShown,
-    ...(sanitizeOverlayBounds(r.overlayBounds) ? { overlayBounds: sanitizeOverlayBounds(r.overlayBounds) } : {}),
+    waylandNoticeShown:
+      typeof r.waylandNoticeShown === 'boolean' ? r.waylandNoticeShown : d.waylandNoticeShown,
+    ...(sanitizeOverlayBounds(r.overlayBounds)
+      ? { overlayBounds: sanitizeOverlayBounds(r.overlayBounds) }
+      : {}),
   };
 }
 

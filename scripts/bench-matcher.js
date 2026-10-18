@@ -2,7 +2,6 @@
  * records event-loop heartbeat latency. No screen capture or clicks occur. */
 const path = require('node:path');
 const { Worker } = require('node:worker_threads');
-const { performance } = require('node:perf_hooks');
 
 const worker = new Worker(path.join(__dirname, '..', 'dist', 'src', 'worker', 'match-worker.js'));
 let requestId = 0;
@@ -14,7 +13,8 @@ function request(message, transfer = []) {
     const onMessage = (response) => {
       if (response.requestId !== id) return;
       cleanup();
-      response.type === 'error' ? reject(new Error(response.message)) : resolve(response);
+      if (response.type === 'error') reject(new Error(response.message));
+      else resolve(response);
     };
     const onError = (error) => {
       cleanup();
@@ -60,14 +60,16 @@ async function matchCrop(mode, width, height, bgra) {
       type: 'match',
       mode,
       confidence: 0.88,
-      crops: [{
-        id: 0,
-        width,
-        height,
-        captureToNativeScaleX: 1,
-        captureToNativeScaleY: 1,
-        bgra: bgra.buffer,
-      }],
+      crops: [
+        {
+          id: 0,
+          width,
+          height,
+          captureToNativeScaleX: 1,
+          captureToNativeScaleY: 1,
+          bgra: bgra.buffer,
+        },
+      ],
       cancelBuffer: new SharedArrayBuffer(4),
     },
     [bgra.buffer]
@@ -103,12 +105,7 @@ function percentile(values, value) {
       heartbeat.push(Math.max(0, now - expected));
       expected = now + 10;
     }, 10);
-    const largeNoButton = await matchCrop(
-      'always-run',
-      width,
-      height,
-      noButtonCrop(width, height)
-    );
+    const largeNoButton = await matchCrop('always-run', width, height, noButtonCrop(width, height));
 
     const tinyTemplates = [
       template('always-run', 11, { width: 52, height: 16 }),

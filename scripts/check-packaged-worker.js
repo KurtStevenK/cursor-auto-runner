@@ -6,7 +6,6 @@ const { Worker } = require('node:worker_threads');
 const asar = require('@electron/asar');
 const { Jimp } = require('jimp');
 
-
 const releaseDir = path.join(__dirname, '..', 'release');
 const macApp = 'Cursor Auto Runner.app';
 const candidates = [
@@ -71,10 +70,7 @@ async function checkResources(resourcesPath) {
     const gray = new Float32Array(width * height);
     for (let index = 0; index < gray.length; index++) {
       const offset = index * 4;
-      gray[index] =
-        0.299 * data[offset] +
-        0.587 * data[offset + 1] +
-        0.114 * data[offset + 2];
+      gray[index] = 0.299 * data[offset] + 0.587 * data[offset + 1] + 0.114 * data[offset + 2];
     }
     return { width, height, data: gray };
   }
@@ -110,7 +106,8 @@ async function checkResources(resourcesPath) {
       const onMessage = (response) => {
         if (response.requestId !== id) return;
         cleanup();
-        response.type === 'error' ? reject(new Error(response.message)) : resolve(response);
+        if (response.type === 'error') reject(new Error(response.message));
+        else resolve(response);
       };
       const onError = (error) => {
         cleanup();
@@ -193,14 +190,16 @@ async function checkResources(resourcesPath) {
           type: 'match',
           mode: entry.requestMode,
           confidence: 0.88,
-          crops: [{
-            id: 1,
-            width: fixture.width,
-            height: fixture.height,
-            captureToNativeScaleX: 0.75,
-            captureToNativeScaleY: 0.75,
-            bgra: fixture.data.buffer,
-          }],
+          crops: [
+            {
+              id: 1,
+              width: fixture.width,
+              height: fixture.height,
+              captureToNativeScaleX: 0.75,
+              captureToNativeScaleY: 0.75,
+              bgra: fixture.data.buffer,
+            },
+          ],
           cancelBuffer: new SharedArrayBuffer(4),
         },
         [fixture.data.buffer]

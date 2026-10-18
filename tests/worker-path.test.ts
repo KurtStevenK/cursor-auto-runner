@@ -23,8 +23,5 @@ test('packaged worker path resolves into app.asar.unpacked', () => {
   const resolved = resolveMatchWorkerPath(mainDirectory, true);
 
   assert.match(resolved, /app\.asar\.unpacked/);
-  assert.equal(
-    resolved.endsWith(path.join('dist', 'src', 'worker', 'match-worker.js')),
-    true
-  );
+  assert.equal(resolved.endsWith(path.join('dist', 'src', 'worker', 'match-worker.js')), true);
 });

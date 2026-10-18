@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { selectWatchWindows, watchKindForTitle, watchKindForWindow } from '../src/main/watch-windows';
+import {
+  selectWatchWindows,
+  watchKindForTitle,
+  watchKindForWindow,
+} from '../src/main/watch-windows';
 
 test('watch titles accept Cursor and RustDesk and skip the runner', () => {
   assert.equal(watchKindForTitle('Cursor'), 'cursor');

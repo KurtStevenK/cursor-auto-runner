@@ -2,9 +2,16 @@
  * System tray: icon reflects the current state, menu offers
  * Start Auto Run / Start Auto Always Run / Stop / Stats / Quit.
  */
-import { app, BrowserWindow, Menu, nativeImage, Tray, MenuItemConstructorOptions } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  Menu,
+  nativeImage,
+  Tray,
+  type MenuItemConstructorOptions,
+} from 'electron';
 import * as path from 'path';
-import { Mode, IPC, Settings, SHORTCUT_CHOICES, stepPoll } from '../shared/types';
+import { type Mode, IPC, type Settings, SHORTCUT_CHOICES, stepPoll } from '../shared/types';
 
 export type TrayCallbacks = {
   getMode: () => Mode;
@@ -120,8 +127,14 @@ export class TrayUI {
       {
         label: 'Capture templates…',
         submenu: (['run', 'always-run', 'allow'] as const).flatMap((name) => [
-          { label: `${name === 'allow' ? 'allow / approve' : name} (dark)`, click: () => this.cb.capture(name, 'dark') },
-          { label: `${name === 'allow' ? 'allow / approve' : name} (light)`, click: () => this.cb.capture(name, 'light') },
+          {
+            label: `${name === 'allow' ? 'allow / approve' : name} (dark)`,
+            click: () => this.cb.capture(name, 'dark'),
+          },
+          {
+            label: `${name === 'allow' ? 'allow / approve' : name} (light)`,
+            click: () => this.cb.capture(name, 'light'),
+          },
         ]),
       },
       { type: 'separator' },
@@ -168,7 +181,8 @@ export class TrayUI {
           label: 'Focus Cursor before clicking',
           type: 'checkbox',
           checked: s.focusCursorBeforeClick,
-          click: (item) => this.cb.updateSettings({ focusCursorBeforeClick: Boolean(item.checked) }),
+          click: (item) =>
+            this.cb.updateSettings({ focusCursorBeforeClick: Boolean(item.checked) }),
         },
         {
           label: 'Pause while I am typing',
@@ -210,7 +224,10 @@ export class TrayUI {
         {
           label: 'Keyboard shortcut',
           submenu: SHORTCUT_CHOICES.map((acc) => ({
-            label: acc === '' ? 'Off' : acc.replace('CommandOrControl', process.platform === 'darwin' ? 'Cmd' : 'Ctrl'),
+            label:
+              acc === ''
+                ? 'Off'
+                : acc.replace('CommandOrControl', process.platform === 'darwin' ? 'Cmd' : 'Ctrl'),
             type: 'radio' as const,
             checked: s.toggleShortcut === acc,
             click: () => this.cb.updateSettings({ toggleShortcut: acc }),

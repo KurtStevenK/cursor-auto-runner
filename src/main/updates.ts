@@ -20,7 +20,8 @@ import {
   updateChannelFor,
 } from './update-version';
 
-const LATEST_RELEASE = 'https://api.github.com/repos/KurtStevenK/cursor-auto-runner/releases/latest';
+const LATEST_RELEASE =
+  'https://api.github.com/repos/KurtStevenK/cursor-auto-runner/releases/latest';
 
 export interface UpdateMenuState {
   statusLabel: string | null;
@@ -76,7 +77,8 @@ export class UpdateController {
     } else if (this.phase === 'idle' && v) {
       statusLabel = `Update available: ${v}`;
       actionLabel = `Download update (${v})`;
-    } else if (this.phase === 'installing' && this.latest) statusLabel = `Installing ${this.latest.version} with Homebrew…`;
+    } else if (this.phase === 'installing' && this.latest)
+      statusLabel = `Installing ${this.latest.version} with Homebrew…`;
     else if (this.latest && isNewerVersion(this.latest.version, app.getVersion())) {
       statusLabel = `Update available: ${this.latest.version}`;
     } else if (this.lastError) statusLabel = 'Update check failed';
@@ -167,7 +169,8 @@ export class UpdateController {
           type: 'info',
           title: 'Cursor Auto Runner',
           message: `Version ${release.version} is available.`,
-          detail: 'Download it from the GitHub Release. A Homebrew install can upgrade itself from this menu.',
+          detail:
+            'Download it from the GitHub Release. A Homebrew install can upgrade itself from this menu.',
           buttons: ['Open download page', 'Not now'],
           defaultId: 0,
           cancelId: 1,
@@ -307,7 +310,9 @@ export class UpdateController {
       return;
     }
     this.phase = 'installing';
-    this.notify(`Updating to ${version} with Homebrew. The app will quit when the new version is ready.`);
+    this.notify(
+      `Updating to ${version} with Homebrew. The app will quit when the new version is ready.`
+    );
     this.options.onChange();
     const logPath = path.join(app.getPath('userData'), 'brew-upgrade.log');
     const log = fs.openSync(logPath, 'w');

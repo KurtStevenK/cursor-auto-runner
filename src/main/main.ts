@@ -2,7 +2,18 @@
  * Cursor Auto Runner — main process entry point.
  * Wires tray, mode controller, detector, stats store and overlay window.
  */
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeTheme, Notification, powerMonitor, screen, shell } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  globalShortcut,
+  ipcMain,
+  nativeTheme,
+  Notification,
+  powerMonitor,
+  screen,
+  shell,
+} from 'electron';
 import * as path from 'path';
 import { Detector } from './detector';
 import { ModeController } from './controller';
@@ -16,9 +27,9 @@ import { startCapture, stopCapture, templatesBaseDir } from './capture';
 import * as fs from 'fs';
 import {
   IPC,
-  Mode,
-  Settings,
-  StatsSnapshot,
+  type Mode,
+  type Settings,
+  type StatsSnapshot,
   DEFAULT_SETTINGS,
   nextToggleMode,
   OVERLAY_MIN_WIDTH,
@@ -79,7 +90,8 @@ function currentSnapshot(): StatsSnapshot {
     consecutiveErrors: h.consecutiveErrors,
     lastError: h.lastError,
     templateCount: detector.lastMetrics.templateCount,
-    missStreakMinutes: controller.current !== 'idle' && since > 0 ? Math.floor((now - since) / 60_000) : null,
+    missStreakMinutes:
+      controller.current !== 'idle' && since > 0 ? Math.floor((now - since) / 60_000) : null,
   };
   return snap;
 }
@@ -99,10 +111,13 @@ function sendStats(immediate = false): void {
     return;
   }
   if (statsTimer) return;
-  statsTimer = setTimeout(() => {
-    statsTimer = null;
-    flushStats();
-  }, Math.max(0, 1000 - (Date.now() - lastStatsSentAt)));
+  statsTimer = setTimeout(
+    () => {
+      statsTimer = null;
+      flushStats();
+    },
+    Math.max(0, 1000 - (Date.now() - lastStatsSentAt))
+  );
 }
 
 function sendDetectionState(windowFound: boolean, watchedKind: StatsSnapshot['watchedKind']): void {
@@ -124,7 +139,13 @@ function openOverlay(): void {
   // Restore the saved position only if it is still on a connected display.
   const saved = s.overlayBounds;
   const restore =
-    saved && boundsIntersectDisplays(saved, screen.getAllDisplays().map((d) => d.workArea)) ? saved : null;
+    saved &&
+    boundsIntersectDisplays(
+      saved,
+      screen.getAllDisplays().map((d) => d.workArea)
+    )
+      ? saved
+      : null;
   overlay = new BrowserWindow({
     width: restore?.width ?? OVERLAY_DEFAULT_WIDTH,
     height: restore?.height ?? OVERLAY_DEFAULT_HEIGHT,
@@ -197,7 +218,8 @@ function applySettings(patch: Partial<Settings>): void {
   const s = settings.get();
   if (patch.confidence !== undefined) controller.setConfidence(s.confidence);
   if (patch.cooldownMs !== undefined) controller.setCooldown(s.cooldownMs);
-  if (patch.focusCursorBeforeClick !== undefined) controller.setFocusBeforeClick(s.focusCursorBeforeClick);
+  if (patch.focusCursorBeforeClick !== undefined)
+    controller.setFocusBeforeClick(s.focusCursorBeforeClick);
   if (patch.pauseWhileTyping !== undefined) controller.setPauseWhileTyping(s.pauseWhileTyping);
   if (patch.launchAtLogin !== undefined) applyLoginItem(s.launchAtLogin);
   if (patch.toggleShortcut !== undefined) registerToggleShortcut(s.toggleShortcut);
@@ -248,7 +270,9 @@ async function showWelcome(): Promise<void> {
   const mac = process.platform === 'darwin';
   const detail =
     'Cursor Auto Runner watches the Cursor IDE and clicks Run, Always Run and Allow for you, so your agent never stalls waiting for approval.\n\n' +
-    (mac ? 'On macOS it needs two permissions: Screen Recording (to see Cursor) and Accessibility (to click). You will be asked when you first start it.\n\n' : '') +
+    (mac
+      ? 'On macOS it needs two permissions: Screen Recording (to see Cursor) and Accessibility (to click). You will be asked when you first start it.\n\n'
+      : '') +
     'How to start: right-click the tray icon and choose Start Auto Run (or Start Auto Always Run). Left-click the tray icon to see your stats.';
   try {
     const { checkboxChecked } = await dialog.showMessageBox({
@@ -261,7 +285,10 @@ async function showWelcome(): Promise<void> {
       checkboxLabel: 'Start at login',
       checkboxChecked: settings.get().launchAtLogin,
     });
-    applySettings({ launchAtLogin: Boolean(checkboxChecked), onboardingShownVersion: app.getVersion() });
+    applySettings({
+      launchAtLogin: Boolean(checkboxChecked),
+      onboardingShownVersion: app.getVersion(),
+    });
   } catch (err) {
     console.error('[welcome] dialog failed:', err);
     settings.set({ onboardingShownVersion: app.getVersion() });
@@ -322,7 +349,9 @@ function applyLoginItem(openAtLogin: boolean): void {
 
 app.whenReady().then(() => {
   installFileLogger(app.getPath('logs'));
-  console.log(`Cursor Auto Runner ${app.getVersion()} starting (${process.platform}, Electron ${process.versions.electron})`);
+  console.log(
+    `Cursor Auto Runner ${app.getVersion()} starting (${process.platform}, Electron ${process.versions.electron})`
+  );
   startPerformanceMonitor();
   settings = new SettingsStore();
   stats = new StatsStore();

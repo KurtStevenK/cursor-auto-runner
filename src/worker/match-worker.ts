@@ -9,19 +9,19 @@ import type {
 } from '../shared/match-protocol';
 import type { ClickMode } from '../shared/types';
 import {
-  ColorComponent,
+  type ColorComponent,
   evaluatePreparedMatch,
   findAccentComponents,
   findBestExactMatchInBounds,
   grayFromBGRA,
-  MatchCandidate,
+  type MatchCandidate,
   COMPOSER_BAND_START,
   orderTemplatesForMode,
   prepareHaystack,
   prepareTemplateVariants,
-  PreparedTemplate,
+  type PreparedTemplate,
   TEMPLATE_SCALES,
-  TemplateInput,
+  type TemplateInput,
 } from './matcher-core';
 
 if (!parentPort) throw new Error('match-worker must run inside a worker thread');
@@ -198,7 +198,10 @@ function findAlwaysRunNear(
     });
   for (const template of alwaysTemplates) {
     if (cancelled()) return null;
-    const rowPad = Math.max(10, Math.ceil(Math.max(run.template.image.height, template.image.height) * 0.75));
+    const rowPad = Math.max(
+      10,
+      Math.ceil(Math.max(run.template.image.height, template.image.height) * 0.75)
+    );
     const leftDistance = Math.min(
       Math.floor(haystack.image.width * 0.75),
       Math.max(400, template.image.width * 18)
@@ -250,10 +253,7 @@ function handleMatch(request: Extract<MatchWorkerRequest, { type: 'match' }>): v
 
   for (const crop of request.crops) {
     if (cancelled()) break;
-    const variants = variantsForScale(
-      crop.captureToNativeScaleX,
-      crop.captureToNativeScaleY
-    );
+    const variants = variantsForScale(crop.captureToNativeScaleX, crop.captureToNativeScaleY);
     const eligible = orderTemplatesForMode(variants, request.mode);
     variantCount = Math.max(variantCount, eligible.length);
     const bgra = new Uint8Array(crop.bgra);
@@ -270,7 +270,7 @@ function handleMatch(request: Extract<MatchWorkerRequest, { type: 'match' }>): v
     if (accent) {
       const verified =
         request.mode === 'always-run' && accent.template.mode === 'run'
-          ? findAlwaysRunNear(haystack, accent, eligible, request.confidence, cancelled) ?? accent
+          ? (findAlwaysRunNear(haystack, accent, eligible, request.confidence, cancelled) ?? accent)
           : accent;
       match = workerMatch(crop.id, verified);
       break;
@@ -292,8 +292,8 @@ function handleMatch(request: Extract<MatchWorkerRequest, { type: 'match' }>): v
       if (composer) {
         const verified =
           request.mode === 'always-run' && composer.template.mode === 'run'
-            ? findAlwaysRunNear(haystack, composer, eligible, request.confidence, cancelled) ??
-              composer
+            ? (findAlwaysRunNear(haystack, composer, eligible, request.confidence, cancelled) ??
+              composer)
             : composer;
         match = workerMatch(crop.id, verified);
         break;
@@ -305,12 +305,7 @@ function handleMatch(request: Extract<MatchWorkerRequest, { type: 'match' }>): v
       // "Always Run" also appears in prose and history. It is only safe when
       // an exact match is tied to a button-sized accent component on its row.
       if (template.mode === 'always-run') continue;
-      const evaluation = evaluatePreparedMatch(
-        haystack,
-        template,
-        request.confidence,
-        cancelled
-      );
+      const evaluation = evaluatePreparedMatch(haystack, template, request.confidence, cancelled);
       if (evaluation.match) {
         match = {
           cropId: crop.id,

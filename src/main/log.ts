@@ -92,10 +92,13 @@ export function installFileLogger(dir: string): void {
     };
   }
   onException = (err) => {
-    console.error('uncaughtException:', err && err.stack ? err.stack : err);
+    console.error('uncaughtException:', err?.stack ? err.stack : err);
   };
   onRejection = (reason) => {
-    console.error('unhandledRejection:', reason instanceof Error && reason.stack ? reason.stack : reason);
+    console.error(
+      'unhandledRejection:',
+      reason instanceof Error && reason.stack ? reason.stack : reason
+    );
   };
   process.on('uncaughtException', onException);
   process.on('unhandledRejection', onRejection);

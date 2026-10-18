@@ -21,8 +21,14 @@ test('release tags compare numerically and ignore a leading v', () => {
 
 test('Homebrew is found on the Apple Silicon or Intel prefix', () => {
   const exists = (file: string) => file === '/opt/homebrew/bin/brew';
-  assert.equal(firstExistingPath(['/opt/homebrew/bin/brew', '/usr/local/bin/brew'], exists), '/opt/homebrew/bin/brew');
-  assert.equal(caskroomForBrew('/opt/homebrew/bin/brew'), '/opt/homebrew/Caskroom/cursor-auto-runner');
+  assert.equal(
+    firstExistingPath(['/opt/homebrew/bin/brew', '/usr/local/bin/brew'], exists),
+    '/opt/homebrew/bin/brew'
+  );
+  assert.equal(
+    caskroomForBrew('/opt/homebrew/bin/brew'),
+    '/opt/homebrew/Caskroom/cursor-auto-runner'
+  );
   assert.equal(caskroomForBrew('/usr/local/bin/brew'), '/usr/local/Caskroom/cursor-auto-runner');
 });
 
