@@ -7,6 +7,16 @@ and each shipped task gets its own version number.
 
 ## Unreleased
 
+## [1.2.96] - 2026-10-18
+
+### Changed
+- The overlay's "Capture Run template" button captures the current theme (dark or light) and says which in its label.
+- The keyboard shortcut choice Ctrl/Cmd+Shift+R (which collides with hard-reload and VS Code Refactor) is replaced by Ctrl/Cmd+Alt+Shift+A. Anyone who had picked the old one now has the shortcut off.
+
+### Fixed
+- When the global shortcut cannot be registered, the setting is reset to Off so the menu does not stay checked and the notice does not repeat on every launch.
+- `brew uninstall --zap` also removes the updater caches.
+
 ## [1.2.95] - 2026-10-18
 
 ### Fixed

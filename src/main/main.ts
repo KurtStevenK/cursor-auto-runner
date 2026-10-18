@@ -357,6 +357,10 @@ function registerToggleShortcut(accelerator: string): void {
     return;
   }
   console.error(`[shortcut] could not register ${accelerator} (already in use?)`);
+  // Revert so the menu does not stay checked and we do not retry (and
+  // notify again) on every launch.
+  settings.set({ toggleShortcut: '' });
+  tray?.rebuild();
   try {
     new Notification({
       title: 'Cursor Auto Runner',
@@ -458,7 +462,9 @@ app.whenReady().then(() => {
     }
     void applyMode(mode);
   });
-  ipcMain.on(IPC.CAPTURE_TEMPLATE, () => startTemplateCapture('run', 'dark'));
+  ipcMain.on(IPC.CAPTURE_TEMPLATE, () =>
+    startTemplateCapture('run', nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
+  );
   ipcMain.on(IPC.CLOSE_OVERLAY, () => overlay?.close());
   ipcMain.on(IPC.SET_POLL_INTERVAL, (_e, ms: number) => {
     const clamped = Math.max(150, Math.min(60000, Number(ms) || DEFAULT_SETTINGS.pollIntervalMs));

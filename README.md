@@ -57,7 +57,7 @@
 - **Adjustable refresh interval** — set how often the screen is checked from the tray menu (*Faster* / *Slower*); the current value is shown right in the menu.
 - **Updates** — Windows and macOS installs update in place (download, then *Restart now*); Homebrew installs upgrade the cask; Linux shows a notification with the release page. *Settings → Check for updates automatically* turns the launch-time check off.
 - **Settings submenu** — *Start at login*, *Restore last mode on launch*, match *Confidence* (0.80–0.95) and *Click cooldown* (0.5–5 s) are changeable from the tray menu and apply immediately.
-- **Global shortcut** — optionally toggle auto-run on and off from anywhere (*Settings → Keyboard shortcut*: Ctrl/Cmd+Alt+R, Ctrl/Cmd+Shift+R or Ctrl/Cmd+Alt+Shift+R). It switches between *Stop* and the last mode you used.
+- **Global shortcut** — optionally toggle auto-run on and off from anywhere (*Settings → Keyboard shortcut*: Ctrl/Cmd+Alt+R, Ctrl/Cmd+Alt+Shift+A or Ctrl/Cmd+Alt+Shift+R). It switches between *Stop* and the last mode you used.
 - **Focus and typing guards** — *Pause while I am typing* skips a click (and retries on the next check) while you are using the mouse or keyboard; *Focus Cursor before clicking* can be turned off to stop the app bringing Cursor to the front.
 - **Adaptive polling** — the refresh interval you set is the baseline; the app checks less often while no Cursor window is visible (at most every 2 s) or you have been away for 5 minutes (every 5 s), and briefly checks faster right after a click. The overlay says when this is in effect.
 - **Lock-screen and sleep pause** — auto-run pauses while the screen is locked or the computer sleeps and resumes in the same mode afterwards.

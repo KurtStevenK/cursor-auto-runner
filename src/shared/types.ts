@@ -102,7 +102,7 @@ export const DEFAULT_SETTINGS: Settings = {
 export const SHORTCUT_CHOICES = [
   '',
   'CommandOrControl+Alt+R',
-  'CommandOrControl+Shift+R',
+  'CommandOrControl+Alt+Shift+A',
   'CommandOrControl+Alt+Shift+R',
 ] as const;
 

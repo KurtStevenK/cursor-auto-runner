@@ -32,5 +32,7 @@ cask "cursor-auto-runner" do
     "~/Library/Preferences/com.kurtstevenk.cursor-auto-runner.plist",
     "~/Library/Saved Application State/com.kurtstevenk.cursor-auto-runner.savedState",
     "~/Library/Logs/Cursor Auto Runner",
+    "~/Library/Caches/cursor-auto-runner-updater",
+    "~/Library/Caches/com.kurtstevenk.cursor-auto-runner.ShipIt",
   ]
 end

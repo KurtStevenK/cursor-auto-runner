@@ -172,3 +172,11 @@ test('existing settings without onboardingShownVersion count as already onboarde
   store.set({ confidence: 0.9 });
   assert.equal(new SettingsStore(dir, '9.9.9').get().onboardingShownVersion, '1.2.94');
 });
+
+test('toggleShortcut offers Alt+Shift+A and drops the old Shift+R choice', () => {
+  assert.equal(
+    sanitizeSettings({ toggleShortcut: 'CommandOrControl+Alt+Shift+A' }).toggleShortcut,
+    'CommandOrControl+Alt+Shift+A'
+  );
+  assert.equal(sanitizeSettings({ toggleShortcut: 'CommandOrControl+Shift+R' }).toggleShortcut, '');
+});

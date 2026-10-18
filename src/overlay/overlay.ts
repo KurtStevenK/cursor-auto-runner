@@ -212,6 +212,10 @@ function render(snap: StatsSnapshot): void {
 }
 
 $('close').addEventListener('click', () => window.autoRunner.close());
+{
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  $('captureBtn').textContent = `Capture Run template (${dark ? 'dark' : 'light'})…`;
+}
 $('captureBtn').addEventListener('click', () => window.autoRunner.captureTemplate());
 $('fasterBtn').addEventListener('click', () => {
   const ms = Number(($('fasterBtn') as HTMLButtonElement).dataset.ms);
