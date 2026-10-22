@@ -1,5 +1,5 @@
 /**
- * electron-builder config for Finn, the macOS build of this app under its new name.
+ * electron-builder config for F1nn (bundle ID xyz.kainzmayer.finn), the macOS build of this app under its new name.
  * Extends the `build` block in package.json. Targets:
  *   --mac dmg      Developer ID DMG (scripts/finn-dist.sh dmg)
  *   --mac mas      Mac App Store (scripts/finn-dist.sh mas)
@@ -9,23 +9,23 @@ const base = require('../package.json').build;
 
 const usage = {
   NSScreenCaptureUsageDescription:
-    'Finn looks at the screen to find the buttons you taught it to click.',
-  NSAccessibilityUsageDescription: 'Finn needs accessibility access to click those buttons for you.',
+    'F1nn looks at the screen to find the buttons you taught it to click.',
+  NSAccessibilityUsageDescription: 'F1nn needs accessibility access to click those buttons for you.',
   ITSAppUsesNonExemptEncryption: false,
 };
 
 module.exports = {
   ...base,
   appId: 'xyz.kainzmayer.finn',
-  productName: 'Finn',
-  extraMetadata: { productName: 'Finn' },
+  productName: 'F1nn',
+  extraMetadata: { productName: 'F1nn' },
   directories: { output: 'release/finn' },
   mac: {
     ...base.mac,
     target: [{ target: 'dmg', arch: ['arm64'] }],
     extendInfo: usage,
   },
-  dmg: { artifactName: 'Finn-${version}-${arch}.${ext}' },
+  dmg: { artifactName: 'F1nn-${version}-${arch}.${ext}' },
   mas: {
     hardenedRuntime: false,
     entitlements: 'build/entitlements.mas.plist',

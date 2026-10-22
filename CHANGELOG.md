@@ -8,7 +8,7 @@ and each shipped task gets its own version number.
 ## Unreleased
 
 ### Added
-- **Finn for macOS:** a build of this app under its new name, Finn (`xyz.kainzmayer.finn`), as a Developer ID DMG (`npm run dist:finn:dmg`) and a sandboxed Mac App Store package for TestFlight (`npm run dist:finn:mas`, upload with `scripts/finn-dist.sh upload`). See `packaging/mac/APP-STORE.md`.
+- **F1nn for macOS:** a build of this app under its new name, F1nn (`xyz.kainzmayer.finn`), as a Developer ID DMG (`npm run dist:finn:dmg`) and a sandboxed Mac App Store package for TestFlight (`npm run dist:finn:mas`, upload with `scripts/finn-dist.sh testflight`). See `packaging/mac/APP-STORE.md`.
 
 ### Changed
 - **Updates:** Mac App Store builds hide the update menu items and never check GitHub, because the store updates them (App Review guideline 2.4.5).

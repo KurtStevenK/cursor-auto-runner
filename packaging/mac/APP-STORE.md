@@ -1,7 +1,8 @@
-# Mac App Store / TestFlight — Finn
+# Mac App Store / TestFlight — F1nn
 
-The Mac App Store build ships under the app's new name **Finn** (bundle ID `xyz.kainzmayer.finn`,
-team `XPPUZJDN56`). Config: [`build/finn.config.js`](../../build/finn.config.js), script:
+The Mac App Store build ships under the app's new name **F1nn** ("Finn" was taken on the store;
+same style as Beaut1fy), bundle ID `xyz.kainzmayer.finn`, team `XPPUZJDN56`, App Store Connect app
+[6825765989](https://appstoreconnect.apple.com/apps/6825765989/distribution/info). Config: [`build/finn.config.js`](../../build/finn.config.js), script:
 [`scripts/finn-dist.sh`](../../scripts/finn-dist.sh), output: `release/finn/`.
 
 Direct download (DMG / Homebrew) keeps using **Developer ID Application** + notarization (see
@@ -11,8 +12,9 @@ Direct download (DMG / Homebrew) keeps using **Developer ID Application** + nota
 
 | Command | Result |
 |---------|--------|
-| `npm run dist:finn:dmg` | `release/finn/Finn-<version>-arm64.dmg`, Developer ID signed; notarized when `ASC_KEY_ID` + `ASC_ISSUER_ID` (or `APPLE_ID` + `APPLE_APP_SPECIFIC_PASSWORD`) are set |
-| `npm run dist:finn:mas` | `release/finn/Finn-<version>-<build>-AppStore.pkg` for TestFlight / App Store |
+| `npm run dist:finn:dmg` | `release/finn/F1nn-<version>-arm64.dmg`, Developer ID signed; notarized when `ASC_KEY_ID` + `ASC_ISSUER_ID` (or `APPLE_ID` + `APPLE_APP_SPECIFIC_PASSWORD`) are set |
+| `npm run dist:finn:mas` | `release/finn/F1nn-<version>-<build>-AppStore.pkg` for TestFlight / App Store |
+| `bash scripts/finn-dist.sh testflight` | Upload the last `mas` build through the Apple account signed in to Xcode (`xcodebuild -exportArchive`, destination upload) |
 | `bash scripts/finn-dist.sh upload <pkg>` | Upload with the App Store Connect API key (`ASC_KEY_ID`, `ASC_ISSUER_ID`, key in `~/.private_keys/AuthKey_<id>.p8`) |
 
 `FINN_BUILD` sets `CFBundleVersion` (default: a `YYYYMMDDHHMM` timestamp, so every upload is higher).
@@ -52,7 +54,7 @@ in its rendezvous error.
 
 ## After upload
 
-1. Wait for **Processing** in App Store Connect → Finn → TestFlight → macOS.
+1. Wait for **Processing** in App Store Connect → F1nn → TestFlight → macOS.
 2. Export compliance: `ITSAppUsesNonExemptEncryption` is false.
 3. Add the build to an internal testing group.
 4. Use manual release until the listing (screenshots, privacy URL, review notes explaining Screen
