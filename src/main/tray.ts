@@ -28,6 +28,7 @@ export type TrayCallbacks = {
     actionEnabled: boolean;
     showHomebrewToggle: boolean;
     homebrewInstall: boolean;
+    available: boolean;
   };
   setHomebrewInstall: (value: boolean) => void;
   getPollInterval: () => number;
@@ -209,6 +210,7 @@ export class TrayUI {
         {
           label: 'Check for updates automatically',
           type: 'checkbox',
+          visible: this.cb.updateMenu().available,
           checked: s.autoCheckUpdates,
           click: (item) => this.cb.updateSettings({ autoCheckUpdates: Boolean(item.checked) }),
         },
@@ -256,6 +258,7 @@ export class TrayUI {
   private updateItems(): MenuItemConstructorOptions[] {
     const update = this.cb.updateMenu();
     const items: MenuItemConstructorOptions[] = [];
+    if (!update.available) return items;
     if (update.statusLabel) items.push({ label: update.statusLabel, enabled: false });
     items.push({
       label: update.actionLabel,

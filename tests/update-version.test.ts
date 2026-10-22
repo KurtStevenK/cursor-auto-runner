@@ -41,4 +41,8 @@ test('update channel depends on platform, packaging and Homebrew', () => {
   assert.equal(f('linux', true, false), 'github-page');
   assert.equal(f('darwin', false, true), 'github-page');
   assert.equal(f('win32', false, false), 'github-page');
+  assert.equal(
+    updateChannelFor({ platform: 'darwin', isPackaged: true, brewCask: true, mas: true }),
+    'app-store'
+  );
 });
