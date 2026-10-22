@@ -29,7 +29,12 @@ export interface UpdateMenuState {
   actionEnabled: boolean;
   showHomebrewToggle: boolean;
   homebrewInstall: boolean;
+  /** False in Mac App Store builds: the store updates the app, so the menu hides update items. */
+  available: boolean;
 }
+
+/** Electron sets process.mas in Mac App Store builds. */
+export const isMasBuild = Boolean((process as NodeJS.Process & { mas?: boolean }).mas);
 
 interface ReleaseInfo {
   version: string;
@@ -88,6 +93,7 @@ export class UpdateController {
       actionEnabled,
       showHomebrewToggle: process.platform === 'darwin',
       homebrewInstall: this.options.getAutoInstall(),
+      available: !isMasBuild,
     };
   }
 
@@ -98,7 +104,7 @@ export class UpdateController {
 
   /** Silent check after launch. Homebrew installs upgrade themselves when the checkbox is on. */
   start(): void {
-    if (this.started) return;
+    if (this.started || isMasBuild) return;
     this.started = true;
     setTimeout(() => {
       if (!this.options.getAutoCheck()) return;
@@ -119,7 +125,7 @@ export class UpdateController {
   }
 
   private async check(interactive: boolean): Promise<void> {
-    if (this.phase !== 'idle') return;
+    if (this.phase !== 'idle' || isMasBuild) return;
     this.phase = 'checking';
     this.lastError = null;
     this.options.onChange();

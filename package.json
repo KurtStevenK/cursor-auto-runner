@@ -23,6 +23,8 @@
     "dist:win": "npm run compile && electron-builder --win --publish never && node scripts/fix-update-feeds.js",
     "dist:mac": "npm run compile && electron-builder --mac --publish never && node scripts/rename-mac-dmg-artifacts.js && node scripts/fix-update-feeds.js",
     "dist:mac:signed": "bash scripts/mac-signed-dist.sh",
+    "dist:finn:dmg": "bash scripts/finn-dist.sh dmg",
+    "dist:finn:mas": "bash scripts/finn-dist.sh mas",
     "dist:linux": "npm run compile && electron-builder --linux --publish never",
     "rebuild:dev": "electron-rebuild -f -w better-sqlite3 -a x64",
     "test": "npm run compile && node --test dist/tests/*.test.js",

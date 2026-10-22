@@ -42,14 +42,19 @@ export function caskroomForBrew(brewPath: string): string {
   return `${prefix}/Caskroom/${CASK_NAME}`;
 }
 
-export type UpdateChannel = 'brew' | 'electron-updater' | 'github-page';
+export type UpdateChannel = 'app-store' | 'brew' | 'electron-updater' | 'github-page';
 
-/** Which update mechanism applies: Homebrew cask, electron-updater (NSIS / macOS), or the release page. */
+/**
+ * Which update mechanism applies: the Mac App Store, Homebrew cask, electron-updater (NSIS / macOS),
+ * or the release page. App Review guideline 2.4.5 lets only the store update a store build.
+ */
 export function updateChannelFor(input: {
   platform: string;
   isPackaged: boolean;
   brewCask: boolean;
+  mas?: boolean;
 }): UpdateChannel {
+  if (input.mas) return 'app-store';
   if (!input.isPackaged) return 'github-page';
   if (input.platform === 'darwin' && input.brewCask) return 'brew';
   if (input.platform === 'win32' || input.platform === 'darwin') return 'electron-updater';
