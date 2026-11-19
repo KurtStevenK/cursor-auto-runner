@@ -136,8 +136,8 @@
   },
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
-    "better-sqlite3": "^13.0.3",
-    "electron-updater": "^6.8.9"
+    "better-sqlite3": "^13.2.0",
+    "electron-updater": "^6.8.11"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
